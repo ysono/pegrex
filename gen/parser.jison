@@ -2,7 +2,6 @@
 
 %%
 
-"escape" return 'ESCAPE'
 "clazz" return 'CLAZZ'
 "group" return 'GROUP'
 
@@ -20,9 +19,15 @@
 "("                         return '('
 ")"                         return ')'
 
-[0-9]                       return 'CHAR_DIGIT'
+"f"                         return 'f'
+"n"                         return 'n'
+"r"                         return 'r'
+"t"                         return 't'
+"u"                         return 'u'
 
 [\u0000-\u001f\u007f\u0080-\u009f]      return 'CHAR_CTRL'
+[0-9]                       return 'CHAR_DIGIT'
+[a-fA-F]                    return 'CHAR_ALPHABET_HEX'
 
 .                           return 'CHAR_OTHER'
 
@@ -62,7 +67,7 @@ quantifiedFactor
     ;
 
 factor
-    : factor_char
+    : chargroup_factorSingle
         {$$ = {type: 'singleChar', val: $1}}
     | escape
         {$$ = {type: 'escapedChar', val: $1}}
@@ -71,18 +76,28 @@ factor
     | group
         {$$ = {type: 'group', val: $1}}
     ;
-factor_char
-    : ','
-    | CHAR_DIGIT
-    | CHAR_OTHER
-    ;
 
 escape
-    : ESCAPE
+    : '\\' escape_unescaped
+        {$$ = $2}
     ;
+escape_unescaped
+    : 'f'
+        {$$ = {type: 'formfeed'}}
+    | 'n'
+        {$$ = {type: 'newline'}}
+    | 'r'
+        {$$ = {type: 'carriageReturn'}}
+    | 't'
+        {$$ = {type: 'tab'}}
+    | 'u' chargroup_hex chargroup_hex chargroup_hex chargroup_hex
+        {$$ = {type: 'unicode', val: $2+$3+$4+$5}}
+    ;
+
 clazz
     : CLAZZ
     ;
+
 group
     : GROUP
     ;
@@ -115,8 +130,29 @@ integer
         {$$ = Number($1)}
     ;
 digits
-    : digits CHAR_DIGIT
+    : digits chargroup_digit
         {$$ = $1 + $2}
-    | CHAR_DIGIT
+    | chargroup_digit
     ;
 
+
+
+chargroup_digit
+    : CHAR_DIGIT
+    ;
+chargroup_factorSingle
+    : ','
+    | 'f'
+    | 'n'
+    | 'r'
+    | 't'
+    | 'u'
+    | CHAR_DIGIT
+    | CHAR_ALPHABET_HEX
+    | CHAR_OTHER
+    ;
+chargroup_hex
+    : 'f',
+    | CHAR_DIGIT
+    | CHAR_ALPHABET_HEX
+    ;

@@ -72,12 +72,12 @@
   }
 */
 var parser = (function(){
-var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,11],$V1=[1,12],$V2=[1,13],$V3=[1,14],$V4=[1,15],$V5=[1,16],$V6=[1,5],$V7=[1,5,15,16,17,18,19,20],$V8=[1,5,15,16,17,18,19,20,22,23,24,25],$V9=[1,5,15,16,17,18,19,20,22],$Va=[1,29],$Vb=[15,16,27];
+var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,20],$V1=[1,12],$V2=[1,13],$V3=[1,14],$V4=[1,15],$V5=[1,16],$V6=[1,21],$V7=[1,22],$V8=[1,11],$V9=[1,17],$Va=[1,18],$Vb=[1,19],$Vc=[1,5],$Vd=[1,5,15,17,18,19,20,21,23,24,32,35,36,37],$Ve=[1,5,15,17,18,19,20,21,23,24,26,27,28,29,32,35,36,37],$Vf=[1,5,15,17,18,19,20,21,23,24,26,32,35,36,37],$Vg=[1,42],$Vh=[1,44],$Vi=[1,45],$Vj=[1,46],$Vk=[31,32,35];
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"choice":3,"sequence_s":4,"|":5,"sequence":6,"quantifiedFactor_s":7,"quantifiedFactor":8,"factor":9,"quantifier":10,"factor_char":11,"escape":12,"clazz":13,"group":14,",":15,"CHAR_DIGIT":16,"CHAR_OTHER":17,"ESCAPE":18,"CLAZZ":19,"GROUP":20,"quantifierAmount":21,"?":22,"*":23,"+":24,"{":25,"integer":26,"}":27,"digits":28,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"|",15:",",16:"CHAR_DIGIT",17:"CHAR_OTHER",18:"ESCAPE",19:"CLAZZ",20:"GROUP",22:"?",23:"*",24:"+",25:"{",27:"}"},
-productions_: [0,[3,1],[4,3],[4,1],[6,1],[7,2],[7,1],[8,2],[8,1],[9,1],[9,1],[9,1],[9,1],[11,1],[11,1],[11,1],[12,1],[13,1],[14,1],[10,2],[10,1],[21,1],[21,1],[21,1],[21,3],[21,4],[21,5],[26,1],[28,2],[28,1]],
+symbols_: {"error":2,"choice":3,"sequence_s":4,"|":5,"sequence":6,"quantifiedFactor_s":7,"quantifiedFactor":8,"factor":9,"quantifier":10,"chargroup_factorSingle":11,"escape":12,"clazz":13,"group":14,"\\\\":15,"escape_unescaped":16,"f":17,"n":18,"r":19,"t":20,"u":21,"chargroup_hex":22,"CLAZZ":23,"GROUP":24,"quantifierAmount":25,"?":26,"*":27,"+":28,"{":29,"integer":30,"}":31,",":32,"digits":33,"chargroup_digit":34,"CHAR_DIGIT":35,"CHAR_ALPHABET_HEX":36,"CHAR_OTHER":37,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"|",15:"\\\\",17:"f",18:"n",19:"r",20:"t",21:"u",23:"CLAZZ",24:"GROUP",26:"?",27:"*",28:"+",29:"{",31:"}",32:",",35:"CHAR_DIGIT",36:"CHAR_ALPHABET_HEX",37:"CHAR_OTHER"},
+productions_: [0,[3,1],[4,3],[4,1],[6,1],[7,2],[7,1],[8,2],[8,1],[9,1],[9,1],[9,1],[9,1],[12,2],[16,1],[16,1],[16,1],[16,1],[16,5],[13,1],[14,1],[10,2],[10,1],[25,1],[25,1],[25,1],[25,3],[25,4],[25,5],[30,1],[33,2],[33,1],[34,1],[11,1],[11,1],[11,1],[11,1],[11,1],[11,1],[11,1],[11,1],[11,1],[22,1],[22,1],[22,1]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
@@ -116,39 +116,57 @@ break;
 case 12:
 this.$ = {type: 'group', val: $$[$0]}
 break;
-case 19:
-$$[$0-1].isGreedy = false; this.$ = $$[$0-1]
+case 13:
+this.$ = $$[$0]
 break;
-case 20:
-$$[$0].isGreedy = true; this.$ = $$[$0]
+case 14:
+this.$ = {type: 'formfeed'}
+break;
+case 15:
+this.$ = {type: 'newline'}
+break;
+case 16:
+this.$ = {type: 'carriageReturn'}
+break;
+case 17:
+this.$ = {type: 'tab'}
+break;
+case 18:
+this.$ = {type: 'unicode', val: $$[$0-3]+$$[$0-2]+$$[$0-1]+$$[$0]}
 break;
 case 21:
-this.$ = {min: 0, max: 1}
+$$[$0-1].isGreedy = false; this.$ = $$[$0-1]
 break;
 case 22:
-this.$ = {min: 0, max: Infinity}
+$$[$0].isGreedy = true; this.$ = $$[$0]
 break;
 case 23:
-this.$ = {min: 1, max: Infinity}
+this.$ = {min: 0, max: 1}
 break;
 case 24:
-this.$ = {min: $$[$0-1], max: $$[$0-1]}
+this.$ = {min: 0, max: Infinity}
 break;
 case 25:
-this.$ = {min: $$[$0-2], max: Infinity}
+this.$ = {min: 1, max: Infinity}
 break;
 case 26:
-this.$ = {min: $$[$0-3], max: $$[$0-1]}
+this.$ = {min: $$[$0-1], max: $$[$0-1]}
 break;
 case 27:
-this.$ = Number($$[$0])
+this.$ = {min: $$[$0-2], max: Infinity}
 break;
 case 28:
+this.$ = {min: $$[$0-3], max: $$[$0-1]}
+break;
+case 29:
+this.$ = Number($$[$0])
+break;
+case 30:
 this.$ = $$[$0-1] + $$[$0]
 break;
 }
 },
-table: [{3:1,4:2,6:3,7:4,8:5,9:6,11:7,12:8,13:9,14:10,15:$V0,16:$V1,17:$V2,18:$V3,19:$V4,20:$V5},{1:[3]},{1:[2,1],5:[1,17]},o($V6,[2,3]),o($V6,[2,4],{9:6,11:7,12:8,13:9,14:10,8:18,15:$V0,16:$V1,17:$V2,18:$V3,19:$V4,20:$V5}),o($V7,[2,6]),o($V7,[2,8],{10:19,21:20,22:[1,21],23:[1,22],24:[1,23],25:[1,24]}),o($V8,[2,9]),o($V8,[2,10]),o($V8,[2,11]),o($V8,[2,12]),o($V8,[2,13]),o($V8,[2,14]),o($V8,[2,15]),o($V8,[2,16]),o($V8,[2,17]),o($V8,[2,18]),{6:25,7:4,8:5,9:6,11:7,12:8,13:9,14:10,15:$V0,16:$V1,17:$V2,18:$V3,19:$V4,20:$V5},o($V7,[2,5]),o($V7,[2,7]),o($V7,[2,20],{22:[1,26]}),o($V9,[2,21]),o($V9,[2,22]),o($V9,[2,23]),{16:$Va,26:27,28:28},o($V6,[2,2]),o($V7,[2,19]),{15:[1,31],27:[1,30]},o([15,27],[2,27],{16:[1,32]}),o($Vb,[2,29]),o($V9,[2,24]),{16:$Va,26:34,27:[1,33],28:28},o($Vb,[2,28]),o($V9,[2,25]),{27:[1,35]},o($V9,[2,26])],
+table: [{3:1,4:2,6:3,7:4,8:5,9:6,11:7,12:8,13:9,14:10,15:$V0,17:$V1,18:$V2,19:$V3,20:$V4,21:$V5,23:$V6,24:$V7,32:$V8,35:$V9,36:$Va,37:$Vb},{1:[3]},{1:[2,1],5:[1,23]},o($Vc,[2,3]),o($Vc,[2,4],{9:6,11:7,12:8,13:9,14:10,8:24,15:$V0,17:$V1,18:$V2,19:$V3,20:$V4,21:$V5,23:$V6,24:$V7,32:$V8,35:$V9,36:$Va,37:$Vb}),o($Vd,[2,6]),o($Vd,[2,8],{10:25,25:26,26:[1,27],27:[1,28],28:[1,29],29:[1,30]}),o($Ve,[2,9]),o($Ve,[2,10]),o($Ve,[2,11]),o($Ve,[2,12]),o($Ve,[2,33]),o($Ve,[2,34]),o($Ve,[2,35]),o($Ve,[2,36]),o($Ve,[2,37]),o($Ve,[2,38]),o($Ve,[2,39]),o($Ve,[2,40]),o($Ve,[2,41]),{16:31,17:[1,32],18:[1,33],19:[1,34],20:[1,35],21:[1,36]},o($Ve,[2,19]),o($Ve,[2,20]),{6:37,7:4,8:5,9:6,11:7,12:8,13:9,14:10,15:$V0,17:$V1,18:$V2,19:$V3,20:$V4,21:$V5,23:$V6,24:$V7,32:$V8,35:$V9,36:$Va,37:$Vb},o($Vd,[2,5]),o($Vd,[2,7]),o($Vd,[2,22],{26:[1,38]}),o($Vf,[2,23]),o($Vf,[2,24]),o($Vf,[2,25]),{30:39,33:40,34:41,35:$Vg},o($Ve,[2,13]),o($Ve,[2,14]),o($Ve,[2,15]),o($Ve,[2,16]),o($Ve,[2,17]),{17:$Vh,22:43,35:$Vi,36:$Vj},o($Vc,[2,2]),o($Vd,[2,21]),{31:[1,47],32:[1,48]},o([31,32],[2,29],{34:49,35:$Vg}),o($Vk,[2,31]),o($Vk,[2,32]),{17:$Vh,22:50,35:$Vi,36:$Vj},o($Ve,[2,42]),o($Ve,[2,43]),o($Ve,[2,44]),o($Vf,[2,26]),{30:52,31:[1,51],33:40,34:41,35:$Vg},o($Vk,[2,30]),{17:$Vh,22:53,35:$Vi,36:$Vj},o($Vf,[2,27]),{31:[1,54]},{17:$Vh,22:55,35:$Vi,36:$Vj},o($Vf,[2,28]),o($Ve,[2,18])],
 defaultActions: {},
 parseError: function parseError(str, hash) {
     if (hash.recoverable) {
@@ -622,48 +640,58 @@ options: {},
 performAction: function anonymous(yy,yy_,$avoiding_name_collisions,YY_START) {
 var YYSTATE=YY_START;
 switch($avoiding_name_collisions) {
-case 0:return 18
+case 0:return 23
 break;
-case 1:return 19
+case 1:return 24
 break;
-case 2:return 20
+case 2:return 5
 break;
-case 3:return 5
+case 3:return 26
 break;
-case 4:return 22
+case 4:return 27
 break;
-case 5:return 23
+case 5:return 28
 break;
-case 6:return 24
+case 6:return 29
 break;
-case 7:return 25
+case 7:return 31
 break;
-case 8:return 27
+case 8:return 32
 break;
-case 9:return 15
+case 9:return '/'
 break;
-case 10:return '/'
+case 10:return 15
 break;
-case 11:return '\\'
+case 11:return '['
 break;
-case 12:return '['
+case 12:return ']'
 break;
-case 13:return ']'
+case 13:return '('
 break;
-case 14:return '('
+case 14:return ')'
 break;
-case 15:return ')'
+case 15:return 17
 break;
-case 16:return 16
+case 16:return 18
 break;
-case 17:return 'CHAR_CTRL'
+case 17:return 19
 break;
-case 18:return 17
+case 18:return 20
+break;
+case 19:return 21
+break;
+case 20:return 'CHAR_CTRL'
+break;
+case 21:return 35
+break;
+case 22:return 36
+break;
+case 23:return 37
 break;
 }
 },
-rules: [/^(?:escape\b)/,/^(?:clazz\b)/,/^(?:group\b)/,/^(?:\|)/,/^(?:\?)/,/^(?:\*)/,/^(?:\+)/,/^(?:\{)/,/^(?:\})/,/^(?:,)/,/^(?:\/)/,/^(?:\\)/,/^(?:\[)/,/^(?:\])/,/^(?:\()/,/^(?:\))/,/^(?:[0-9])/,/^(?:[\u0000-\u001f\u007f\u0080-\u009f])/,/^(?:.)/],
-conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],"inclusive":true}}
+rules: [/^(?:clazz\b)/,/^(?:group\b)/,/^(?:\|)/,/^(?:\?)/,/^(?:\*)/,/^(?:\+)/,/^(?:\{)/,/^(?:\})/,/^(?:,)/,/^(?:\/)/,/^(?:\\)/,/^(?:\[)/,/^(?:\])/,/^(?:\()/,/^(?:\))/,/^(?:f\b)/,/^(?:n\b)/,/^(?:r\b)/,/^(?:t\b)/,/^(?:u\b)/,/^(?:[\u0000-\u001f\u007f\u0080-\u009f])/,/^(?:[0-9])/,/^(?:[a-fA-F])/,/^(?:.)/],
+conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],"inclusive":true}}
 });
 return lexer;
 })();
