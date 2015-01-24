@@ -5,25 +5,33 @@
 "clazz" return 'CLAZZ'
 "group" return 'GROUP'
 
-"|"                         return '|'
-"?"                         return '?'
-"*"                         return '*'
-"+"                         return '+'
-"{"                         return '{'
-"}"                         return '}'
-","                         return ','
-"/"                         return '/'
-"\\"                        return '\\'
-"["                         return '['
-"]"                         return ']'
-"("                         return '('
-")"                         return ')'
+[|]                         return '|'
+[?]                         return '?'
+[*]                         return '*'
+[+]                         return '+'
+[{]                         return '{'
+[}]                         return '}'
+[,]                         return ','
+[/]                         return '/'
+[\\]                        return '\\'
+[[]                         return '['
+[]]                         return ']'
+[(]                         return '('
+[)]                         return ')'
 
-"f"                         return 'f'
-"n"                         return 'n'
-"r"                         return 'r'
-"t"                         return 't'
-"u"                         return 'u'
+[b]                         return 'b'
+[d]                         return 'd'
+[f]                         return 'f'
+[n]                         return 'n'
+[r]                         return 'r'
+[s]                         return 's'
+[t]                         return 't'
+[u]                         return 'u'
+[w]                         return 'w'
+[B]                         return 'B'
+[D]                         return 'D'
+[S]                         return 'S'
+[W]                         return 'W'
 
 [\u0000-\u001f\u007f\u0080-\u009f]      return 'CHAR_CTRL'
 [0-9]                       return 'CHAR_DIGIT'
@@ -92,6 +100,14 @@ escape_unescaped
         {$$ = {type: 'tab'}}
     | 'u' chargroup_hex chargroup_hex chargroup_hex chargroup_hex
         {$$ = {type: 'unicode', val: $2+$3+$4+$5}}
+    | 'B'
+    | 'D'
+    | 'S'
+    | 'W'
+    | 'b'
+    | 'd'
+    | 's'
+    | 'w'
     ;
 
 clazz
@@ -142,17 +158,29 @@ chargroup_digit
     ;
 chargroup_factorSingle
     : ','
+    | 'b'
+    | 'd'
     | 'f'
     | 'n'
     | 'r'
+    | 's'
     | 't'
     | 'u'
+    | 'w'
+    | 'B'
+    | 'D'
+    | 'S'
+    | 'W'
     | CHAR_DIGIT
     | CHAR_ALPHABET_HEX
     | CHAR_OTHER
     ;
 chargroup_hex
-    : 'f',
+    : 'b'
+    | 'd'
+    | 'f'
+    | 'B'
+    | 'D'
     | CHAR_DIGIT
     | CHAR_ALPHABET_HEX
     ;
