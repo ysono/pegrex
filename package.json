@@ -1,0 +1,32 @@
+{
+  "name": "pegrex",
+  "version": "1.0.0",
+  "description": "Visual Regular Expression Builder",
+  "main": "index.js",
+  "scripts": {
+    "build": "build.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ysono",
+  "license": "ISC",
+  "devDependencies": {
+    "jison": "^0.4.15"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "regex",
+    "regexp",
+    "regular",
+    "expression",
+    "visual",
+    "visualizer",
+    "visualize",
+    "visualiser",
+    "visualise",
+    "build",
+    "builder"
+  ]
+}
