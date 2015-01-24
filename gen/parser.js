@@ -72,19 +72,19 @@
   }
 */
 var parser = (function(){
-var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,7],$V1=[1,5],$V2=[1,5,11],$V3=[1,5,11,13],$V4=[1,20],$V5=[18,19,21];
+var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,11],$V1=[1,12],$V2=[1,13],$V3=[1,14],$V4=[1,15],$V5=[1,16],$V6=[1,5],$V7=[1,5,15,16,17,18,19,20],$V8=[1,5,15,16,17,18,19,20,22,23,24,25],$V9=[1,5,15,16,17,18,19,20,22],$Va=[1,29],$Vb=[15,16,27];
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"choice":3,"sequence_s":4,"|":5,"sequence":6,"factor_quantifier_s":7,"factor_quantifier":8,"factor":9,"quantifier":10,"FACTOR":11,"quantifier_amount":12,"?":13,"*":14,"+":15,"{":16,"integer":17,"}":18,",":19,"digits":20,"DIGIT":21,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"|",11:"FACTOR",13:"?",14:"*",15:"+",16:"{",18:"}",19:",",21:"DIGIT"},
-productions_: [0,[3,1],[4,3],[4,1],[6,1],[7,2],[7,1],[8,2],[8,1],[9,1],[10,2],[10,1],[12,1],[12,1],[12,1],[12,3],[12,4],[12,5],[17,1],[20,2],[20,1]],
+symbols_: {"error":2,"choice":3,"sequence_s":4,"|":5,"sequence":6,"quantifiedFactor_s":7,"quantifiedFactor":8,"factor":9,"quantifier":10,"factor_char":11,"escape":12,"clazz":13,"group":14,",":15,"CHAR_DIGIT":16,"CHAR_OTHER":17,"ESCAPE":18,"CLAZZ":19,"GROUP":20,"quantifierAmount":21,"?":22,"*":23,"+":24,"{":25,"integer":26,"}":27,"digits":28,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"|",15:",",16:"CHAR_DIGIT",17:"CHAR_OTHER",18:"ESCAPE",19:"CLAZZ",20:"GROUP",22:"?",23:"*",24:"+",25:"{",27:"}"},
+productions_: [0,[3,1],[4,3],[4,1],[6,1],[7,2],[7,1],[8,2],[8,1],[9,1],[9,1],[9,1],[9,1],[11,1],[11,1],[11,1],[12,1],[13,1],[14,1],[10,2],[10,1],[21,1],[21,1],[21,1],[21,3],[21,4],[21,5],[26,1],[28,2],[28,1]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
 var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
-return {type: 'choice', val: $$[$0]}
+return {sequences: $$[$0]}
 break;
 case 2:
 this.$ = $$[$0-2].concat($$[$0])
@@ -93,7 +93,7 @@ case 3: case 6:
 this.$ = [$$[$0]]
 break;
 case 4:
-this.$ = {type: 'sequence', val: $$[$0]}
+this.$ = {quantifiedFactors: $$[$0]}
 break;
 case 5:
 this.$ = $$[$0-1].concat($$[$0])
@@ -102,44 +102,53 @@ case 7:
 $$[$0-1].quantifier = $$[$0]; this.$ = $$[$0-1]
 break;
 case 8:
-this.$ = $$[$0]
+$$[$0].quantifier = {min: 1, max: 1, isGreedy: true}; this.$ = $$[$0]
 break;
 case 9:
-this.$ = {type: 'factor', val: $$[$0]}
+this.$ = {type: 'singleChar', val: $$[$0]}
 break;
 case 10:
-this.$.type = 'quantifier'; this.$.stragety = 'lazy'
+this.$ = {type: 'escapedChar', val: $$[$0]}
 break;
 case 11:
-this.$.type = 'quantifier'; this.$.stragety = 'greedy'
+this.$ = {type: 'charSet', val: $$[$0]}
 break;
 case 12:
-this.$ = {min: 0, max: 1}
-break;
-case 13:
-this.$ = {min: 0, max: Infinity}
-break;
-case 14:
-this.$ = {min: 1, max: Infinity}
-break;
-case 15:
-this.$ = {min: Number($$[$0-1]), max: Number($$[$0-1])}
-break;
-case 16:
-this.$ = {min: Number($$[$0-2]), max: Infinity}
-break;
-case 17:
-this.$ = {min: Number($$[$0-3]), max: Number($$[$0-1])}
-break;
-case 18:
-this.$ = Number($$[$0])
+this.$ = {type: 'group', val: $$[$0]}
 break;
 case 19:
+$$[$0-1].isGreedy = false; this.$ = $$[$0-1]
+break;
+case 20:
+$$[$0].isGreedy = true; this.$ = $$[$0]
+break;
+case 21:
+this.$ = {min: 0, max: 1}
+break;
+case 22:
+this.$ = {min: 0, max: Infinity}
+break;
+case 23:
+this.$ = {min: 1, max: Infinity}
+break;
+case 24:
+this.$ = {min: $$[$0-1], max: $$[$0-1]}
+break;
+case 25:
+this.$ = {min: $$[$0-2], max: Infinity}
+break;
+case 26:
+this.$ = {min: $$[$0-3], max: $$[$0-1]}
+break;
+case 27:
+this.$ = Number($$[$0])
+break;
+case 28:
 this.$ = $$[$0-1] + $$[$0]
 break;
 }
 },
-table: [{3:1,4:2,6:3,7:4,8:5,9:6,11:$V0},{1:[3]},{1:[2,1],5:[1,8]},o($V1,[2,3]),o($V1,[2,4],{9:6,8:9,11:$V0}),o($V2,[2,6]),o($V2,[2,8],{10:10,12:11,13:[1,12],14:[1,13],15:[1,14],16:[1,15]}),o([1,5,11,13,14,15,16],[2,9]),{6:16,7:4,8:5,9:6,11:$V0},o($V2,[2,5]),o($V2,[2,7]),o($V2,[2,11],{13:[1,17]}),o($V3,[2,12]),o($V3,[2,13]),o($V3,[2,14]),{17:18,20:19,21:$V4},o($V1,[2,2]),o($V2,[2,10]),{18:[1,21],19:[1,22]},o([18,19],[2,18],{21:[1,23]}),o($V5,[2,20]),o($V3,[2,15]),{17:25,18:[1,24],20:19,21:$V4},o($V5,[2,19]),o($V3,[2,16]),{18:[1,26]},o($V3,[2,17])],
+table: [{3:1,4:2,6:3,7:4,8:5,9:6,11:7,12:8,13:9,14:10,15:$V0,16:$V1,17:$V2,18:$V3,19:$V4,20:$V5},{1:[3]},{1:[2,1],5:[1,17]},o($V6,[2,3]),o($V6,[2,4],{9:6,11:7,12:8,13:9,14:10,8:18,15:$V0,16:$V1,17:$V2,18:$V3,19:$V4,20:$V5}),o($V7,[2,6]),o($V7,[2,8],{10:19,21:20,22:[1,21],23:[1,22],24:[1,23],25:[1,24]}),o($V8,[2,9]),o($V8,[2,10]),o($V8,[2,11]),o($V8,[2,12]),o($V8,[2,13]),o($V8,[2,14]),o($V8,[2,15]),o($V8,[2,16]),o($V8,[2,17]),o($V8,[2,18]),{6:25,7:4,8:5,9:6,11:7,12:8,13:9,14:10,15:$V0,16:$V1,17:$V2,18:$V3,19:$V4,20:$V5},o($V7,[2,5]),o($V7,[2,7]),o($V7,[2,20],{22:[1,26]}),o($V9,[2,21]),o($V9,[2,22]),o($V9,[2,23]),{16:$Va,26:27,28:28},o($V6,[2,2]),o($V7,[2,19]),{15:[1,31],27:[1,30]},o([15,27],[2,27],{16:[1,32]}),o($Vb,[2,29]),o($V9,[2,24]),{16:$Va,26:34,27:[1,33],28:28},o($Vb,[2,28]),o($V9,[2,25]),{27:[1,35]},o($V9,[2,26])],
 defaultActions: {},
 parseError: function parseError(str, hash) {
     if (hash.recoverable) {
@@ -613,28 +622,48 @@ options: {},
 performAction: function anonymous(yy,yy_,$avoiding_name_collisions,YY_START) {
 var YYSTATE=YY_START;
 switch($avoiding_name_collisions) {
-case 0:return 11
+case 0:return 18
 break;
-case 1:return 5
+case 1:return 19
 break;
-case 2:return 13
+case 2:return 20
 break;
-case 3:return 14
+case 3:return 5
 break;
-case 4:return 15
+case 4:return 22
 break;
-case 5:return 16
+case 5:return 23
 break;
-case 6:return 18
+case 6:return 24
 break;
-case 7:return 19
+case 7:return 25
 break;
-case 8:return 21
+case 8:return 27
+break;
+case 9:return 15
+break;
+case 10:return '/'
+break;
+case 11:return '\\'
+break;
+case 12:return '['
+break;
+case 13:return ']'
+break;
+case 14:return '('
+break;
+case 15:return ')'
+break;
+case 16:return 16
+break;
+case 17:return 'CHAR_CTRL'
+break;
+case 18:return 17
 break;
 }
 },
-rules: [/^(?:fac\b)/,/^(?:\|)/,/^(?:\?)/,/^(?:\*)/,/^(?:\+)/,/^(?:\{)/,/^(?:\})/,/^(?:,)/,/^(?:[0-9])/],
-conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8],"inclusive":true}}
+rules: [/^(?:escape\b)/,/^(?:clazz\b)/,/^(?:group\b)/,/^(?:\|)/,/^(?:\?)/,/^(?:\*)/,/^(?:\+)/,/^(?:\{)/,/^(?:\})/,/^(?:,)/,/^(?:\/)/,/^(?:\\)/,/^(?:\[)/,/^(?:\])/,/^(?:\()/,/^(?:\))/,/^(?:[0-9])/,/^(?:[\u0000-\u001f\u007f\u0080-\u009f])/,/^(?:.)/],
+conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],"inclusive":true}}
 });
 return lexer;
 })();
