@@ -1,12 +1,6 @@
 /*
 Resrouces:
-
 - [ECMA](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10)
-
-
-
-http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9
-
 */
 
 %lex
@@ -63,6 +57,7 @@ http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9
 [0-9]                       return 'CHAR_DIGIT_DECIMAL'
 [a-fA-F]                    return 'CHAR_DIGIT_HEX'
 [a-zA-Z]                    return 'CHAR_ALPHABET'
+/* Control characters are [allowed](http://www.ecma-international.org/ecma-262/5.1/#sec-E) */
 .                           return 'CHAR_OTHER'
 
 /lex
@@ -78,7 +73,7 @@ Pattern
         if ($1.length > 1) {
             $$.hint = 'ECMA specifies right-recursive, but in practice, all major browsers appear to use all Alternatives concurrently for the earliest match in string.'
         }
-        return {alternatives: $1}
+        return $$
         }}
     ;
 Disjunction /* 1 or more of groups of Term */
@@ -212,7 +207,7 @@ CharacterEscape
     | 'c' ControlLetter
     | HexEscapeSequence
     | UnicodeEscapeSequence
-    /* | IdentityEscape */
+    | IdentityEscape
     ;
 ControlEscape
     : 'f'
@@ -275,13 +270,14 @@ ClassEscape
         {{
         debugger /* TODO closure needed? */
         (function(){
-            // eval may interpret first 0 to 3 chars as octal
+            // this particular literal is eval'd the same way as a string:
+            // the first 0 to 3 chars could be octal.
             var converted = eval("'\\" + $1 + "'")
             var lenDiff = $$.length - converted.length
             var chars
             function specificChars(str) {
                 str.split('').map(function(char){
-                    return {type: 'specificChar', val: char}
+                    return {type: 'specificChar(escaped)', val: char}
                 })
             }
             if (lenDiff > 0) {
@@ -318,10 +314,15 @@ DecimalDigits
     | CHAR_DIGIT_DECIMAL
     ;
 PatternCharacter
-    /* not ^ $ \ . * + ? ( ) [ ] { } | */
+    /*
+    spec says not ^ $ \ . * + ? ( ) [ ] { } |
+    but allowing ] } because it works with major browsers
+    */
     : '='
     | '!'
+    | '}'
     | ','
+    | ']'
     | '-'
     | ':'
     | 'b'
@@ -414,10 +415,35 @@ HexDigit
     | CHAR_DIGIT_DECIMAL
     | CHAR_DIGIT_HEX
     ;
+IdentityEscape
+    /* Note that this ia a hand-waving approximation that matches with way more characters than intended by the spec. We're adding just enough exclusion to avoid ambiguity in grammar. */
+    /* not (any other beginning char of AtomEscape)
+        i.e. not (any digit) or (any special alphabet) */
+    : '|'
+    | '^'
+    | '$'
+    | '\\'
+    | '('
+    | ')'
+    | '?'
+    | '='
+    | '!'
+    | '*'
+    | '+'
+    | '{'
+    | '}'
+    | ','
+    | '.'
+    | '['
+    | ']'
+    | '-'
+    | ':'
+    | CHAR_DIGIT_HEX
+    | CHAR_ALPHABET
+    | CHAR_OTHER
+    ;
 
 
 %%
 
-/*
-ctrl chars are no longer ignored as of ecma 5
-*/
+
