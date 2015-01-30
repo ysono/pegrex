@@ -7,12 +7,6 @@ Resrouces:
 
 http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9
 
-
-
-the good parts doesn't have
-    [^^]  -> means exclude tilda
-    no \xhh or \uhhhh
-MDN's page on RegExp
 */
 
 %lex
@@ -25,29 +19,50 @@ MDN's page on RegExp
 
 /* Terminals made of an exact char */
 
-[|] return '|'
+[|]  return '|'
 [\^] return '^'
-[$] return '$'
+[$]  return '$'
 [\\] return '\\'
-[b] return 'b'
-[B] return 'B'
-[(] return '('
-[)] return ')'
-[?] return '?'
-[=] return '='
-[!] return '!'
-[*] return '*'
-[+] return '+'
-[{] return '{'
-[}] return '}'
-[,] return ','
+[(]  return '('
+[)]  return ')'
+[?]  return '?'
+[=]  return '='
+[!]  return '!'
+[*]  return '*'
+[+]  return '+'
+[{]  return '{'
+[}]  return '}'
+[,]  return ','
 [\.] return '.'
+[\[] return '['
+[\]] return ']'
+[-]  return '-'
+[:]  return ':'
+
+[b]  return 'b'
+[B]  return 'B'
+[c]  return 'c'
+[d]  return 'd'
+[D]  return 'D'
+[f]  return 'f'
+[n]  return 'n'
+[r]  return 'r'
+[s]  return 's'
+[S]  return 'S'
+[t]  return 't'
+[u]  return 'u'
+[v]  return 'v'
+[w]  return 'w'
+[W]  return 'W'
+[x]  return 'x'
 
 <<EOF>> return 'EOF'
 
 /* Terminals made of exactly one char with multiple possibilities */
 
 [0-9]                       return 'CHAR_DIGIT_DECIMAL'
+[a-fA-F]                    return 'CHAR_DIGIT_HEX'
+[a-zA-Z]                    return 'CHAR_ALPHABET'
 .                           return 'CHAR_OTHER'
 
 /lex
@@ -58,21 +73,19 @@ MDN's page on RegExp
 
 Pattern
     : Disjunction EOF
-        {return {alternatives: $1}}
+        {{
+        $$ = {alternatives: $1}
+        if ($1.length > 1) {
+            $$.hint = 'ECMA specifies right-recursive, but in practice, all major browsers appear to use all Alternatives concurrently for the earliest match in string.'
+        }
+        return {alternatives: $1}
+        }}
     ;
 Disjunction /* 1 or more of groups of Term */
     : Alternative_formatted
         {$$ = [$1]}
     | Disjunction '|' Alternative_formatted
         {$$ = $1.concat($3)}
-        /*
-            TODO hint:
-            ECMA specifies right-recursive, but in practice,
-            all major browsers appear to use all Alternatives
-            concurrently for the earliest match in string. 
-
-            It doesn't matter for this parser anyway.
-        */
     ;
 Alternative_formatted /* 0 or more of Term */
     : Alternative
@@ -80,7 +93,7 @@ Alternative_formatted /* 0 or more of Term */
         if (! $1.length) {
             $1.concat({
                 type: 'zeroLenStr',
-                hint: 'matches zero-length str. must use /(?:)/ in the literal form.''
+                hint: 'matches zero-length str. TODO must use /(?:)/ in the literal form.'
             })
         }
         $$ = {terms: $1}
@@ -91,31 +104,12 @@ Alternative /* 0 or more of Term */
         {$$ = []}
     | Alternative Term
         {$$ = $1.concat($2)}
-        /* $1 is always an array due to the empty condition above.
-            $2 may be array.
-         */
     ;
 Term
-    /*
-    token value can be an object like below or an array of it
-    {
-        type
-        hint (optional)
-        val (optional)
-        quantifier (optional)
-    }
-    */
     : Assertion
     | Atom
     | Atom Quantifier
-        {{
-        if ($1 instanceof Array) {
-            // implicitly assert $1.length > 0
-            $1.slice(-1)[0].quantifier = $2; $$ = $1
-        } else {
-            $1.quantifier = $2; $$ = $1
-        }
-        }}
+        {$1.quantifier = $2; $$ = $1}
     ;
 Assertion
     : '^'
@@ -182,66 +176,244 @@ QuantifierPrefix
         {$$ = {min: $2, max: $4}}
     ;
 Atom
+    /*
+    token value is an object like {
+        type
+        val (optional)
+    }
+    */
     : PatternCharacter
         {$$ = {type: 'specificChar', val: $1}}
     | '.'
         {$$ = {type: 'anyChar'}}
-    | '\\' AtomEscape
+    | '\\' AtomEscape 
         {$$ = $2}
-    /* | CharacterClass  TODO */
+    | CharacterClass
     | '(' Disjunction ')'
         {{
         $$ = {
-            type: 'group',
+            type: 'capturingGroup',
             val: $2
         }
         }}
-        /* TODO group num */
+        /* TODO group num ++ */
     | '(' '?' ':' Disjunction ')'
-        {$$ = {type: 'nonCapturedGroup', val: $4}}
+        {$$ = {type: 'nonCapturingGroup', val: $4}}
     ;
 AtomEscape
     : DecimalDigits
-        {$$ = {type: 'decimalEscape'}}
-        /* delay parsing till all capturing groups have been matched */
+        {$$ = {type: 'escapedInteger', val: $1}}
+        /* delay parsing till all capturing groups have been found. TODO move quantifier */
     | CharacterEscape
     | CharacterClassEscape
-        {$$ = {type: 'characterClassEscape'}}
     ;
 CharacterEscape
-    : '\\' 'f' /* TODO */
-        {$$ = {type: 'formFeed'}}
+    : ControlEscape
+    | 'c' ControlLetter
+    | HexEscapeSequence
+    | UnicodeEscapeSequence
+    /* | IdentityEscape */
     ;
+ControlEscape
+    : 'f'
+    | 'n'
+    | 'r'
+    | 't'
+    | 'v'
+    ;
+HexEscapeSequence
+    : 'u' HexDigit HexDigit HexDigit HexDigit
+    ;
+UnicodeEscapeSequence
+    : 'x' HexDigit HexDigit
+    ;
+
+CharacterClassEscape
+    : 'd'
+        {$$ = {type: 'digitChar', hint: '[0-9]'}}
+    | 'D'
+        {$$ = {type: 'nonDigitChar', hint: '[^0-9]'}}
+    | 's'
+        {$$ = {type: 'whitespaceChar', hint: 'TODO'}}
+    | 'S'
+        {$$ = {type: 'notWhitespaceChar', hint: 'TODO'}}
+    | 'w'
+        {$$ = {type: 'wordChar', hint: 'TODO'}}
+    | 'W'
+        {$$ = {type: 'nonWordChar', hint: 'TODO'}}
+    ;
+CharacterClass
+    : '[' ClassRanges ']'
+        /* TODO if first char is ^ then ... */
+        {$$ = $2}
+    ;
+ClassRanges
+    : /* empty */
+    | NonemptyClassRanges
+    ;
+NonemptyClassRanges
+    : ClassAtom
+    | ClassAtom NonemptyClassRangesNoDash
+    | ClassAtom '-' ClassAtom ClassRanges
+    ;
+NonemptyClassRangesNoDash
+    : ClassAtom
+    | ClassAtomNoDash NonemptyClassRangesNoDash
+    | ClassAtomNoDash '-' ClassAtom ClassRanges
+    ;
+ClassAtom
+    : '-'
+    | ClassAtomNoDash
+    ;
+ClassAtomNoDash
+    : ClassAtomNoDash_single
+    | '\\' ClassEscape
+        {$$ = $2}
+    ;
+ClassEscape
+    : DecimalDigits
+        {{
+        debugger /* TODO closure needed? */
+        (function(){
+            // eval may interpret first 0 to 3 chars as octal
+            var converted = eval("'\\" + $1 + "'")
+            var lenDiff = $$.length - converted.length
+            var chars
+            function specificChars(str) {
+                str.split('').map(function(char){
+                    return {type: 'specificChar', val: char}
+                })
+            }
+            if (lenDiff > 0) {
+                chars = [{
+                    type: 'charInOctal',
+                    val: $1.slice(1, 1 + lenDiff),
+                    convertedVal: converted[0]
+                }]
+                chars = chars.concat(specificChars(converted.slice(1)))
+            } else {
+                chars = specificChars(converted)
+            }
+            $$ = chars
+        })()
+        }}
+    | 'b'
+        {$$ = {type: 'backspace'}}
+    | CharacterEscape
+    | CharacterClassEscape
+    ;
+
 
 integer
     : DecimalDigits
         {$$ = Number($1)}
     ;
 
-/* Rules that are sets of terminals */
+
+/* Rules that depend on
+Terminals made of exactly one char with multiple possibilities */
+
 DecimalDigits
     : CHARS_DIGIT_DECIMAL
     | CHAR_DIGIT_DECIMAL
     ;
 PatternCharacter
-    : 'b'
-    | 'B'
-    | '='
+    /* not ^ $ \ . * + ? ( ) [ ] { } | */
+    : '='
     | '!'
     | ','
-    | CHAR_DIGIT_DECIMAL
-    | CHAR_OTHER
-    ;
-CharacterClassEscape
-    : 'd'
+    | '-'
+    | ':'
+    | 'b'
+    | 'B'
+    | 'c'
+    | 'd'
     | 'D'
+    | 'f'
+    | 'n'
+    | 'r'
     | 's'
     | 'S'
+    | 't'
+    | 'u'
+    | 'v'
     | 'w'
     | 'W'
+    | 'x'
+    | CHAR_DIGIT_DECIMAL
+    | CHAR_DIGIT_HEX
+    | CHAR_ALPHABET
+    | CHAR_OTHER
     ;
-
-
+ClassAtomNoDash_single
+    /* not \ ] - */
+    : '|'
+    | '^'
+    | '$'
+    | '('
+    | ')'
+    | '?'
+    | '='
+    | '!'
+    | '*'
+    | '+'
+    | '{'
+    | '}'
+    | ','
+    | '.'
+    | '['
+    | ':'
+    | 'b'
+    | 'B'
+    | 'c'
+    | 'd'
+    | 'D'
+    | 'f'
+    | 'n'
+    | 'r'
+    | 's'
+    | 'S'
+    | 't'
+    | 'u'
+    | 'v'
+    | 'w'
+    | 'W'
+    | 'x'
+    | CHAR_DIGIT_DECIMAL
+    | CHAR_DIGIT_HEX
+    | CHAR_ALPHABET
+    | CHAR_OTHER
+    ;
+ControlLetter
+    : 'b'
+    | 'B'
+    | 'c'
+    | 'd'
+    | 'D'
+    | 'f'
+    | 'n'
+    | 'r'
+    | 's'
+    | 'S'
+    | 't'
+    | 'u'
+    | 'v'
+    | 'w'
+    | 'W'
+    | 'x'
+    | CHAR_DIGIT_HEX
+    | CHAR_ALPHABET
+    ;
+HexDigit
+    : 'b'
+    | 'B'
+    | 'c'
+    | 'd'
+    | 'D'
+    | 'f'
+    | CHAR_DIGIT_DECIMAL
+    | CHAR_DIGIT_HEX
+    ;
 
 
 %%
