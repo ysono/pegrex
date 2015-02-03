@@ -4,46 +4,29 @@
             return {
                 pattern: '',
                 flags: [],
-                tree: []
+                tree: {}
             }
         },
         textsToViz: function(texts) {
-            function patternToTree(str) {
-                // will be replaced by jison
-                return str.split('').map(function(c) {
-                    if (c === 'r') {
-                        return {
-                            label: 'hello',
-                            repeat: {
-                                min: 0,
-                                max: Infinity
-                            }
-                        }
-                    } else {
-                        return {
-                            label: 'anyChar'
-                        }
-                    }
-                })
+            var tree
+            try {
+                tree = parser.parse(texts.pattern)
+            } catch(e) {
+                // don't propagate b/c still want text states updated
+                // TODO highlight text or something
+                console.error('parsing failed', e)
+                tree = {}
             }
             this.setState({
                 pattern: texts.pattern,
                 flags: texts.flags,
-                tree: patternToTree(texts.pattern)
+                tree: tree
             })
         },
         vizToTexts: function(someData) {
-            function treeToPattern(arr) {
-                return arr.map(function() {
-                    if (arr.label === 'anyChar') {
-                        return 'x'
-                    } else {
-                        return 'r'
-                    }
-                })
-            }
+            // TODO treeToPattern
             this.setState({
-                pattern: treeToPattern(someData.tree),
+                // pattern: treeToPattern(someData.tree),
                 flags: someData.flags,
                 tree: someData.tree
             })
