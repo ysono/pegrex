@@ -1,8 +1,15 @@
 (function(reactClasses) {
     var Surface = React.createClass({
         render: function() {
+            debugger
+            var blocks = this.props.tree && this.props.tree.alternatives
+                ? this.props.tree.alternatives[0].terms
+                : [] // TODO
+            blocks = blocks.filter(function(b) {
+                return b.type === 'singleChar'
+            }) // TODO
             var arrows = []
-            function spaceOutSiblings(blocks) {
+            function spaceOutSiblings() {
                 var nextXPx = 30 // margin left
                 var nextYPx = 30 // margin top
                 var spaceXPx = 100
@@ -26,10 +33,10 @@
                     }
                 })
             }
-            spaceOutSiblings(this.props.tree)
-            debugger
-            var blockChildren = this.props.tree.map(function(block, i) {
-                return block.repeat ? (
+            spaceOutSiblings()
+            var blockChildren = blocks.map(function(block, i) {
+                debugger
+                return block.quantifier ? (
                     <RepeatedBlock key={'block' + i} block={block} />
                 ):(
                     <Block key={'block' + i} block={block} />
@@ -71,7 +78,7 @@
                 'a 10 10 0 0 1 10 -10',
                 'z'
                 ].join(' ')
-            if (block.repeat.min === 0) {
+            if (block.quantifier.min === 0) {
                 block.y += 70 /* 50 from d above, plus 2 arcs */
             }
             return (

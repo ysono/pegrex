@@ -1,7 +1,6 @@
 (function(reactClasses) {
     var Texts = React.createClass({
         handleChange: function(parts) {
-            debugger
             this.props.onChange(parts)
         },
         render: function() {
