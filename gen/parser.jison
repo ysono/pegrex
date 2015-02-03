@@ -68,37 +68,32 @@ Resrouces:
 
 Pattern
     : Disjunction EOF
-        {{
-        $$ = {alternatives: $1}
-        if ($1.length > 1) {
-            $$.hint = 'ECMA specifies right-recursive, but in practice, all major browsers appear to use all Alternatives concurrently for the earliest match in string.'
-        }
-        return $$
-        }}
+        {return $1}
     ;
-Disjunction /* 1 or more of groups of Term */
-    : Alternative_formatted
-        {$$ = [$1]}
-    | Disjunction '|' Alternative_formatted
-        {$$ = $1.concat($3)}
-    ;
-Alternative_formatted /* 0 or more of Term */
+Disjunction
     : Alternative
+        {$$ = {alternatives: [$1]}}
+    | Disjunction '|' Alternative
         {{
-        if (! $1.length) {
-            $1.concat({
-                type: 'zeroLenStr',
-                hint: 'matches zero-length str. TODO must use /(?:)/ in the literal form.'
-            })
-        }
-        $$ = {terms: $1}
+        $1.alternatives = $1.alternatives.concat($3)
+        $1.hint = 'ECMA specifies right-recursive, but in practice, all major browsers appear to use all Alternatives concurrently for the earliest match in string.'
+        $$ = $1
         }}
     ;
-Alternative /* 0 or more of Term */
+Alternative
     : /* empty */
-        {$$ = []}
+        {{
+        $$ = {
+            terms: [],
+            hint: 'Matches zero-length string.'
+        }
+        }}
     | Alternative Term
-        {$$ = $1.concat($2)}
+        {{
+        $1.terms = $1.terms.concat($2)
+        delete $1.hint
+        $$ = $1
+        }}
     ;
 Term
     : Assertion
@@ -110,43 +105,49 @@ Assertion
     : '^'
         {{
         $$ = {
-            type: 'beginningOfLine',
+            type: 'assertion',
+            assertion: 'Beginning of Line',
             hint: 'Matches the zero-length string after a new line char, i.e. one of [newline (\\n), carriage return (\\r), line separator (\\u2028), paragraph separator (\\2029)]'
         }
         }}
     | '$'
         {{
         $$ = {
-            type: 'endOfLine',
+            type: 'assertion',
+            assertion: 'End of Line',
             hint: 'Matches the zero-length string before a new line char, i.e. one of [newline (\\n), carriage return (\\r), line separator (\\u2028), paragraph separator (\\2029)]'
         }
         }}
     | '\\' 'b'
         {{
         $$ = {
-            type: 'wordBoundary',
+            type: 'assertion',
+            assertion: 'Word Boundary',
             hint: 'Matches the zero-length string between (a word char (\\w)) and (a non-word char (\\W) or the beginning or end of a line")'
         }
         }}
     | '\\' 'B'
         {{
         $$ = {
-            type: 'nonWordBoundary',
+            type: 'assertion',
+            assertion: 'Non Word Boundary',
             hint: 'Matches the zero-length string between a word char (\\w) and a word char (\\w)'
         }
         }}
     | '(' '?' '=' Disjunction ')'
         {{
         $$ = {
-            type: 'positiveLookforward',
-            val: $4
+            type: 'group',
+            role: 'Positive Look-forward',
+            grouped: $4
         }
         }}
     | '(' '?' '!' Disjunction ')'
         {{
         $$ = {
-            type: 'negativeLookforward',
-            val: $4
+            type: 'group',
+            role: 'Negative Look-forward',
+            grouped: $4
         }
         }}
     ;
@@ -172,71 +173,99 @@ QuantifierPrefix
     ;
 Atom
     /*
-    token value is an object like {
-        type
-        val (optional)
+    for PatternCharacter, dot, and AtomEscape, except (AtomEscape -> DecimalDigits) :
+    {
+        type: 'singleChar'
+        label: // required
+        display: // required
     }
     */
     : PatternCharacter
-        {$$ = {type: 'specificChar', val: $1}}
+        {$$ = {type: 'singleChar', label: 'Specific Char', display: $1}}
     | '.'
-        {$$ = {type: 'anyChar'}}
-    | '\\' AtomEscape 
-        {$$ = $2}
+        {$$ = {type: 'singleChar', label: 'Any Char', display: '.'}}
+    | '\\' AtomEscape
+        {$2.type = 'singleChar'; $$ = $2}
     | CharacterClass
+        /* TODO */
     | '(' Disjunction ')'
         {{
         $$ = {
-            type: 'capturingGroup',
-            val: $2
+            type: 'group',
+            role: 'Capturing',
+            grouped: $2
         }
         }}
         /* TODO group num ++ */
     | '(' '?' ':' Disjunction ')'
-        {$$ = {type: 'nonCapturingGroup', val: $4}}
+        {{
+        $$ = {
+            type: 'group',
+            role: 'Non Capturing',
+            grouped: $4
+        }
+        }}
     ;
+
 AtomEscape
     : DecimalDigits
-        {$$ = {type: 'escapedInteger', val: $1}}
+        {$$ = {ESCAPED_INTEGER: true, decimals: $1}}
         /* delay parsing till all capturing groups have been found. TODO move quantifier */
     | CharacterEscape
+        {{
+        $1.label = 'Specific Char'
+        $$ = $1
+        }}
     | CharacterClassEscape
     ;
 CharacterEscape
+    /* {
+        display: // required
+    } */
     : ControlEscape
     | 'c' ControlLetter
+        {$$ = {display: $1 + $2, hint: 'Control Character'}}
     | HexEscapeSequence
     | UnicodeEscapeSequence
     | IdentityEscape
+        {$$ = {display: $1}}
     ;
 ControlEscape
     : 'f'
+        {$$ = {display: $1, hint: 'Form Feed'}}
     | 'n'
+        {$$ = {display: $1, hint: 'Newline'}}
     | 'r'
+        {$$ = {display: $1, hint: 'Carriage Return'}}
     | 't'
+        {$$ = {display: $1, hint: 'Tab'}}
     | 'v'
+        {$$ = {display: $1, hint: 'Vertical Tab'}}
     ;
 HexEscapeSequence
     : 'u' HexDigit HexDigit HexDigit HexDigit
+        {$$ = {display: '0x'+$2+$3+$4+$5, hint: 'Hexadecimal Notation'}}
     ;
 UnicodeEscapeSequence
     : 'x' HexDigit HexDigit
+        {$$ = {display: '0x'+$2+$3, hint: 'Hexadecimal Notation'}}
     ;
 
 CharacterClassEscape
     : 'd'
-        {$$ = {type: 'digitChar', hint: '[0-9]'}}
+        {$$ = {label: 'Digit Char', hint: '[0-9]'}}
     | 'D'
-        {$$ = {type: 'nonDigitChar', hint: '[^0-9]'}}
+        {$$ = {label: 'Non Digit Char', hint: '[^0-9]'}}
     | 's'
-        {$$ = {type: 'whitespaceChar', hint: 'TODO'}}
+        {$$ = {label: 'Whitespace Char', hint: 'TODO'}}
     | 'S'
-        {$$ = {type: 'notWhitespaceChar', hint: 'TODO'}}
+        {$$ = {label: 'Non Whitespace Char', hint: 'TODO'}}
     | 'w'
-        {$$ = {type: 'wordChar', hint: 'TODO'}}
+        {$$ = {label: 'Word Char', hint: 'TODO'}}
     | 'W'
-        {$$ = {type: 'nonWordChar', hint: 'TODO'}}
+        {$$ = {label: 'Non Word Char', hint: 'TODO'}}
     ;
+
 CharacterClass
     : '[' ClassRanges ']'
         /* TODO if first char is ^ then ... */

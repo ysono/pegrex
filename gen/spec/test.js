@@ -13,7 +13,7 @@ _.each(strToExpected, function(expected, str){
         delete act.hint // not comparing hints
     })
     if (success) {
-        console.info(str, success, actual)
+        console.info(str, success)
     } else {
         console.error(str, success, stringify(actual), stringify(expected))
     }

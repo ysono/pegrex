@@ -36,7 +36,9 @@ var provide = {
             provide.PatternCharacter(),
             {
                 '.':  {
-                    type: 'anyChar'
+                    type: 'singleChar',
+                    label: 'Any Char',
+                    display: '.'
                 }
             },
             provide.AtomEscape()
@@ -45,8 +47,9 @@ var provide = {
     PatternCharacter: function(){
         return ['a','b','0','8',':',']'].reduce(function(map, c){
             map[c] = {
-                type: 'specificChar',
-                val: c
+                type: 'singleChar',
+                label: 'Specific Char',
+                display: c
             }
             return map
         }, {})
@@ -70,22 +73,39 @@ var provide = {
         var all = octals.concat(octalsPlusChars).concat(chars)
         return _.reduce(all, function(map,str){
             map[str] = {
-                type: 'escapedInteger',
-                val: str // no processing done; expecting whole decimals
+                type: 'singleChar',
+                ESCAPED_INTEGER: true,
+                decimals: str // no processing done; expecting whole decimals
             }
             return map
         }, {})
     },
     CharacterEscape: function(){
-        
+        function getExp(display) {
+            return {
+                type: 'singleChar',
+                label: 'Specific Char',
+                display: display
+            }
+        }
+        return {
+            'f': getExp('f'),
+            'cA': getExp('cA'),
+            'cz': getExp('cz'),
+            'u3f9b': getExp('0x3f9b'),
+            'x3f': getExp('0x3f'),
+            '$': getExp('$') // TODO more IdentityEscape
+        }
     },
     CharacterClassEscape: function(){
         return {
             'd': {
-                type: 'digitChar'
+                type: 'singleChar',
+                label: 'Digit Char'
             },
             'S': {
-                type: 'notWhitespaceChar'
+                type: 'singleChar',
+                label: 'Non Whitespace Char'
             }
         }
     }

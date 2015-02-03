@@ -29,11 +29,12 @@
     var Literal = React.createClass({
         render: function() {
             var parts = this.props.parts
+            var pattern = parts.pattern || '(?:)'
             return (
                 <fieldset>
                     <legend>Literal</legend>
                     <span>/</span>
-                    <input type="text" value={parts.pattern} />
+                    <input type="text" value={pattern} />
                     <span>/</span>
                     <input type="text" value={parts.flags.join('')} />
                 </fieldset>
