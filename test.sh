@@ -1,3 +1,4 @@
 #!/bin/sh
 
-node gen/spec/test.js
+node gen/spec/specSanity.js
+node gen/spec/testJison.js

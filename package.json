@@ -28,6 +28,14 @@
     "visualiser",
     "visualise",
     "build",
-    "builder"
+    "builder",
+    "jison",
+    "ebnf",
+    "peg",
+    "canopy",
+    "parser",
+    "react",
+    "reactjs",
+    "react-art"
   ]
 }
