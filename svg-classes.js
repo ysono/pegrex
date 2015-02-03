@@ -1,29 +1,5 @@
 (function(reactClasses) {
     var Surface = React.createClass({
-        // getInitialState: function() {
-        //     // TODO move getInitialState one level up
-        //     var tree = [
-        //         {
-        //             label: 'anyChar'
-        //         },
-        //         {
-        //             label: 'hello',
-        //             repeat: {
-        //                 min: 0,
-        //                 max: Infinity
-        //             }
-        //         },
-        //         {
-        //             label: 'my third thingy'
-        //         }
-        //     ]
-        //     var arrows = []
-        //     spaceOutSiblings(tree)
-        //     return {blocks: tree, arrows: arrows}
-        // },
-        getArrows: function(blocks) {
-
-        },
         render: function() {
             var arrows = []
             function spaceOutSiblings(blocks) {
@@ -64,7 +40,6 @@
                     <Arrow key={'arrow' + i} arrow={arrow} />
                 )
             })
-            // var arrows = []
 
             var markerStr = '\
                 <marker id="marker-tri" \
