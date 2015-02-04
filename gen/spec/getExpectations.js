@@ -1,6 +1,6 @@
 var _ = require('lodash')
 
-function combineExps(){
+function combineUniqueExps(){
     var args = Array.prototype.slice.call(arguments).concat(
         function(existing, additional){
             if (existing != null) {
@@ -12,33 +12,64 @@ function combineExps(){
     return _.assign.apply(_, args)
 }
 
+function interlace(singles) {
+    // singles is a map of str to exp
+
+    var singleStrs = Object.keys(singles)
+
+    var doubles = (function(singleStrs) {
+        var map = {}
+        var i,j, str0,str1,exp
+        for(i = 0; i < singleStrs.length; i++) {
+            for(j = 0; j < singleStrs.length; j++) {
+                str0 = singleStrs[i]
+                str1 = singleStrs[j]
+                map[str0 + str1] = [singles[str0], singles[str1]]
+                // e.g. 'ab' maps to [{type: ...}, {type: ...}]
+            }
+        }
+    })(singleStrs.slice(0, 3)) // arbitrary restrict interlace size
+
+    // for singles we expect results to be arrays too
+    singles = _.reduce(singles, function(map, exp, str) {
+        map[str] = [exp]
+        return map
+    }, {})
+
+    return _.assign(singles, doubles)
+}
+
 var provide = {
     Pattern: function(){
         return provide.Disjunction()
     },
     Disjunction: function(){
-        return _.reduce(provide.Alternative(), function(map, exp, str){
-            map[str] = {alternatives: [exp]}
+        return _.reduce(provide.Alternatives(), function(map, exp, str){
+            map[str] = {alternatives: exp}
             return map
         }, {})
     },
+    Alternatives: function() {
+        return interlace(provide.Alternative())
+    },
     Alternative: function(){
-        return _.reduce(provide.Term(), function(map, exp, str){
-            map[str] = {terms: [exp]}
+        return _.reduce(provide.Terms(), function(map, exp, str){
+            map[str] = {terms: exp}
             return map
         }, {})
+    },
+    Terms: function() {
+        return interlace(provide.Term())
     },
     Term: function(){
         return provide.Atom()
     },
     Atom: function(){
-        return combineExps(
+        return combineUniqueExps(
             provide.PatternCharacter(),
             {
                 '.':  {
-                    type: 'singleChar',
-                    label: 'Any Char',
-                    display: '.'
+                    type: 'Any Char'
                 }
             },
             provide.AtomEscape()
@@ -47,23 +78,18 @@ var provide = {
     PatternCharacter: function(){
         return ['a','b','0','8',':',']'].reduce(function(map, c){
             map[c] = {
-                type: 'singleChar',
-                label: 'Specific Char',
+                type: 'Specific Char',
                 display: c
             }
             return map
         }, {})
     },
     AtomEscape: function(){
-        var escaped = combineExps(
+        return combineUniqueExps(
             provide.DecimalEscape(),
             provide.CharacterEscape(),
             provide.CharacterClassEscape()
         )
-        return _.reduce(escaped, function(map, exp, str){
-            map['\\' + str] = exp
-            return map
-        }, {})
     },
     DecimalEscape: function(){
         var octals = ['0','7','00','07','70','000','377']
@@ -72,8 +98,7 @@ var provide = {
         // backrefs are any decimal starting with a [1-9], so they are covered above
         var all = octals.concat(octalsPlusChars).concat(chars)
         return _.reduce(all, function(map,str){
-            map[str] = {
-                type: 'singleChar',
+            map['\\' + str] = {
                 ESCAPED_INTEGER: true,
                 decimals: str // no processing done; expecting whole decimals
             }
@@ -81,34 +106,53 @@ var provide = {
         }, {})
     },
     CharacterEscape: function(){
-        function getExp(display) {
-            return {
-                type: 'singleChar',
-                label: 'Specific Char',
-                display: display
+        var needEscape = {
+            'f': 'Form Feed',
+            'cA': 'Control Character',
+            'cz': 'Control Character',
+            // TODO c0 c9 c_
+            'u3f9b': 'Hexadecimal Notation',
+            'x3f': 'Hexadecimal Notation'
+        }
+        var identityEscape = [
+            'a', '$'
+            // TODO more
+        ]
+
+        needEscape = _.reduce(function(map, meaning, unescaped) {
+            var escaped = '\\' + unescaped
+            map[escaped] = {
+                type: 'Specific Char',
+                display: escaped,
+                meaning: meaning
             }
-        }
-        return {
-            'f': getExp('f'),
-            'cA': getExp('cA'),
-            'cz': getExp('cz'),
-            'u3f9b': getExp('0x3f9b'),
-            'x3f': getExp('0x3f'),
-            '$': getExp('$') // TODO more IdentityEscape
-        }
+            return map
+        }, {})
+        identityEscape = _.reduce(function(map, unescaped) {
+            var escaped = '\\' + unescaped
+            map[escaped] = {
+                type: 'Specific Char',
+                display: unescaped
+            }
+            return map
+        })
+
+        return _.reduce(needEscape, identityEscape)
     },
     CharacterClassEscape: function(){
         return {
-            'd': {
-                type: 'singleChar',
-                label: 'Digit Char'
+            '\\d': {
+                type: 'Specific Char',
+                display: '\\d',
+                meaning: 'Digit Char'
             },
-            'S': {
-                type: 'singleChar',
-                label: 'Non Whitespace Char'
+            '\\S': {
+                type: 'Specific Char',
+                display: '\\S',
+                meaning: 'Non Whitespace Char'
             }
         }
     }
 }
-debugger
+
 module.exports = provide.Pattern

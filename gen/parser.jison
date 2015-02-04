@@ -71,259 +71,210 @@ Pattern
         {return $1}
     ;
 Disjunction
+    : Alternative_s
+        {$$ = b().disjunction($1)}
+    ;
+Alternative_s
     : Alternative
-        {$$ = {alternatives: [$1]}}
-    | Disjunction '|' Alternative
-        {{
-        $1.alternatives = $1.alternatives.concat($3)
-        $1.hint = 'ECMA specifies right-recursive, but in practice, all major browsers appear to use all Alternatives concurrently for the earliest match in string.'
-        $$ = $1
-        }}
+        {$$ = [$1]}
+    | Alternative_s '|' Alternative
+        {$$ = $1.concat($3)}
     ;
 Alternative
+    : Term_s
+        {$$ = b().alternative($1)}
+    ;
+Term_s
+    /* returns array of whatever valid types are for Term */
     : /* empty */
-        {{
-        $$ = {
-            terms: [],
-            hint: 'Matches zero-length string.'
-        }
-        }}
-    | Alternative Term
-        {{
-        $1.terms = $1.terms.concat($2)
-        delete $1.hint
-        $$ = $1
-        }}
+        {$$ = []}
+    | Term_s Term
+        {$$ = $1.concat($2)}
     ;
 Term
     : Assertion
     | Atom
     | Atom Quantifier
-        {$1.quantifier = $2; $$ = $1}
+        {$$ = b().quantifiedAtom($1, $2)}
+        /* TODO test is $1 array? */
     ;
 Assertion
+    /* assertion */
     : '^'
-        {{
-        $$ = {
-            type: 'assertion',
-            assertion: 'Beginning of Line',
-            hint: 'Matches the zero-length string after a new line char, i.e. one of [newline (\\n), carriage return (\\r), line separator (\\u2028), paragraph separator (\\2029)]'
-        }
-        }}
+        {$$ = b().assertion('Line Boundary', true)}
     | '$'
-        {{
-        $$ = {
-            type: 'assertion',
-            assertion: 'End of Line',
-            hint: 'Matches the zero-length string before a new line char, i.e. one of [newline (\\n), carriage return (\\r), line separator (\\u2028), paragraph separator (\\2029)]'
-        }
-        }}
+        {$$ = b().assertion('Line Boundary', false)}
     | '\\' 'b'
-        {{
-        $$ = {
-            type: 'assertion',
-            assertion: 'Word Boundary',
-            hint: 'Matches the zero-length string between (a word char (\\w)) and (a non-word char (\\W) or the beginning or end of a line")'
-        }
-        }}
+        {$$ = b().assertion('Word Boundary', true)}
     | '\\' 'B'
-        {{
-        $$ = {
-            type: 'assertion',
-            assertion: 'Non Word Boundary',
-            hint: 'Matches the zero-length string between a word char (\\w) and a word char (\\w)'
-        }
-        }}
+        {$$ = b().assertion('Word Boundary', false)}
     | '(' '?' '=' Disjunction ')'
-        {{
-        $$ = {
-            type: 'group',
-            role: 'Positive Look-forward',
-            grouped: $4
-        }
-        }}
+        {$$ = b().assertion('Look-Forward', true, $4)}
     | '(' '?' '!' Disjunction ')'
-        {{
-        $$ = {
-            type: 'group',
-            role: 'Negative Look-forward',
-            grouped: $4
-        }
-        }}
+        {$$ = b().assertion('Look-Forward', false, $4)}
     ;
 Quantifier
+    /* quantifier */
     : QuantifierPrefix
-        {$1.greedy = true; $$ = $1}
+        {$$ = b().quantifier($1, true)}
     | QuantifierPrefix '?'
-        {$1.greedy = false; $$ = $1}
+        {$$ = b().quantifier($1, false)}
     ;
 QuantifierPrefix
+    /* quantifierRange */
     : '*'
-        {$$ = {min: 0, max: Infinity}}
+        {$$ = b().quantifierRange(0, Intinify)}
     | '+'
-        {$$ = {min: 1, max: Infinity}}
+        {$$ = b().quantifierRange(1, Intinify)}
     | '?'
-        {$$ = {min: 0, max: 1}}
+        {$$ = b().quantifierRange(0, 1)}
     | '{' integer '}'
-        {$$ = {min: $2, max: $2}}
+        {$$ = b().quantifierRange($2, $2)}
     | '{' integer ',' '}'
-        {$$ = {min: $2, max: Infinity}}
+        {$$ = b().quantifierRange($2, Infinity)}
     | '{' integer ',' integer '}'
-        {$$ = {min: $2, max: $4}}
+        {$$ = b().quantifierRange($2, $4)}
     ;
 Atom
-    /*
-    for PatternCharacter, dot, and AtomEscape, except (AtomEscape -> DecimalDigits) :
-    {
-        type: 'singleChar'
-        label: // required
-        display: // required
-    }
-    */
+    /* anyChar or specificChar or specificCharEsc or delayedEscapedInteger or charSet or group */
     : PatternCharacter
-        {$$ = {type: 'singleChar', label: 'Specific Char', display: $1}}
+        {$$ = b().specificChar($1)}
     | '.'
-        {$$ = {type: 'singleChar', label: 'Any Char', display: '.'}}
-    | '\\' AtomEscape
-        {$2.type = 'singleChar'; $$ = $2}
+        {$$ = b().anyChar()}
+    | '\\' AtomEscape -> $2
     | CharacterClass
-        /* TODO */
     | '(' Disjunction ')'
         {{
-        $$ = {
-            type: 'group',
-            role: 'Capturing',
-            grouped: $2
-        }
+        $$ = b().group(true, $2)
+        // TODO test
+        yy.numCapturedGroups = (yy.numCapturedGroups || 0) + 1
         }}
-        /* TODO group num ++ */
     | '(' '?' ':' Disjunction ')'
-        {{
-        $$ = {
-            type: 'group',
-            role: 'Non Capturing',
-            grouped: $4
-        }
-        }}
+        {$$ = b().group(false, $4)}
     ;
 
 AtomEscape
+    /* specificChar or specificCharEsc or delayedEscapedInteger */
     : DecimalDigits
-        {$$ = {ESCAPED_INTEGER: true, decimals: $1}}
-        /* delay parsing till all capturing groups have been found. TODO move quantifier */
+        {$$ = b().delayedEscapedInteger($1)}
     | CharacterEscape
-        {{
-        $1.label = 'Specific Char'
-        $$ = $1
-        }}
     | CharacterClassEscape
     ;
 CharacterEscape
-    /* {
-        display: // required
-    } */
+    /* specificChar or specificCharEsc */
     : ControlEscape
     | 'c' ControlLetter
-        {$$ = {display: $1 + $2, hint: 'Control Character'}}
+        {$$ = b().specificCharEsc($1+$2, 'Control Character')}
     | HexEscapeSequence
     | UnicodeEscapeSequence
     | IdentityEscape
-        {$$ = {display: $1}}
+        {$$ = b().specificChar($1, 'Unnecessarily escaped')}
     ;
 ControlEscape
+    /* specificCharEsc */
     : 'f'
-        {$$ = {display: $1, hint: 'Form Feed'}}
+        {$$ = b().specificCharEsc($1, 'Form Feed')}
     | 'n'
-        {$$ = {display: $1, hint: 'Newline'}}
+        {$$ = b().specificCharEsc($1, 'Newline')}
     | 'r'
-        {$$ = {display: $1, hint: 'Carriage Return'}}
+        {$$ = b().specificCharEsc($1, 'Carriage Return')}
     | 't'
-        {$$ = {display: $1, hint: 'Tab'}}
+        {$$ = b().specificCharEsc($1, 'Tab')}
     | 'v'
-        {$$ = {display: $1, hint: 'Vertical Tab'}}
+        {$$ = b().specificCharEsc($1, 'Vertical Tab')}
     ;
 HexEscapeSequence
+    /* specificCharEsc */
     : 'u' HexDigit HexDigit HexDigit HexDigit
-        {$$ = {display: '0x'+$2+$3+$4+$5, hint: 'Hexadecimal Notation'}}
+        {$$ = b().specificChar(yytext, 'Hexadecimal Notation')}
     ;
 UnicodeEscapeSequence
+    /* specificCharEsc */
     : 'x' HexDigit HexDigit
-        {$$ = {display: '0x'+$2+$3, hint: 'Hexadecimal Notation'}}
+        {$$ = b().specificChar(yytext, 'Hexadecimal Notation')}
     ;
 
 CharacterClassEscape
+    /* specificCharEsc */
     : 'd'
-        {$$ = {label: 'Digit Char', hint: '[0-9]'}}
+        {$$ = b().specificCharEsc($1, 'Digit Char', '[0-9]')}
     | 'D'
-        {$$ = {label: 'Non Digit Char', hint: '[^0-9]'}}
+        {$$ = b().specificCharEsc($1, 'Non Digit Char', '[^0-9]')}
     | 's'
-        {$$ = {label: 'Whitespace Char', hint: 'TODO'}}
+        {$$ = b().specificCharEsc($1, 'Whitespace Char', 'Includes space nbsp \n \r \t \v \f')}
     | 'S'
-        {$$ = {label: 'Non Whitespace Char', hint: 'TODO'}}
+        {$$ = b().specificCharEsc($1, 'Non Whitespace Char', 'Complement of \s')}
     | 'w'
-        {$$ = {label: 'Word Char', hint: 'TODO'}}
+        {$$ = b().specificCharEsc($1, 'Word Char', '[0-9A-Z_a-z]')}
     | 'W'
-        {$$ = {label: 'Non Word Char', hint: 'TODO'}}
+        {$$ = b().specificCharEsc($1, 'Non Word Char', '[^0-9A-Z_a-z]')}
     ;
 
 CharacterClass
+    /* charSet */
     : '[' ClassRanges ']'
-        /* TODO if first char is ^ then ... */
-        {$$ = $2}
+        {$$ = b().charSet($2)}
     ;
 ClassRanges
+    /* array of specificChar or specificCharEsc or charRange */
     : /* empty */
+        {$$ = []}
     | NonemptyClassRanges
     ;
 NonemptyClassRanges
+    /* array of specificChar or specificCharEsc or charRange */
     : ClassAtom
     | ClassAtom NonemptyClassRangesNoDash
+        {$$ = $1.concat($2)}
     | ClassAtom '-' ClassAtom ClassRanges
+        {$$ = b().charRange($1,$3,$4)}
     ;
 NonemptyClassRangesNoDash
+    /* array of specificChar or specificCharEsc or charRange */
     : ClassAtom
     | ClassAtomNoDash NonemptyClassRangesNoDash
+        {$$ = $1.concat($2)}
     | ClassAtomNoDash '-' ClassAtom ClassRanges
+        {$$ = b().charRange($1,$3,$4)}
     ;
 ClassAtom
+    /* array of specificChar or specificCharEsc */
     : '-'
+        {$$ = [b().specificChar($1)]}
     | ClassAtomNoDash
     ;
 ClassAtomNoDash
+    /* array of specificChar or specificCharEsc */
     : ClassAtomNoDash_single
+        {$$ = [b().specificChar($1)]}
     | '\\' ClassEscape
-        {$$ = $2}
+        {$$ = [].concat($2)}
     ;
 ClassEscape
+    /* specificChar or specificCharEsc or array thereof */
     : DecimalDigits
         {{
-        debugger /* TODO closure needed? */
-        (function(){
-            // this particular literal is eval'd the same way as a string:
-            // the first 0 to 3 chars could be octal.
+        ;(function(){
+            // piggy back on string evaluation. the first 1 to 3 chars could be octal.
             var converted = eval("'\\" + $1 + "'")
-            var lenDiff = $$.length - converted.length
-            var chars
-            function specificChars(str) {
-                str.split('').map(function(char){
-                    return {type: 'specificChar(escaped)', val: char}
-                })
-            }
-            if (lenDiff > 0) {
-                chars = [{
-                    type: 'charInOctal',
-                    val: $1.slice(1, 1 + lenDiff),
-                    convertedVal: converted[0]
-                }]
-                chars = chars.concat(specificChars(converted.slice(1)))
+            // var numOctChars = (converted === $1) ? 0
+            //     : $1.length - converted.length + 1
+            var parsed
+            if (converted === $1) {
+                parsed = [b().specificChar(
+                    converted[0], 'Unnecessarily escaped')]
             } else {
-                chars = specificChars(converted)
+                parsed = [b().specifiedCharEsc(
+                    $1.slice(0, $1.length - converted.length + 1),
+                    'Octal notation')]
             }
-            $$ = chars
+            $$ = parsed.concat(converted.slice(1).split('').map(function(c) {
+                return b().specificChar(c)
+            }))
         })()
         }}
     | 'b'
-        {$$ = {type: 'backspace'}}
+        {$$ = b().specificCharEsc($1, 'Backspace')}
     | CharacterEscape
     | CharacterClassEscape
     ;
@@ -415,6 +366,7 @@ ClassAtomNoDash_single
     | CHAR_OTHER
     ;
 ControlLetter
+    /* TODO same as \w */
     : 'b'
     | 'B'
     | 'c'
@@ -475,4 +427,162 @@ IdentityEscape
 
 %%
 
+// this helper needs to be fn literal b/c it's defined after `var parser`
+function b() {
+    var builders = {
+        disjunction: function(alts) {
+            var result = {
+                alternatives: alts
+            }
+            if (alts.length) {
+                result.hint = 'ECMA specifies right-recursive, but in practice, all major browsers appear to use all Alternatives concurrently for the earliest match in string.'
+            }
+            return result
+        },
+        alternative: function(terms) {
+            var result = {
+                terms: terms
+            }
+            if (! terms.length) {
+                result.hint = 'Matches zero-length string.'
+            }
+            return result
+        },
 
+        assertion: function(key, etc0, etc1) {
+            var map = {
+                'Line Boundary': function() {
+                    var atBeg = etc0
+                    var prepo = atBeg ? 'after' : 'before'
+                    var char0 = atBeg ? 'beginning of string' : 'end of string'
+                    var charlist = [char0].concat([
+                        'newline (\\n)',
+                        'carriage return (\\r)',
+                        'line separator',
+                        'paragraph separator'
+                    ])
+                    var hint = 'Matches the zero-length string {0} a new line char, i.e. one of [{0}]'
+                        .format(prepo, String(charlist))
+                    return {
+                        atBeginning: atBeg,
+                        hint: hint
+                    }
+                },
+                'Word Boundary': function() {
+                    var atWb = etc0
+                    var hint = atWb
+                        ? '(a word char (\\w)) and (a non-word char (\\W) or the beginning or the end of a line")'
+                        : 'a word char (\\w) and a word char (\\w)'
+                    hint = 'Matches the zero-length string between ' + hint
+
+                    return {
+                        atBoundary: atWb,
+                        hint: hint
+                    }
+                },
+                'Look-Forward': function() {
+                    var isPos = etc0
+                    var disj = etc1
+                    return {
+                        isPositive: isPos,
+                        group: builders.group(false, disj)
+                    }
+                }
+            }
+            var result = map[key]()
+            result.type = 'Assertion'
+            result.assertion = key
+            return result
+        },
+
+        anyChar: function() {
+            return {
+                type: 'Any Char'
+            }
+        },
+        specificChar: function(display, hint) {
+            return {
+                type: 'Specific Char',
+                display: display,
+                hint: hint
+            }
+        },
+        specificCharEsc: function(unescaped, meaning, hint) {
+            escaped = /^\\/.test(unescaped) ? unescaped : '\\' + unescaped
+            return {
+                type: 'Specific Char',
+                display: escaped,
+                meaning: meaning,
+                hint: hint
+            }
+            return builders.specificChar(escaped, hint)
+        },
+        delayedEscapedInteger: function(decimals) {
+            // delay parsing till all capturing groups have been found. TODO move quantifier
+            return {
+                ESCAPED_INTEGER: true,
+                decimals: decimals
+            }
+        },
+
+        quantifiedAtom: function(atom, quantifier) {
+            atom.quantifier = quantifier
+            return atom
+        },
+        quantifier: function(quantifierRange, greedy) {
+            quantifierRange.greedy = greedy
+            return quantifierRange
+        },
+        quantifierRange: function(min, max) {
+            var result = {
+                min: min,
+                max: max
+            }
+            if (min > max) {
+                result.error = 'Repetition range must be specified in the increasing order of numbers'
+            }
+            return result
+        },
+
+        charRange: function(before, after, beyond) {
+            // all 3 args are arrays of specificChar or specificCharEsc
+            return before.slice(0, -1)
+                .concat(
+                    (function() {
+                        var begin = before.slice(-1)[0].display
+                        var end = after[0].display
+                        var range = {
+                            type: 'Range of Chars',
+                            begin: begin,
+                            end: end
+                        }
+                        if (begin.charCodeAt(0) - end.charCodeAt(0) < 0) {
+                            range.error = 'Char range must be specified in the increasing order of unicode values'
+                        }
+                        return range
+                    })()
+                )
+                .concat(after.slice(1))
+                .concat(beyond)
+        },
+        charSet: function(items) {
+            var result = {
+                type: 'Set of Characters',
+                possibilities: items
+            }
+            if (! items.length) {
+                result.hint = 'Since this attempts to match with nothing, rather than an empty string, the whole regex will not match with anything.'
+            }
+            return result
+        },
+
+        group: function(isCapturing, grouped) {
+            return {
+                type: 'Group',
+                isCapturing: isCapturing,
+                grouped: grouped
+            }
+        }
+    }
+    return builders
+}

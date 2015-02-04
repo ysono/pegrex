@@ -13,7 +13,8 @@ function runOne(str, regex, isMatch, msg) {
 
 var tests = [
  [charFromOctal(1) + charFromOctal(2) + '8', /\128/, false, 'decimal escape does not match with only one decimal']
-,[charFromOctal(12) + '8', /\128/, true, 'decimal escape matches with the longest valid octal notation, just like string']
+,[charFromOctal(12) + '8', /\128/, true, 'decimal escape matches with the longest valid octal notation, just like string.'
+    + ' apparently ff started it - see webkit src -> YarrParser.h -> Parser::parseEscape']
 
 ,[charFromOctal(377), /\377/, true, '377 is octal']
 ,[charFromOctal(400), /\400/, false, '400 is not octal']
@@ -31,10 +32,20 @@ var tests = [
 ,['qw\u0002', /(.)(.)\2/, false, 'backref takes precedence over octal']
 
 ,['qww', /^(q)\2(w)$/, false, 'forwardref does NOT match what the group matches']
-,['qw', /^(q)\2(w)$/, true, 'forwardref always matches with an empty string (though ecma says behavior undefined)']
+,['qw', /^(q)\2(w)$/, true, 'forwardref always matches with an empty string (though ecma says behavior undefined).'
+    + ' e.g. in webkit src, PatternTerm::TypeForwardReference does not have any matching behavior associated.']
 ,['q\u0002w', /(q)\2(w)/, false, 'forwardref takes precedence over octal']
+
+,['qww', /(.)(.)\02/, false, 'backref cannot start with digit 0']
+,['qw\u0002', /(.)(.)\02/, true, 'decimal that starts with digit 0 is octal']
 ]
 
 tests.forEach(function(params) {
     runOne.apply(null, params)
 })
+
+
+/*
+TODO YarrParser.h -> Parser::parseEscape
+ctrl inside class accepts \c[\w]
+*/
