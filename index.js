@@ -1,4 +1,4 @@
-(function() {
+;(function() {
     var Whole = React.createClass({
         getInitialState: function() {
             return {
