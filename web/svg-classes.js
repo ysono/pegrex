@@ -6,7 +6,7 @@
                 ? this.props.tree.alternatives[0].terms
                 : [] // TODO
             blocks = blocks.filter(function(b) {
-                return b.type === 'singleChar'
+                return b.type === 'Specific Char' || b.type === 'Any Char'
             }) // TODO
             var arrows = []
             function spaceOutSiblings() {
@@ -14,7 +14,7 @@
                 var nextYPx = 30 // margin top
                 var spaceXPx = 100
                 blocks.forEach(function(block, i) {
-                    var wPx = block.label.length * 12
+                    var wPx = block.type.length * 12
                     block.w = wPx
                     block.x = nextXPx
                     nextXPx += wPx + spaceXPx
@@ -99,7 +99,7 @@
                         stroke="blue" strokeWidth="3px" fill="white" />
                     <text x={block.w / 2} y={block.h / 2} textAnchor="middle" fontFamily="monospace"
                         style={{'alignmentBaseline': 'baseline'}}>
-                        {block.label}</text>
+                        {block.type}</text>
                 </g>
             )
             // style attr above not needed
