@@ -1,4 +1,4 @@
 #!/bin/sh
 
-node gen/spec/escapedInteger-spec.js
-node gen/spec/escapedInteger-jison.js
+node gen/spec/escapedInteger-spec.js | grep -v "^true"
+node gen/spec/escapedInteger-parser.js | grep -v "^true"

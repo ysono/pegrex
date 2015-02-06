@@ -358,13 +358,14 @@ function runOne(regex, terms) {
         }
     })
     if (success) {
-        console.info(src, success)
+        console.info(success, src)
     } else {
         act = stringify(act)
         exp = stringify(exp)
-        console.error(src, success, act, exp)
+        console.error(success, src, act, exp)
     }
 }
 _.each(specs, function(params) {
     runOne.apply(null, params)
 })
+console.info('done testing parser')
