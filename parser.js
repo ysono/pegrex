@@ -87,7 +87,7 @@ case 1:
 return $$[$0-1]
 break;
 case 2:
-this.$ = b().disjunction($$[$0])
+this.$ = b().withLoc(_$[$0]).disjunction($$[$0])
 break;
 case 3:
 this.$ = [$$[$0]]
@@ -96,16 +96,16 @@ case 4:
 this.$ = $$[$0-2].concat($$[$0])
 break;
 case 5:
-this.$ = b().alternative($$[$0])
+this.$ = b().withLoc(_$[$0]).alternative($$[$0])
 break;
 case 6: case 53:
 this.$ = []
 break;
-case 7: case 56: case 59:
-this.$ = $$[$0-1].concat($$[$0])
+case 7:
+this.$ = $$[$0-1].concat( b().withLoc(_$[$0]).get($$[$0]) )
 break;
 case 10:
-this.$ = b().quantifiedAtom($$[$0-1], $$[$0])
+this.$ = b().quantifiedAtom($$[$0-1], b().withLoc(_$[$0]).get($$[$0]))
 break;
 case 11:
 this.$ = b().assertion('Line Boundary', true)
@@ -159,16 +159,13 @@ case 27:
 this.$ = $$[$0];
 break;
 case 29:
-
-        this.$ = b().group(true, $$[$0-1])
-        parser.yy.numCapturedGroups = (parser.yy.numCapturedGroups || 0) + 1
-        
+this.$ = b().group(true, $$[$0-1])
 break;
 case 30:
 this.$ = b().group(false, $$[$0-1])
 break;
 case 31:
-this.$ = b().delayedEscapedIntegerContainer($$[$0])
+this.$ = b().delayedEscapedInteger(_$[$0], $$[$0])
 break;
 case 35:
 this.$ = b().specificCharEsc($$[$0-1]+$$[$0], 'Control Character')
@@ -218,17 +215,20 @@ break;
 case 52:
 this.$ = b().charSet($$[$0-1])
 break;
+case 56: case 59:
+this.$ = $$[$0-1].concat($$[$0])
+break;
 case 57: case 60:
-this.$ = b().charRange($$[$0-3],$$[$0-1],$$[$0])
+this.$ = b().withLoc(_$[$0-3],_$[$0-1]).charRange($$[$0-3],$$[$0-1],$$[$0])
 break;
 case 61: case 63:
-this.$ = [b().specificChar($$[$0])]
+this.$ = [b().withLoc(_$[$0]).specificChar($$[$0])]
 break;
 case 64:
-this.$ = [].concat($$[$0])
+this.$ = [].concat(b().withLoc(_$[$0-1],_$[$0]).get($$[$0]))
 break;
 case 65:
-this.$ = b().escapedInteger($$[$0])
+this.$ = b().escapedInteger(_$[$0], $$[$0])
 break;
 case 66:
 this.$ = b().specificCharEsc($$[$0], 'Backspace')
@@ -389,6 +389,31 @@ parse: function parse(input) {
 // this helper needs to be fn literal b/c it's defined after `var parser`
 function b() {
     var builders = {
+        withLoc: function(begin, end) {
+            function assign(o) {
+                if (o instanceof Array) {
+                    // The concept of location is valid with one token only.
+                    // Not an error if token can be an array or an obj
+                    // e.g. ClassEscape
+                    return o
+                }
+                o.location = [
+                    begin.first_column,
+                    (end || begin).last_column
+                ]
+                return o
+            }
+            var augmented = Object.keys(builders).reduce(function(map, key) {
+                map[key] = function() {
+                    var token = builders[key].apply(this, arguments)
+                    return assign(token)
+                }
+                return map
+            }, {})
+            augmented.get = assign
+            return augmented
+        },
+
         disjunction: function(alts) {
             var result = {
                 alternatives: alts
@@ -407,7 +432,7 @@ function b() {
             }
 
             // we will revisit each array of terms, parsing and expanding
-            // any `delayedEscapedIntegerContainer` item the array contains
+            // any `delayedEscapedInteger` item the array contains
             (parser.yy.terms_s = parser.yy.terms_s || [])
                 .push(terms)
 
@@ -485,36 +510,63 @@ function b() {
             }
         },
 
-        escapedInteger: function(decimals) {
+        escapedInteger: function(loc, decimals) {
             /* returns array of specificChar or specificCharEsc */
+
+            var loc0 = loc.first_column
+            var loc1 = loc.last_column
+            var octEndWrtDecimals
+            var locEndOfFirstChar
 
             // piggy back on string literal evaluation.
             // the first 1 to 3 chars could be octal.
             var evalled = eval("'\\" + decimals + "'")
             var parsed
             if (evalled === decimals) {
-                parsed = [builders.specificChar(
-                    evalled[0], 'Unnecessarily escaped')]
+                locEndOfFirstChar = loc0 + 1
+                parsed = [
+                    builders
+                        .withLoc({
+                            first_column: loc0 - 1, // -1 for the '\\'
+                            last_column: locEndOfFirstChar
+                        })
+                        .specificChar(evalled[0], 'Unnecessarily escaped')
+                ]
             } else {
-                parsed = [builders.specificCharEsc(
-                    decimals.slice(0, decimals.length - evalled.length + 1),
-                    'Octal Notation')]
+                octEndWrtDecimals = decimals.length - evalled.length + 1
+                locEndOfFirstChar = loc0 + octEndWrtDecimals
+                parsed = [
+                    builders
+                        .withLoc({
+                            first_column: loc0 - 1, // -1 for the '\\'
+                            last_column: locEndOfFirstChar
+                        })
+                        .specificCharEsc(
+                            decimals.slice(0, octEndWrtDecimals),
+                            'Octal Notation')
+                ]
             }
-            return parsed.concat(evalled.slice(1).split('').map(function(c) {
-                return builders.specificChar(c)
+            return parsed.concat(evalled.slice(1).split('').map(function(c, i) {
+                return builders
+                    .withLoc({
+                        first_column: locEndOfFirstChar + i,
+                        last_column: locEndOfFirstChar + i + 1
+                    })
+                    .specificChar(c)
             }))
         },
-        delayedEscapedIntegerContainer: function(decimals) {
+        delayedEscapedInteger: function(loc, decimals) {
             // delay parsing till all capturing groups have been found.
             var result = {
-                type: 'delayedEscapedIntegerContainer',
+                type: 'delayedEscapedInteger',
                 unparsed: decimals,
-                backrefNumMax: parser.yy.numCapturedGroups
+                backrefNumMax: parser.yy.numCapturedGroups || 0,
+                loc: loc
             }
             return result
         },
-        delayedEscapedInteger: function(container) {
-            /* parses delayedEscapedIntegerContainer
+        escapedIntegerMaybeRef: function(delayed) {
+            /* parses delayedEscapedInteger
                 and returns array of
                 (backRef or fwdRef or specificChar or specificCharEsc)
             */
@@ -534,28 +586,34 @@ function b() {
                 // e.g. in webkit src, `PatternTerm::TypeForwardReference` does not have any matching behavior associated.
             }
 
-            var contained = (function(decimals, backrefNumMax) {
+            var contained = (function(decimals, backrefNumMax, loc) {
                 // This whole logic is not covered by [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9) but is consistent with major browsers.
                 // e.g. see Webkit [src](https://github.com/WebKit/webkit/blob/master/Source/JavaScriptCore/yarr/YarrParser.h) YarrParser.h Parser::parseEscape
 
                 var int = Number(decimals)
+                var ref
                 if (decimals[0] > '0' &&
                         int <= (parser.yy.numCapturedGroups || 0)
                         ) {
                     // only then could it be fwd or back ref
                     if (int > backrefNumMax) {
-                        return [fwdRef(int)]
+                        ref = fwdRef(int)
                     } else {
-                        return [backRef(int)]
+                        ref = backRef(int)
                     }
+                    return [
+                        builders.withLoc({
+                            first_column: loc.first_column - 1, // -1 for the '\\'
+                            last_column: loc.first_column + 1
+                        }).get(ref)
+                    ]
                 } else {
-                    return builders.escapedInteger(decimals)
+                    return builders.escapedInteger(loc, decimals)
                 }
-            })(container.unparsed, container.backrefNumMax)
+            })(delayed.unparsed, delayed.backrefNumMax, delayed.loc)
 
-            if (container.quantifier) {
-                contained.slice(-1)[0].quantifier = container.quantifier
-                delete container.quantifier
+            if (delayed.quantifier) {
+                builders.quantifiedAtom(contained.slice(-1)[0], delayed.quantifier)
             }
 
             return contained
@@ -563,6 +621,9 @@ function b() {
 
         quantifiedAtom: function(atom, quantifier) {
             atom.quantifier = quantifier
+            if (atom.location) {
+                atom.location[1] = quantifier.location[1]
+            }
             return atom
         },
         quantifier: function(quantifierRange, greedy) {
@@ -602,12 +663,22 @@ function b() {
                 .concat(beyond)
         },
         charSet: function(items) {
+            var inclusive = true
+            if (items[0]
+                    && items[0].type === 'Specific Char'
+                    && items[0].display === '^') {
+                inclusive = false
+                items = items.slice(1)
+            }
             var result = {
                 type: 'Set of Characters',
-                possibilities: items
+                possibilities: items,
+                inclusive: inclusive
             }
             if (! items.length) {
-                result.hint = 'Since this attempts to match with nothing, rather than an empty string, the whole regex will not match with anything.'
+                result.hint = inclusive
+                    ? 'Since this attempts to match with nothing, rather than an empty string, the whole regex will not match with anything.'
+                    : 'This matches with any single character "barring none".'
             }
             return result
         },
@@ -621,13 +692,16 @@ function b() {
         },
 
         group: function(isCapturing, grouped) {
+            if (isCapturing) {
+                parser.yy.numCapturedGroups = (parser.yy.numCapturedGroups || 0) + 1
+            }
             return {
                 type: 'Group',
                 isCapturing: isCapturing,
                 grouped: grouped
             }
         }
-    }
+    } // end of var builders
     return builders
 }
 
@@ -640,18 +714,18 @@ parser.parse = (function(orig) {
 
         parser.yy.terms_s.forEach(function(terms) {
             var i, term
-            // apparently `.length` is re-read for every loop
+            // `.length` is re-read for every loop
             for(i = 0; i < terms.length; i++) {
                 term = terms[i]
-                if(term.type === 'delayedEscapedIntegerContainer') {
+                if(term.type === 'delayedEscapedInteger') {
                     // no need to adjust i
                     // b/c the replacement array is at least as long
                     // as the length of 1 being spliced away.
-                    splice(terms, i, b().delayedEscapedInteger(term))
+                    splice(terms, i, b().escapedIntegerMaybeRef(term))
                 }
             }
         })
-        // reset b/c these values makes parser stateful
+        // reset b/c these values make parser stateful
         parser.yy.terms_s.length = 0
         parser.yy.numCapturedGroups = 0
     }
