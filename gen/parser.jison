@@ -32,6 +32,7 @@ Resrouces:
 [\]] return ']'
 [-]  return '-'
 [:]  return ':'
+[_]  return '_'
 
 [b]  return 'b'
 [B]  return 'B'
@@ -97,7 +98,6 @@ Term
     | Atom
     | Atom Quantifier
         {$$ = b().quantifiedAtom($1, b().withLoc(@2).get($2))}
-        /* TODO test is $1 array? */
     ;
 Assertion
     /* assertion */
@@ -283,6 +283,7 @@ PatternCharacter
     | ']'
     | '-'
     | ':'
+    | '_'
     | 'b'
     | 'B'
     | 'c'
@@ -322,6 +323,7 @@ ClassAtomNoDash_single
     | '.'
     | '['
     | ':'
+    | '_'
     | 'b'
     | 'B'
     | 'c'
@@ -344,8 +346,10 @@ ClassAtomNoDash_single
     | CHAR_OTHER
     ;
 ControlLetter
-    /* TODO same as \w according to YarrParser.h -> Parser::parseEscape */
-    : 'b'
+    /* ecma says [A-Za-z] but major browsers also allow _ and [0-9]
+        E.g. see [Webkit](https://github.com/WebKit/webkit/blob/master/Source/JavaScriptCore/yarr/YarrParser.h) Parser::parseEscape */
+    : '_'
+    | 'b'
     | 'B'
     | 'c'
     | 'd'
@@ -361,6 +365,7 @@ ControlLetter
     | 'w'
     | 'W'
     | 'x'
+    | CHAR_DIGIT_DECIMAL
     | CHAR_DIGIT_HEX
     | CHAR_ALPHABET
     ;
@@ -397,6 +402,7 @@ IdentityEscape
     | ']'
     | '-'
     | ':'
+    | '_'
     | CHAR_DIGIT_HEX
     | CHAR_ALPHABET
     | CHAR_OTHER
@@ -607,7 +613,7 @@ function b() {
 
             var contained = (function(decimals, backrefNumMax, loc) {
                 // This whole logic is not covered by [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9) but is consistent with major browsers.
-                // e.g. see Webkit [src](https://github.com/WebKit/webkit/blob/master/Source/JavaScriptCore/yarr/YarrParser.h) YarrParser.h Parser::parseEscape
+                // e.g. see [Webkit](https://github.com/WebKit/webkit/blob/master/Source/JavaScriptCore/yarr/YarrParser.h)  Parser::parseEscape
 
                 var int = Number(decimals)
                 var ref

@@ -304,8 +304,8 @@ var specs = [
         ]
     ],
     [
-        /* tests location of quantified (octal then chars) */
-        /\1289{3,}?/,
+        /* tests location of quantified decimals */
+        /\1289{3,}?7/,
         [
             {
                 type: 'Specific Char',
@@ -328,6 +328,11 @@ var specs = [
                     location: [5,10]
                 },
                 location: [4,10]
+            },
+            {
+                type: 'Specific Char',
+                display: '7',
+                location: [10,11]
             }
         ]
     ]

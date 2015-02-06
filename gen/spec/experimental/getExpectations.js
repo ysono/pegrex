@@ -112,6 +112,8 @@ var provide = {
             'f': 'Form Feed',
             'cA': 'Control Character',
             'cz': 'Control Character',
+            'c3': 'Control Character',
+            'c_': 'Control Character',
             // TODO c0 c9 c_
             'u3f9b': 'Hexadecimal Notation',
             'x3f': 'Hexadecimal Notation'
