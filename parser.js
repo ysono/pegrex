@@ -415,13 +415,9 @@ function b() {
         },
 
         disjunction: function(alts) {
-            var result = {
+            return {
                 alternatives: alts
             }
-            if (alts.length > 1) {
-                result.hint = 'ECMA specifies right-recursive, but in practice, all major browsers appear to use all Alternatives concurrently for the earliest match in string.'
-            }
-            return result
         },
         alternative: function(terms) {
             var result = {
@@ -574,20 +570,21 @@ function b() {
             function backRef(number) {
                 return {
                     type: 'Back Reference',
-                    number: number
+                    number: number,
+                    hint: 'Warning: This is a valid Back Reference, but it will match with an empty string if the target group has not been captured by the time this reference is expected. In practice, it should mean anything outside the root-level Alternative that this Back Reference belongs to will have not been captured.'
                 }
             }
             function fwdRef(number) {
                 return {
                     type: 'Forward Reference',
                     number: number,
-                    hint: '[ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9) does not support the concept of "forward reference, but implementations in major browsers match with a zero-length string'
+                    hint: 'Because the target group will never have been captured, a Forward Reference always matches with an empty string.'
                 }
-                // e.g. in webkit src, `PatternTerm::TypeForwardReference` does not have any matching behavior associated.
             }
 
             var contained = (function(decimals, backrefNumMax, loc) {
-                // This whole logic is not covered by [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9) but is consistent with major browsers.
+                // This whole logic is not covered by [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9)
+                // but is consistent with major browsers.
                 // e.g. see [Webkit](https://github.com/WebKit/webkit/blob/master/Source/JavaScriptCore/yarr/YarrParser.h)  Parser::parseEscape
 
                 var int = Number(decimals)
@@ -608,6 +605,8 @@ function b() {
                         }).get(ref)
                     ]
                 } else {
+                    // contrary to [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.11),
+                    // \0 can be followed by other digits.
                     return builders.escapedInteger(loc, decimals)
                 }
             })(delayed.unparsed, delayed.backrefNumMax, delayed.loc)
@@ -725,7 +724,7 @@ parser.parse = (function(orig) {
                 }
             }
         })
-        // reset b/c these values make parser stateful
+        // reset these values that make parser stateful
         parser.yy.terms_s.length = 0
         parser.yy.numCapturedGroups = 0
     }
