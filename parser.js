@@ -161,15 +161,14 @@ break;
 case 29:
 
         this.$ = b().group(true, $$[$0-1])
-        // TODO test
-        yy.numCapturedGroups = (yy.numCapturedGroups || 0) + 1
+        parser.yy.numCapturedGroups = (parser.yy.numCapturedGroups || 0) + 1
         
 break;
 case 30:
 this.$ = b().group(false, $$[$0-1])
 break;
 case 31:
-this.$ = b().delayedEscapedInteger($$[$0])
+this.$ = b().delayedEscapedIntegerContainer($$[$0])
 break;
 case 35:
 this.$ = b().specificCharEsc($$[$0-1]+$$[$0], 'Control Character')
@@ -192,26 +191,29 @@ break;
 case 43:
 this.$ = b().specificCharEsc($$[$0], 'Vertical Tab')
 break;
-case 44: case 45:
-this.$ = b().specificChar(yytext, 'Hexadecimal Notation')
+case 44:
+this.$ = b().specificCharEsc($$[$0-4]+$$[$0-3]+$$[$0-2]+$$[$0-1]+$$[$0], 'Hexadecimal Notation')
+break;
+case 45:
+this.$ = b().specificCharEsc($$[$0-2]+$$[$0-1]+$$[$0], 'Hexadecimal Notation')
 break;
 case 46:
-this.$ = b().specificCharEsc($$[$0], 'Digit Char', '[0-9]')
+this.$ = b().predefinedCharSet($$[$0], 'Digit Char', '[0-9]')
 break;
 case 47:
-this.$ = b().specificCharEsc($$[$0], 'Non Digit Char', '[^0-9]')
+this.$ = b().predefinedCharSet($$[$0], 'Non Digit Char', '[^0-9]')
 break;
 case 48:
-this.$ = b().specificCharEsc($$[$0], 'Whitespace Char', 'Includes space nbsp \n \r \t \v \f')
+this.$ = b().predefinedCharSet($$[$0], 'Whitespace Char', 'Includes but is not limited to space nbsp \n \r \t \v \f')
 break;
 case 49:
-this.$ = b().specificCharEsc($$[$0], 'Non Whitespace Char', 'Complement of \s')
+this.$ = b().predefinedCharSet($$[$0], 'Non Whitespace Char', 'Complement of \s')
 break;
 case 50:
-this.$ = b().specificCharEsc($$[$0], 'Word Char', '[0-9A-Z_a-z]')
+this.$ = b().predefinedCharSet($$[$0], 'Word Char', '[0-9A-Z_a-z]')
 break;
 case 51:
-this.$ = b().specificCharEsc($$[$0], 'Non Word Char', '[^0-9A-Z_a-z]')
+this.$ = b().predefinedCharSet($$[$0], 'Non Word Char', '[^0-9A-Z_a-z]')
 break;
 case 52:
 this.$ = b().charSet($$[$0-1])
@@ -226,26 +228,7 @@ case 64:
 this.$ = [].concat($$[$0])
 break;
 case 65:
-
-        ;(function(){
-            // piggy back on string evaluation. the first 1 to 3 chars could be octal.
-            var converted = eval("'\\" + $$[$0] + "'")
-            // var numOctChars = (converted === $$[$0]) ? 0
-            //     : $$[$0].length - converted.length + 1
-            var parsed
-            if (converted === $$[$0]) {
-                parsed = [b().specificChar(
-                    converted[0], 'Unnecessarily escaped')]
-            } else {
-                parsed = [b().specifiedCharEsc(
-                    $$[$0].slice(0, $$[$0].length - converted.length + 1),
-                    'Octal notation')]
-            }
-            this.$ = parsed.concat(converted.slice(1).split('').map(function(c) {
-                return b().specificChar(c)
-            }))
-        })()
-        
+this.$ = b().escapedInteger($$[$0])
 break;
 case 66:
 this.$ = b().specificCharEsc($$[$0], 'Backspace')
@@ -410,7 +393,7 @@ function b() {
             var result = {
                 alternatives: alts
             }
-            if (alts.length) {
+            if (alts.length > 1) {
                 result.hint = 'ECMA specifies right-recursive, but in practice, all major browsers appear to use all Alternatives concurrently for the earliest match in string.'
             }
             return result
@@ -422,6 +405,12 @@ function b() {
             if (! terms.length) {
                 result.hint = 'Matches zero-length string.'
             }
+
+            // we will revisit each array of terms, parsing and expanding
+            // any `delayedEscapedIntegerContainer` item the array contains
+            (parser.yy.terms_s = parser.yy.terms_s || [])
+                .push(terms)
+
             return result
         },
 
@@ -437,8 +426,13 @@ function b() {
                         'line separator',
                         'paragraph separator'
                     ])
-                    var hint = 'Matches the zero-length string {0} a new line char, i.e. one of [{0}]'
-                        .format(prepo, String(charlist))
+                    var hint = [
+                        'Matches the zero-length string ',
+                        prepo,
+                        ' a new line char, i.e. one of [',
+                        String(charlist),
+                        ']'
+                    ].join('')
                     return {
                         atBeginning: atBeg,
                         hint: hint
@@ -483,22 +477,88 @@ function b() {
                 hint: hint
             }
         },
-        specificCharEsc: function(unescaped, meaning, hint) {
-            escaped = /^\\/.test(unescaped) ? unescaped : '\\' + unescaped
+        specificCharEsc: function(unescaped, meaning) {
             return {
                 type: 'Specific Char',
-                display: escaped,
-                meaning: meaning,
-                hint: hint
+                display: '\\' + unescaped,
+                meaning: meaning
             }
-            return builders.specificChar(escaped, hint)
         },
-        delayedEscapedInteger: function(decimals) {
-            // delay parsing till all capturing groups have been found. TODO move quantifier
-            return {
-                ESCAPED_INTEGER: true,
-                decimals: decimals
+
+        escapedInteger: function(decimals) {
+            /* returns array of specificChar or specificCharEsc */
+
+            // piggy back on string literal evaluation.
+            // the first 1 to 3 chars could be octal.
+            var evalled = eval("'\\" + decimals + "'")
+            var parsed
+            if (evalled === decimals) {
+                parsed = [builders.specificChar(
+                    evalled[0], 'Unnecessarily escaped')]
+            } else {
+                parsed = [builders.specificCharEsc(
+                    decimals.slice(0, decimals.length - evalled.length + 1),
+                    'Octal Notation')]
             }
+            return parsed.concat(evalled.slice(1).split('').map(function(c) {
+                return builders.specificChar(c)
+            }))
+        },
+        delayedEscapedIntegerContainer: function(decimals) {
+            // delay parsing till all capturing groups have been found.
+            var result = {
+                type: 'delayedEscapedIntegerContainer',
+                unparsed: decimals,
+                backrefNumMax: parser.yy.numCapturedGroups
+            }
+            return result
+        },
+        delayedEscapedInteger: function(container) {
+            /* parses delayedEscapedIntegerContainer
+                and returns array of
+                (backRef or fwdRef or specificChar or specificCharEsc)
+            */
+
+            function backRef(number) {
+                return {
+                    type: 'Back Reference',
+                    number: number
+                }
+            }
+            function fwdRef(number) {
+                return {
+                    type: 'Forward Reference',
+                    number: number,
+                    hint: '[ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9) does not support the concept of "forward reference, but implementations in major browsers match with a zero-length string'
+                }
+                // e.g. in webkit src, `PatternTerm::TypeForwardReference` does not have any matching behavior associated.
+            }
+
+            var contained = (function(decimals, backrefNumMax) {
+                // This whole logic is not covered by [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9) but is consistent with major browsers.
+                // e.g. see Webkit [src](https://github.com/WebKit/webkit/blob/master/Source/JavaScriptCore/yarr/YarrParser.h) YarrParser.h Parser::parseEscape
+
+                var int = Number(decimals)
+                if (decimals[0] > '0' &&
+                        int <= (parser.yy.numCapturedGroups || 0)
+                        ) {
+                    // only then could it be fwd or back ref
+                    if (int > backrefNumMax) {
+                        return [fwdRef(int)]
+                    } else {
+                        return [backRef(int)]
+                    }
+                } else {
+                    return builders.escapedInteger(decimals)
+                }
+            })(container.unparsed, container.backrefNumMax)
+
+            if (container.quantifier) {
+                contained.slice(-1)[0].quantifier = container.quantifier
+                delete container.quantifier
+            }
+
+            return contained
         },
 
         quantifiedAtom: function(atom, quantifier) {
@@ -528,7 +588,7 @@ function b() {
                         var begin = before.slice(-1)[0].display
                         var end = after[0].display
                         var range = {
-                            type: 'Range of Chars',
+                            type: 'Range of Characters',
                             begin: begin,
                             end: end
                         }
@@ -551,6 +611,14 @@ function b() {
             }
             return result
         },
+        predefinedCharSet: function(unescaped, meaning, hint) {
+            return {
+                type: 'Pre-defined Set of Characters',
+                display: '\\' + unescaped,
+                meaning: meaning,
+                hint: hint
+            }
+        },
 
         group: function(isCapturing, grouped) {
             return {
@@ -562,6 +630,37 @@ function b() {
     }
     return builders
 }
+
+parser.parse = (function(orig) {
+    function postParse() {
+        function splice(arr, index, replacement) {
+            var args = [index, 1].concat(replacement)
+            Array.prototype.splice.apply(arr, args)
+        }
+
+        parser.yy.terms_s.forEach(function(terms) {
+            var i, term
+            // apparently `.length` is re-read for every loop
+            for(i = 0; i < terms.length; i++) {
+                term = terms[i]
+                if(term.type === 'delayedEscapedIntegerContainer') {
+                    // no need to adjust i
+                    // b/c the replacement array is at least as long
+                    // as the length of 1 being spliced away.
+                    splice(terms, i, b().delayedEscapedInteger(term))
+                }
+            }
+        })
+        // reset b/c these values makes parser stateful
+        parser.yy.terms_s.length = 0
+        parser.yy.numCapturedGroups = 0
+    }
+    return function() {
+        var parsed = orig.apply(this, arguments)
+        postParse()
+        return parsed
+    }
+})(parser.parse)
 /* generated by jison-lex 0.3.4 */
 var lexer = (function(){
 var lexer = ({
