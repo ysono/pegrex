@@ -1,5 +1,5 @@
 var _ = require('lodash')
-var parser = require('../parser')
+var parser = require('../../parser')
 var getExpectations = require('./getExpectations')
 
 function stringify(o){

@@ -136,7 +136,7 @@ QuantifierPrefix
         {$$ = b().quantifierRange($2, $4)}
     ;
 Atom
-    /* anyChar or specificChar or specificCharEsc or delayedEscapedInteger or charSet or group */
+    /* anyChar or specificChar or specificCharEsc or predefinedCharSet or delayedEscapedIntegerContainer or charSet or group */
     : PatternCharacter
         {$$ = b().specificChar($1)}
     | '.'
@@ -146,17 +146,16 @@ Atom
     | '(' Disjunction ')'
         {{
         $$ = b().group(true, $2)
-        // TODO test
-        yy.numCapturedGroups = (yy.numCapturedGroups || 0) + 1
+        parser.yy.numCapturedGroups = (parser.yy.numCapturedGroups || 0) + 1
         }}
     | '(' '?' ':' Disjunction ')'
         {$$ = b().group(false, $4)}
     ;
 
 AtomEscape
-    /* specificChar or specificCharEsc or delayedEscapedInteger */
+    /* specificChar or specificCharEsc or predefinedCharSet or delayedEscapedIntegerContainer */
     : DecimalDigits
-        {$$ = b().delayedEscapedInteger($1)}
+        {$$ = b().delayedEscapedIntegerContainer($1)}
     | CharacterEscape
     | CharacterClassEscape
     ;
@@ -186,28 +185,28 @@ ControlEscape
 HexEscapeSequence
     /* specificCharEsc */
     : 'u' HexDigit HexDigit HexDigit HexDigit
-        {$$ = b().specificChar(yytext, 'Hexadecimal Notation')}
+        {$$ = b().specificCharEsc($1+$2+$3+$4+$5, 'Hexadecimal Notation')}
     ;
 UnicodeEscapeSequence
     /* specificCharEsc */
     : 'x' HexDigit HexDigit
-        {$$ = b().specificChar(yytext, 'Hexadecimal Notation')}
+        {$$ = b().specificCharEsc($1+$2+$3, 'Hexadecimal Notation')}
     ;
 
 CharacterClassEscape
-    /* specificCharEsc */
+    /* predefinedCharSet */
     : 'd'
-        {$$ = b().specificCharEsc($1, 'Digit Char', '[0-9]')}
+        {$$ = b().predefinedCharSet($1, 'Digit Char', '[0-9]')}
     | 'D'
-        {$$ = b().specificCharEsc($1, 'Non Digit Char', '[^0-9]')}
+        {$$ = b().predefinedCharSet($1, 'Non Digit Char', '[^0-9]')}
     | 's'
-        {$$ = b().specificCharEsc($1, 'Whitespace Char', 'Includes space nbsp \n \r \t \v \f')}
+        {$$ = b().predefinedCharSet($1, 'Whitespace Char', 'Includes but is not limited to space nbsp \n \r \t \v \f')}
     | 'S'
-        {$$ = b().specificCharEsc($1, 'Non Whitespace Char', 'Complement of \s')}
+        {$$ = b().predefinedCharSet($1, 'Non Whitespace Char', 'Complement of \s')}
     | 'w'
-        {$$ = b().specificCharEsc($1, 'Word Char', '[0-9A-Z_a-z]')}
+        {$$ = b().predefinedCharSet($1, 'Word Char', '[0-9A-Z_a-z]')}
     | 'W'
-        {$$ = b().specificCharEsc($1, 'Non Word Char', '[^0-9A-Z_a-z]')}
+        {$$ = b().predefinedCharSet($1, 'Non Word Char', '[^0-9A-Z_a-z]')}
     ;
 
 CharacterClass
@@ -216,13 +215,13 @@ CharacterClass
         {$$ = b().charSet($2)}
     ;
 ClassRanges
-    /* array of specificChar or specificCharEsc or charRange */
+    /* array of specificChar or specificCharEsc or predefinedCharSet or charRange */
     : /* empty */
         {$$ = []}
     | NonemptyClassRanges
     ;
 NonemptyClassRanges
-    /* array of specificChar or specificCharEsc or charRange */
+    /* array of specificChar or specificCharEsc or predefinedCharSet or charRange */
     : ClassAtom
     | ClassAtom NonemptyClassRangesNoDash
         {$$ = $1.concat($2)}
@@ -230,7 +229,7 @@ NonemptyClassRanges
         {$$ = b().charRange($1,$3,$4)}
     ;
 NonemptyClassRangesNoDash
-    /* array of specificChar or specificCharEsc or charRange */
+    /* array of specificChar or specificCharEsc or predefinedCharSet or charRange */
     : ClassAtom
     | ClassAtomNoDash NonemptyClassRangesNoDash
         {$$ = $1.concat($2)}
@@ -238,41 +237,22 @@ NonemptyClassRangesNoDash
         {$$ = b().charRange($1,$3,$4)}
     ;
 ClassAtom
-    /* array of specificChar or specificCharEsc */
+    /* array of specificChar or specificCharEsc or predefinedCharSet */
     : '-'
         {$$ = [b().specificChar($1)]}
     | ClassAtomNoDash
     ;
 ClassAtomNoDash
-    /* array of specificChar or specificCharEsc */
+    /* array of specificChar or specificCharEsc or predefinedCharSet */
     : ClassAtomNoDash_single
         {$$ = [b().specificChar($1)]}
     | '\\' ClassEscape
         {$$ = [].concat($2)}
     ;
 ClassEscape
-    /* specificChar or specificCharEsc or array thereof */
+    /* specificChar or specificCharEsc or predefinedCharSet or array thereof */
     : DecimalDigits
-        {{
-        ;(function(){
-            // piggy back on string evaluation. the first 1 to 3 chars could be octal.
-            var converted = eval("'\\" + $1 + "'")
-            // var numOctChars = (converted === $1) ? 0
-            //     : $1.length - converted.length + 1
-            var parsed
-            if (converted === $1) {
-                parsed = [b().specificChar(
-                    converted[0], 'Unnecessarily escaped')]
-            } else {
-                parsed = [b().specifiedCharEsc(
-                    $1.slice(0, $1.length - converted.length + 1),
-                    'Octal notation')]
-            }
-            $$ = parsed.concat(converted.slice(1).split('').map(function(c) {
-                return b().specificChar(c)
-            }))
-        })()
-        }}
+        {$$ = b().escapedInteger($1)}
     | 'b'
         {$$ = b().specificCharEsc($1, 'Backspace')}
     | CharacterEscape
@@ -366,7 +346,7 @@ ClassAtomNoDash_single
     | CHAR_OTHER
     ;
 ControlLetter
-    /* TODO same as \w */
+    /* TODO same as \w according to YarrParser.h -> Parser::parseEscape */
     : 'b'
     | 'B'
     | 'c'
@@ -434,7 +414,7 @@ function b() {
             var result = {
                 alternatives: alts
             }
-            if (alts.length) {
+            if (alts.length > 1) {
                 result.hint = 'ECMA specifies right-recursive, but in practice, all major browsers appear to use all Alternatives concurrently for the earliest match in string.'
             }
             return result
@@ -446,6 +426,12 @@ function b() {
             if (! terms.length) {
                 result.hint = 'Matches zero-length string.'
             }
+
+            // we will revisit each array of terms, parsing and expanding
+            // any `delayedEscapedIntegerContainer` item the array contains
+            (parser.yy.terms_s = parser.yy.terms_s || [])
+                .push(terms)
+
             return result
         },
 
@@ -461,8 +447,13 @@ function b() {
                         'line separator',
                         'paragraph separator'
                     ])
-                    var hint = 'Matches the zero-length string {0} a new line char, i.e. one of [{0}]'
-                        .format(prepo, String(charlist))
+                    var hint = [
+                        'Matches the zero-length string ',
+                        prepo,
+                        ' a new line char, i.e. one of [',
+                        String(charlist),
+                        ']'
+                    ].join('')
                     return {
                         atBeginning: atBeg,
                         hint: hint
@@ -507,22 +498,88 @@ function b() {
                 hint: hint
             }
         },
-        specificCharEsc: function(unescaped, meaning, hint) {
-            escaped = /^\\/.test(unescaped) ? unescaped : '\\' + unescaped
+        specificCharEsc: function(unescaped, meaning) {
             return {
                 type: 'Specific Char',
-                display: escaped,
-                meaning: meaning,
-                hint: hint
+                display: '\\' + unescaped,
+                meaning: meaning
             }
-            return builders.specificChar(escaped, hint)
         },
-        delayedEscapedInteger: function(decimals) {
-            // delay parsing till all capturing groups have been found. TODO move quantifier
-            return {
-                ESCAPED_INTEGER: true,
-                decimals: decimals
+
+        escapedInteger: function(decimals) {
+            /* returns array of specificChar or specificCharEsc */
+
+            // piggy back on string literal evaluation.
+            // the first 1 to 3 chars could be octal.
+            var evalled = eval("'\\" + decimals + "'")
+            var parsed
+            if (evalled === decimals) {
+                parsed = [builders.specificChar(
+                    evalled[0], 'Unnecessarily escaped')]
+            } else {
+                parsed = [builders.specificCharEsc(
+                    decimals.slice(0, decimals.length - evalled.length + 1),
+                    'Octal Notation')]
             }
+            return parsed.concat(evalled.slice(1).split('').map(function(c) {
+                return builders.specificChar(c)
+            }))
+        },
+        delayedEscapedIntegerContainer: function(decimals) {
+            // delay parsing till all capturing groups have been found.
+            var result = {
+                type: 'delayedEscapedIntegerContainer',
+                unparsed: decimals,
+                backrefNumMax: parser.yy.numCapturedGroups
+            }
+            return result
+        },
+        delayedEscapedInteger: function(container) {
+            /* parses delayedEscapedIntegerContainer
+                and returns array of
+                (backRef or fwdRef or specificChar or specificCharEsc)
+            */
+
+            function backRef(number) {
+                return {
+                    type: 'Back Reference',
+                    number: number
+                }
+            }
+            function fwdRef(number) {
+                return {
+                    type: 'Forward Reference',
+                    number: number,
+                    hint: '[ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9) does not support the concept of "forward reference, but implementations in major browsers match with a zero-length string'
+                }
+                // e.g. in webkit src, `PatternTerm::TypeForwardReference` does not have any matching behavior associated.
+            }
+
+            var contained = (function(decimals, backrefNumMax) {
+                // This whole logic is not covered by [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9) but is consistent with major browsers.
+                // e.g. see Webkit [src](https://github.com/WebKit/webkit/blob/master/Source/JavaScriptCore/yarr/YarrParser.h) YarrParser.h Parser::parseEscape
+
+                var int = Number(decimals)
+                if (decimals[0] > '0' &&
+                        int <= (parser.yy.numCapturedGroups || 0)
+                        ) {
+                    // only then could it be fwd or back ref
+                    if (int > backrefNumMax) {
+                        return [fwdRef(int)]
+                    } else {
+                        return [backRef(int)]
+                    }
+                } else {
+                    return builders.escapedInteger(decimals)
+                }
+            })(container.unparsed, container.backrefNumMax)
+
+            if (container.quantifier) {
+                contained.slice(-1)[0].quantifier = container.quantifier
+                delete container.quantifier
+            }
+
+            return contained
         },
 
         quantifiedAtom: function(atom, quantifier) {
@@ -552,7 +609,7 @@ function b() {
                         var begin = before.slice(-1)[0].display
                         var end = after[0].display
                         var range = {
-                            type: 'Range of Chars',
+                            type: 'Range of Characters',
                             begin: begin,
                             end: end
                         }
@@ -575,6 +632,14 @@ function b() {
             }
             return result
         },
+        predefinedCharSet: function(unescaped, meaning, hint) {
+            return {
+                type: 'Pre-defined Set of Characters',
+                display: '\\' + unescaped,
+                meaning: meaning,
+                hint: hint
+            }
+        },
 
         group: function(isCapturing, grouped) {
             return {
@@ -586,3 +651,34 @@ function b() {
     }
     return builders
 }
+
+parser.parse = (function(orig) {
+    function postParse() {
+        function splice(arr, index, replacement) {
+            var args = [index, 1].concat(replacement)
+            Array.prototype.splice.apply(arr, args)
+        }
+
+        parser.yy.terms_s.forEach(function(terms) {
+            var i, term
+            // `.length` is re-read for every loop
+            for(i = 0; i < terms.length; i++) {
+                term = terms[i]
+                if(term.type === 'delayedEscapedIntegerContainer') {
+                    // no need to adjust i
+                    // b/c the replacement array is at least as long
+                    // as the length of 1 being spliced away.
+                    splice(terms, i, b().delayedEscapedInteger(term))
+                }
+            }
+        })
+        // reset b/c these values make parser stateful
+        parser.yy.terms_s.length = 0
+        parser.yy.numCapturedGroups = 0
+    }
+    return function() {
+        var parsed = orig.apply(this, arguments)
+        postParse()
+        return parsed
+    }
+})(parser.parse)

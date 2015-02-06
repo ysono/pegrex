@@ -1,8 +1,8 @@
 var _ = require('lodash')
 
-function combineUniqueExps(){
+function combineUniqueExps() {
     var args = Array.prototype.slice.call(arguments).concat(
-        function(existing, additional){
+        function(existing, additional) {
             if (existing != null) {
                 throw 'duplicate test string for the same rule'
             }
@@ -40,11 +40,11 @@ function interlace(singles) {
 }
 
 var provide = {
-    Pattern: function(){
+    Pattern: function() {
         return provide.Disjunction()
     },
-    Disjunction: function(){
-        return _.reduce(provide.Alternatives(), function(map, exp, str){
+    Disjunction: function() {
+        return _.reduce(provide.Alternatives(), function(map, exp, str) {
             map[str] = {alternatives: exp}
             return map
         }, {})
@@ -52,8 +52,8 @@ var provide = {
     Alternatives: function() {
         return interlace(provide.Alternative())
     },
-    Alternative: function(){
-        return _.reduce(provide.Terms(), function(map, exp, str){
+    Alternative: function() {
+        return _.reduce(provide.Terms(), function(map, exp, str) {
             map[str] = {terms: exp}
             return map
         }, {})
@@ -61,10 +61,10 @@ var provide = {
     Terms: function() {
         return interlace(provide.Term())
     },
-    Term: function(){
+    Term: function() {
         return provide.Atom()
     },
-    Atom: function(){
+    Atom: function() {
         return combineUniqueExps(
             provide.PatternCharacter(),
             {
@@ -75,8 +75,8 @@ var provide = {
             provide.AtomEscape()
         )
     },
-    PatternCharacter: function(){
-        return ['a','b','0','8',':',']'].reduce(function(map, c){
+    PatternCharacter: function() {
+        return ['a','b','0','8',':',']'].reduce(function(map, c) {
             map[c] = {
                 type: 'Specific Char',
                 display: c
@@ -84,28 +84,30 @@ var provide = {
             return map
         }, {})
     },
-    AtomEscape: function(){
+    AtomEscape: function() {
         return combineUniqueExps(
-            provide.DecimalEscape(),
+            // provide.DecimalEscape(),
             provide.CharacterEscape(),
             provide.CharacterClassEscape()
         )
     },
-    DecimalEscape: function(){
-        var octals = ['0','7','00','07','70','000','377']
-        var octalsPlusChars = ['08','78', '008','078','0000','0008','3770','3778']
-        var chars = ['8','80','88','888','8888']
-        // backrefs are any decimal starting with a [1-9], so they are covered above
-        var all = octals.concat(octalsPlusChars).concat(chars)
-        return _.reduce(all, function(map,str){
-            map['\\' + str] = {
-                ESCAPED_INTEGER: true,
-                decimals: str // no processing done; expecting whole decimals
-            }
-            return map
-        }, {})
-    },
-    CharacterEscape: function(){
+    // DecimalEscape: function() {
+    //     var octals = ['0','7','00','07','70','000','377']
+    //     var octalsPlusChars = ['08','78', '008','078','0000','0008','3770','3778']
+    //     var chars = ['8','80','88','888','8888']
+
+        
+    //     // backrefs are any decimal starting with a [1-9], so they are covered above
+    //     var all = octals.concat(octalsPlusChars).concat(chars)
+    //     return _.reduce(all, function(map,str) {
+    //         map['\\' + str] = {
+    //             ESCAPED_INTEGER: true,
+    //             decimals: str // no processing done; expecting whole decimals
+    //         }
+    //         return map
+    //     }, {})
+    // },
+    CharacterEscape: function() {
         var needEscape = {
             'f': 'Form Feed',
             'cA': 'Control Character',
@@ -119,7 +121,7 @@ var provide = {
             // TODO more
         ]
 
-        needEscape = _.reduce(function(map, meaning, unescaped) {
+        needEscape = _.reduce(needEscape, function(map, meaning, unescaped) {
             var escaped = '\\' + unescaped
             map[escaped] = {
                 type: 'Specific Char',
@@ -128,26 +130,26 @@ var provide = {
             }
             return map
         }, {})
-        identityEscape = _.reduce(function(map, unescaped) {
+        identityEscape = _.reduce(identityEscape, function(map, unescaped) {
             var escaped = '\\' + unescaped
             map[escaped] = {
                 type: 'Specific Char',
                 display: unescaped
             }
             return map
-        })
+        }, {})
 
-        return _.reduce(needEscape, identityEscape)
+        return _.assign(needEscape, identityEscape)
     },
-    CharacterClassEscape: function(){
+    CharacterClassEscape: function() {
         return {
             '\\d': {
-                type: 'Specific Char',
+                type: 'Pre-defined Set of Characters',
                 display: '\\d',
                 meaning: 'Digit Char'
             },
             '\\S': {
-                type: 'Specific Char',
+                type: 'Pre-defined Set of Characters',
                 display: '\\S',
                 meaning: 'Non Whitespace Char'
             }

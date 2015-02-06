@@ -5,20 +5,20 @@ function charFromOctal(octal) {
     return String.fromCharCode(decimal)
 }
 
-function runOne(str, regex, isMatch, msg) {
+function runOne(str, regex, isMatch, msg, expectedTerms) {
     var success = !! str.match(regex) === isMatch
-    var level = success ? 'info' : 'error'
-    console[level](success, msg)
+    console[success ? 'info' : 'error'](success, msg)
 }
 
-var tests = [
+var specs = [
  [charFromOctal(1) + charFromOctal(2) + '8', /\128/, false, 'decimal escape does not match with only one decimal']
 ,[charFromOctal(12) + '8', /\128/, true, 'decimal escape matches with the longest valid octal notation, just like string.'
     + ' apparently ff started it - see webkit src -> YarrParser.h -> Parser::parseEscape']
 
 ,[charFromOctal(377), /\377/, true, '377 is octal']
 ,[charFromOctal(400), /\400/, false, '400 is not octal']
-,['400', /\400/, false, '400 is chars 4 0 0']
+,['400', /^\400$/, false, '400 is not all chars']
+,[charFromOctal(40) + '0', /^\400$/, true, '400 is octal then char']
 
 ,['qww', /(.)(.)[\2]/, false, 'escaped decimal digits are never a backref inside a class']
 ,['qww', /(.)(.)\2/, true, 'escaped decimal digits can be a backref outside a class']
@@ -38,14 +38,10 @@ var tests = [
 
 ,['qww', /(.)(.)\02/, false, 'backref cannot start with digit 0']
 ,['qw\u0002', /(.)(.)\02/, true, 'decimal that starts with digit 0 is octal']
+
+,['qwqq', /(.)(.)\1{2}/, true, 'backref works with quantifier']
 ]
 
-tests.forEach(function(params) {
+specs.forEach(function(params) {
     runOne.apply(null, params)
 })
-
-
-/*
-TODO YarrParser.h -> Parser::parseEscape
-ctrl inside class accepts \c[\w]
-*/

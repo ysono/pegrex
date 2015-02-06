@@ -1,5 +1,8 @@
 (function(reactClasses) {
     var Surface = React.createClass({
+        // TODO Disjunction Alternative etc
+        // literal sync. check key attr again
+
         render: function() {
             debugger
             var blocks = this.props.tree && this.props.tree.alternatives
