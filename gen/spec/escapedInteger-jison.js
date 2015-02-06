@@ -10,13 +10,14 @@ function disjunction(terms) {
         ]
     }
 }
-function capturedSingleAnyChar() {
+function capturedSingleAnyChar(locBegin) {
     return {
         type: 'Group',
         isCapturing: true,
         grouped: disjunction([
             {
-                type: 'Any Char'
+                type: 'Any Char',
+                location: [locBegin,locBegin+1]
             }
         ])
     }
@@ -29,11 +30,13 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\12',
-                meaning: 'Octal Notation'
+                meaning: 'Octal Notation',
+                location: [0,3]
             },
             {
                 type: 'Specific Char',
-                display: '8'
+                display: '8',
+                location: [3,4]
             }
         ]
     ], [
@@ -42,7 +45,8 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\377',
-                meaning: 'Octal Notation'
+                meaning: 'Octal Notation',
+                location: [0,4]
             }
         ]
     ], [
@@ -51,47 +55,54 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\40',
-                meaning: 'Octal Notation'
+                meaning: 'Octal Notation',
+                location: [0,3]
             },
             {
                 type: 'Specific Char',
-                display: '0'
+                display: '0',
+                location: [3,4]
             }
         ]
     ], [
         /(.)(.)[\2]/,
         [
-            capturedSingleAnyChar(),
-            capturedSingleAnyChar(),
+            capturedSingleAnyChar(1),
+            capturedSingleAnyChar(4),
             {
                 type: 'Set of Characters',
+                inclusive: true,
                 possibilities: [
                     {
                         type: 'Specific Char',
                         display: '\\2',
-                        meaning: 'Octal Notation'
+                        meaning: 'Octal Notation',
+                        location: [7,9]
                     }
-                ]
+                ],
+                location: [6,10]
             }
         ]
     ], [
         /(.)(.)\2/,
         [
-            capturedSingleAnyChar(),
-            capturedSingleAnyChar(),
+            capturedSingleAnyChar(1),
+            capturedSingleAnyChar(4),
             {
                 type: 'Back Reference',
-                number: 2
+                number: 2,
+                location: [6,8]
             }
         ]
     ], [
         /(.)\0/,
         [
-            capturedSingleAnyChar(),
+            capturedSingleAnyChar(1),
             {
                 type: 'Specific Char',
                 display: '\\0',
-                meaning: 'Octal Notation'
+                meaning: 'Octal Notation',
+                location: [3,5]
             }
         ]
     ], [
@@ -101,31 +112,35 @@ var specs = [
                 type: 'Group',
                 isCapturing: true,
                 grouped: disjunction([])
+                // location omitted
             },
             {
                 type: 'Specific Char',
                 display: '\\0',
-                meaning: 'Octal Notation'
+                meaning: 'Octal Notation',
+                location: [2,4]
             }
         ]
     ], [
         /(.)\2/,
         [
-            capturedSingleAnyChar(),
+            capturedSingleAnyChar(1),
             {
                 type: 'Specific Char',
                 display: '\\2',
-                meaning: 'Octal Notation'
+                meaning: 'Octal Notation',
+                location: [3,5]
             }
         ]
     ], [
         /(.)(.)\2/,
         [
-            capturedSingleAnyChar(),
-            capturedSingleAnyChar(),
+            capturedSingleAnyChar(1),
+            capturedSingleAnyChar(4),
             {
                 type: 'Back Reference',
-                number: 2
+                number: 2,
+                location: [6,8]
             }
         ]
     ], [
@@ -134,7 +149,8 @@ var specs = [
             {
                 type: 'Assertion',
                 assertion: 'Line Boundary',
-                atBeginning: true,                
+                atBeginning: true,
+                location: [0,1]
             },
             {
                 type: 'Group',
@@ -142,13 +158,16 @@ var specs = [
                 grouped: disjunction([
                     {
                         type: 'Specific Char',
-                        display: 'q'
+                        display: 'q',
+                        location: [2,3]
                     }
                 ])
+                // location omitted
             },
             {
                 type: 'Forward Reference',
-                number: 2
+                number: 2,
+                location: [4,6]
             },
             {
                 type: 'Group',
@@ -156,40 +175,46 @@ var specs = [
                 grouped: disjunction([
                     {
                         type: 'Specific Char',
-                        display: 'w'
+                        display: 'w',
+                        location: [7,8]
                     }
                 ])
+                // location omitted
             },
             {
                 type: 'Assertion',
                 assertion: 'Line Boundary',
-                atBeginning: false
+                atBeginning: false,
+                location: [9,10]
             }
         ]
     ], [
         /(.)(.)\02/,
         [
-            capturedSingleAnyChar(),
-            capturedSingleAnyChar(),
+            capturedSingleAnyChar(1),
+            capturedSingleAnyChar(4),
             {
                 type: 'Specific Char',
                 display: '\\02',
-                meaning: 'Octal Notation'
+                meaning: 'Octal Notation',
+                location: [6,9]
             }
         ]
     ], [
         /(.)(.)\1{2}/,
         [
-            capturedSingleAnyChar(),
-            capturedSingleAnyChar(),
+            capturedSingleAnyChar(1),
+            capturedSingleAnyChar(4),
             {
                 type: 'Back Reference',
                 number: 1,
                 quantifier: {
                     min: 2,
                     max: 2,
-                    greedy: true
-                }
+                    greedy: true,
+                    location: [8,11]
+                },
+                location: [6,11]
             }
         ]
     ]
@@ -202,28 +227,34 @@ var specs = [
         [
             {
                 type: 'Specific Char',
-                display: 'a'
+                display: 'a',
+                location: [0,1]
             },
             {
                 type: 'Specific Char',
                 display: '\\123',
-                meaning: 'Octal Notation'
+                meaning: 'Octal Notation',
+                location: [1,5]
             },
             {
                 type: 'Specific Char',
-                display: '4'
+                display: '4',
+                location: [5,6]
             },
             {
                 type: 'Specific Char',
-                display: '9'
+                display: '9',
+                location: [6,8]
             },
             {
                 type: 'Specific Char',
-                display: '8'
+                display: '8',
+                location: [8,9]
             },
             {
                 type: 'Specific Char',
-                display: 'z'
+                display: 'z',
+                location: [9,10]
             }
         ]
     ], [
@@ -231,17 +262,21 @@ var specs = [
         [
             {
                 type: 'Set of Characters',
+                inclusive: true,
                 possibilities: [
                     {
                         type: 'Specific Char',
                         display: '\\12',
-                        meaning: 'Octal Notation'
+                        meaning: 'Octal Notation',
+                        location: [1,4]
                     },
                     {
                         type: 'Specific Char',
-                        display: '9'
+                        display: '9',
+                        location: [4,5]
                     }
-                ]
+                ],
+                location: [0,6]
             }
         ]
     ],
@@ -250,17 +285,49 @@ var specs = [
         [
             {
                 type: 'Set of Characters',
+                inclusive: true,
                 possibilities: [
                     {
                         type: 'Specific Char',
                         display: '\\40',
-                        meaning: 'Octal Notation'
+                        meaning: 'Octal Notation',
+                        location: [1,4]
                     },
                     {
                         type: 'Specific Char',
-                        display: '0'
+                        display: '0',
+                        location: [4,5]
                     }
-                ]
+                ],
+                location: [0,6]
+            }
+        ]
+    ],
+    [
+        /* tests location of quantified (octal then chars) */
+        /\1289{3,}?/,
+        [
+            {
+                type: 'Specific Char',
+                display: '\\12',
+                meaning: 'Octal Notation',
+                location: [0,3]
+            },
+            {
+                type: 'Specific Char',
+                display: '8',
+                location: [3,4]
+            },
+            {
+                type: 'Specific Char',
+                display: '9',
+                quantifier: {
+                    min: 3,
+                    max: Infinity,
+                    greedy: false,  
+                    location: [5,10]
+                },
+                location: [4,10]
             }
         ]
     ]
@@ -276,6 +343,14 @@ function runOne(regex, terms) {
     var act = parser.parse(src)
     var success = _.isEqual(act, exp, function(act, exp){
         delete act.hint // not comparing hints
+        if (act.alternatives || act.terms || act.grouped) {
+            delete act.location // lazy - compare locations of terms and their children only
+        }
+
+        if (typeof act === 'object'
+                && Object.keys(act).length !== Object.keys(exp).length) {
+            debugger // keep this debugger - it's useful
+        }
     })
     if (success) {
         console.info(src, success)

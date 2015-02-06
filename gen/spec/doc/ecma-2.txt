@@ -1,0 +1,60 @@
+SourceCharacter
+    any unicode code unit
+IdentifierPart ::
+    IdentifierStart
+    UnicodeCombiningMark
+    UnicodeDigit
+    UnicodeConnectorPunctuation
+    <ZWNJ>
+    <ZWJ>
+IdentifierStart ::
+    UnicodeLetter
+    $
+    _
+    \ UnicodeEscapeSequence
+UnicodeLetter ::
+    any character in the Unicode categories
+        “Uppercase letter (Lu)”
+        “Lowercase letter (Ll)”
+        “Titlecase letter (Lt)”
+        “Modifier letter (Lm)”
+        “Other letter (Lo)”
+        “Letter number (Nl)”
+UnicodeEscapeSequence ::
+    u HexDigit HexDigit HexDigit HexDigit
+HexDigit ::
+    one of
+    0 1 2 3 4 5 6 7 8 9 a b c d e f A B C D E F
+UnicodeCombiningMark ::
+    any character in the Unicode categories
+        “Non-spacing mark (Mn)”
+        “Combining spacing mark (Mc)”
+UnicodeDigit ::
+    any character in the Unicode category
+        “Decimal number (Nd)”
+UnicodeConnectorPunctuation ::
+    any character in the Unicode category
+        “Connector punctuation (Pc)”
+ZWNJ
+    \u200c
+ZWJ
+    \u200d
+
+---
+
+IdentityEscape
+    SourceCharacter but not
+        IdentifierStart
+        UnicodeCombiningMark
+        UnicodeDigit
+        UnicodeConnectorPunctuation
+
+---
+
+LineTerminator ::
+    <LF>    \u000a
+    <CR>    \u000d
+    <LS>    \u2028
+    <PS>    \u2029
+
+A `.` matches the set of all characters except LineTerminator
