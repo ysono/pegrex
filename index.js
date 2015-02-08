@@ -1,5 +1,5 @@
 ;(function() {
-    var Whole = React.createClass({
+    var Controls = React.createClass({
         getInitialState: function() {
             return {
                 pattern: '',
@@ -32,7 +32,7 @@
         },
         render: function() {
             return (
-                <div className="whole-react">
+                <div className="controls">
                     <reactClasses.Texts
                         pattern={this.state.pattern}
                         flags={this.state.flags}
@@ -46,7 +46,7 @@
         }
     })
     React.render(
-        <Whole />,
-        document.getElementById('above-react')
+        <Controls />,
+        document.getElementsByClassName('controls-parent')[0]
     )
 })()

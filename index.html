@@ -6,26 +6,33 @@
 
     <script src="parser.js"></script>
 
+    <script type="text/jsx" src="add-dim-pos.js"></script>
     <script type="text/jsx" src="svg-classes.js"></script>
     <script type="text/jsx" src="text-classes.js"></script>
 
     <style>
         html, body {
             height:100%;
+            margin: 0;
         }
-        #above-react, .whole-react {
+        .controls-parent, .controls {
             position: relative;
             height: 100%;
         }
-        svg {
-            height: 100%;
+        .texts-parent {
+            height: 120px;
+        }
+        .surface-parent {
+            position: absolute;
+            top: 120px;
+            bottom: 0;
             width: 100%;
-            border: solid 1px black;
+            overflow: auto;
         }
     </style>
 </head>
 <body>
-    <div id="above-react"></div>
+    <div class="controls-parent"></div>
     <script type="text/jsx" src="index.js"></script>
 </body>
 </html>
