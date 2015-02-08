@@ -3,8 +3,10 @@ var parser = require('../parser')
 
 function disjunction(terms) {
     return {
+        type: 'Disjunction',
         alternatives: [
             {
+                type: 'Alternative',
                 terms: terms
             }
         ]

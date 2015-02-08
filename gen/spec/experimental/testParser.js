@@ -22,9 +22,10 @@ _.each(strToExpected, function(expected, str){
         delete act.location // lazy - not comparing locations
     })
     if (success) {
-        console.info(str, success)
+        console.info(success, str)
     } else {
-        console.error(str, success, stringify(actual), stringify(expected))
+        console.error(success, str, stringify(actual), stringify(expected))
     }
 })
 
+console.info('done experimental testing on parser')

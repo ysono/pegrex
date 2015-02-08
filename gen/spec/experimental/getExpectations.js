@@ -45,7 +45,10 @@ var provide = {
     },
     Disjunction: function() {
         return _.reduce(provide.Alternatives(), function(map, exp, str) {
-            map[str] = {alternatives: exp}
+            map[str] = {
+                type: 'Disjunction',
+                alternatives: exp
+            }
             return map
         }, {})
     },
@@ -54,7 +57,10 @@ var provide = {
     },
     Alternative: function() {
         return _.reduce(provide.Terms(), function(map, exp, str) {
-            map[str] = {terms: exp}
+            map[str] = {
+                type: 'Alternative',
+                terms: exp
+            }
             return map
         }, {})
     },

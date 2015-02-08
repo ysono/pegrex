@@ -432,7 +432,7 @@ function b() {
             }
             var augmented = Object.keys(builders).reduce(function(map, key) {
                 map[key] = function() {
-                    var token = builders[key].apply(this, arguments)
+                    var token = builders[key].apply(builders, arguments)
                     return assign(token)
                 }
                 return map
@@ -443,11 +443,13 @@ function b() {
 
         disjunction: function(alts) {
             return {
+                type: 'Disjunction',
                 alternatives: alts
             }
         },
         alternative: function(terms) {
             var result = {
+                type: 'Alternative',
                 terms: terms
             }
             if (! terms.length) {
@@ -503,7 +505,7 @@ function b() {
                     var disj = etc1
                     return {
                         isPositive: isPos,
-                        group: builders.group(false, disj)
+                        grouped: builders.group(false, disj)
                     }
                 }
             }
@@ -598,7 +600,7 @@ function b() {
                 return {
                     type: 'Back Reference',
                     number: number,
-                    hint: 'Warning: This is a valid Back Reference, but it will match with an empty string if the target group has not been captured by the time this reference is expected. In practice, it should mean anything outside the root-level Alternative that this Back Reference belongs to will have not been captured.'
+                    hint: 'Warning: This is a valid Back Reference, but it will match with an empty string if the target group has not been captured by the time this reference is expected. In practice, any group that is 1) outside the root-level Alternative that this Back Reference belongs to or 2) inside a Look-Forward Assertion will have not been captured.'
                 }
             }
             function fwdRef(number) {
