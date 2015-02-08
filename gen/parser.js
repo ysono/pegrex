@@ -516,7 +516,7 @@ function b() {
             var octEndWrtDecimals
             var locEndOfFirstChar
 
-            // piggy back on string literal evaluation.
+            // piggy back on string literal evaluation. it's safe.
             // the first 1 to 3 chars could be octal.
             var evalled = eval("'\\" + decimals + "'")
             var parsed

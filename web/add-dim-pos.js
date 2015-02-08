@@ -1,4 +1,14 @@
 ;(function(reactClasses) {
+    /* setUi:
+        1) if data has children,
+            resursively call itself.
+            now all children have dims
+        2) if data has children,
+            gather all dims of children
+            and based on these, set pos_s of children
+        3) set data's dim
+            if data has children, base dim on pos_s of children
+    */
     function setUi(data) {
         function oneChar() {
             return data.ui = {
