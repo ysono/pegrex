@@ -1,5 +1,7 @@
 (function(reactClasses) {
     var Texts = React.createClass({
+        // TODO literal input sync.
+
         handleChange: function(parts) {
             this.props.onChange(parts)
         },

@@ -4,7 +4,7 @@
             return {
                 pattern: '',
                 flags: [],
-                tree: {}
+                tree: undefined
             }
         },
         textsToViz: function(texts) {
@@ -15,7 +15,6 @@
                 // don't propagate b/c still want text states updated
                 // TODO highlight text or something
                 console.error('parsing failed', e)
-                tree = {}
             }
             this.setState({
                 pattern: texts.pattern,
@@ -33,7 +32,7 @@
         },
         render: function() {
             return (
-                <div>
+                <div className="whole-react">
                     <reactClasses.Texts
                         pattern={this.state.pattern}
                         flags={this.state.flags}
@@ -48,6 +47,6 @@
     })
     React.render(
         <Whole />,
-        document.getElementById('content')
+        document.getElementById('above-react')
     )
 })()
