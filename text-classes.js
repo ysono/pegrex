@@ -1,9 +1,8 @@
 ;(function(reactClasses) {
     var Texts = React.createClass({
-        // TODO literal input sync.
-
         handleChange: function(parts) {
             this.props.onChange(parts)
+            // parent compo owns the states of parts.*
         },
         render: function() {
             var parts = {
@@ -28,43 +27,69 @@
         return result
     }
     var Literal = React.createClass({
+        handleChange: function() {
+            var parts = parseInputValues(this.refs)
+            this.props.onChange(parts)
+        },
         render: function() {
             var parts = this.props.parts
             var pattern = parts.pattern || '(?:)'
+            var flags = parts.flags.join('')
             return (
                 <fieldset>
                     <legend>Literal</legend>
                     <span>/</span>
-                    <input type="text" value={pattern} />
+                    <input ref="pattern" type="text"
+                        value={pattern} onChange={this.handleChange} />
                     <span>/</span>
-                    <input type="text" value={parts.flags.join('')} />
+                    <input ref="flags" type="text"
+                        value={flags} onChange={this.handleChange} />
                 </fieldset>
             )
         }
     })
     var Constructor = React.createClass({
+        getInitialState: function() {
+            return {
+                escapeInProgress: false
+            }
+        },
         handleChange: function() {
-            this.props.onChange(
-                parseInputValues(this.refs))
+            function unescape(str) {
+                // eval() would not be wise
+                return str.replace(/\\\\/g, '\\')
+            }
+            function isEscapeInProgress(pattern) {
+                return /[^\\]\\$/.test(pattern)
+            }
+            var parts = parseInputValues(this.refs)
+            var escInP = isEscapeInProgress(parts.pattern)
+
+            if (! escInP) {
+                parts.pattern = unescape(parts.pattern)
+                this.props.onChange(parts)
+            }
+            this.setState({
+                escapeInProgress: escInP
+            })
         },
         render: function() {
             var parts = this.props.parts
             function escape(str) {
                 return str.replace(/\\/g, '\\\\')
             }
-            function unescape() {
-                // eval() would not be wise
-                return str.replace(/\\\\/g, '\\')
-            }
+            var pattern = escape(parts.pattern)
+                + (this.state.escapeInProgress ? '\\' : '')
+            var flags = parts.flags.join('')
             return (
                 <fieldset>
                     <legend>Constructor</legend>
                     <span>{'new RegExp('}</span>
                     <input ref="pattern" type="text"
-                        value={escape(parts.pattern)} onChange={this.handleChange} />
+                        value={pattern} onChange={this.handleChange} />
                     <span>,</span>
                     <input ref="flags" type="text"
-                        value={parts.flags.join('')} onChange={this.handleChange} />
+                        value={flags} onChange={this.handleChange} />
                     <span>{')'}</span>
                 </fieldset>
             )

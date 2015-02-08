@@ -31,7 +31,7 @@
         render: function() {
             var disj = this.props.disj
 
-            var pos = disj.ui.pos || [48,32] // if undefined, this is the root disj.
+            var pos = disj.ui.pos
             var txform = ['translate(', pos, ')'].join('')
 
             var altNodes = disj.alternatives.map(function(alt, i) {
