@@ -8,9 +8,24 @@
 
     <script type="text/jsx" src="svg-classes.js"></script>
     <script type="text/jsx" src="text-classes.js"></script>
+
+    <style>
+        html, body {
+            height:100%;
+        }
+        #above-react, .whole-react {
+            position: relative;
+            height: 100%;
+        }
+        svg {
+            height: 100%;
+            width: 100%;
+            border: solid 1px black;
+        }
+    </style>
 </head>
 <body>
-    <div id="content"></div>
+    <div id="above-react"></div>
     <script type="text/jsx" src="index.js"></script>
 </body>
 </html>
