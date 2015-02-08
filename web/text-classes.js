@@ -1,4 +1,4 @@
-(function(reactClasses) {
+;(function(reactClasses) {
     var Texts = React.createClass({
         // TODO literal input sync.
 
@@ -11,7 +11,7 @@
                 flags: this.props.flags
             }
             return (
-                <div>
+                <div className="texts-parent">
                     <Literal parts={parts} onChange={this.handleChange} />
                     <Constructor parts={parts} onChange={this.handleChange} />
                 </div>
