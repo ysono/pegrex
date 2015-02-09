@@ -146,23 +146,27 @@
 
             var txform = ['translate(', arrow.pos, ')'].join('')
 
+            var markerLen = 12 // from defs>marker[markerWidth]
+            arrow.end[0] -= markerLen
+
             var vector = [
                 arrow.end[0] - arrow.begin[0],
                 arrow.end[1] - arrow.begin[1]
             ]
-            var diagonal = Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2))
+            var qCtrlPt = [
+                arrow.begin[0] + vector[0] / 4,
+                arrow.begin[1]
+            ]
+            var midPt = [
+                arrow.begin[0] + vector[0] / 2,
+                arrow.begin[1] + vector[1] / 2
+            ]
 
-            var markerLen = 10 // from defs>marker[markerWidth]
-            var markerW = markerLen / diagonal * vector[0]
-            var markerH = markerLen / diagonal * vector[1]
-
-            arrow.end[0] -= markerW
-            arrow.end[1] -= markerH
-            var d = ['M', arrow.begin, 'L', arrow.end].join(' ')
+            var d = ['M', arrow.begin, 'Q', qCtrlPt, midPt, 'T', arrow.end].join(' ')
 
             return (
                 <g transform={txform}>
-                    <path d={d} markerEnd="url(#marker-tri)" stroke="orange" />
+                    <path d={d} markerEnd="url(#marker-tri)" stroke="orange" fill="none" />
                 </g>
             )
         }
