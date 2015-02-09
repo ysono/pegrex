@@ -1,20 +1,91 @@
 ;(function(reactClasses) {
+
+    // requires setUi
+    /* setUiOnChildren:
+        1) call setUi on all children -> now they each have dim
+        2) gather all dims of children -> set pos of children, and dim/pos of fillers
+        3) based on dim/pos of the farthest child -> set parentData's dim
+    */
+    function setUiOnChildren(
+            parentData,
+
+            childrenProp, /* parentData[childrenProp] contains an array of children */
+            /*padPara, padOrtho,*/ /* [n,n] -- start and end paddings in the direction of expansion and the orthogonal direction, respectively */
+            pad, /* {x: [n,n], y: [n,n]} -- where [n,n] are start and end paddings in that direction */
+            intraMargin, /* spacing between a child and a filler */
+            /*isDirHor*/ /* boolean: is direction horizontal */
+            dirPara, /* 'x' or 'y' */
+
+            /* below is required if fillers are used between children */
+            fillerDim /* {x: n, y: n} -- dimension of filler. the orthogonal dim can be 0 as a placeholder. */
+            ) {
+        var dirOrtho = dirPara === 'x' ? 'y' : 'x'
+
+        function readCoord(coord, dir) {
+            var i = dir === 'x' ? 0 : 1
+            return coord[i]
+        }
+        function toCoord(para, ortho) {
+            if (dirPara === 'x') {
+                return [para, ortho]
+            } else {
+                return [ortho, para]
+            }
+        }
+
+        // this pair of vars indicate the farthest point being occupied by children or filler
+        var maxPara = pad[dirPara][0] - intraMargin
+        var maxOrtho = 0
+
+        var fillers = []
+        parentData[childrenProp].forEach(function(child, i) {
+            if (fillerDim && i) {
+                (function() {
+                    var fillerPosPara = maxPara + intraMargin
+                    var fillerPosOrtho = pad[dirOrtho][0]
+
+                    var filler = {
+                        pos: toCoord(fillerPosPara, fillerPosOrtho),
+                        dim: toCoord(fillerDim[dirPara], fillerDim[dirOrtho])
+                    }
+                    fillers.push(filler)
+
+                    maxPara = fillerPosPara + fillerDim[dirPara]
+                    // not updating maxOrtho b/c filler is assumed to be smaller than any children in the ortho dir.
+                })()
+            }
+
+            var cUi = setUi(child)
+            var cPosPara = maxPara + intraMargin
+            var cPosOrtho = pad[dirOrtho][0]
+
+            cUi.pos = toCoord(cPosPara, cPosOrtho)
+
+            maxPara = cPosPara + readCoord(cUi.dim, dirPara)
+            maxOrtho = Math.max(maxOrtho, cPosOrtho + readCoord(cUi.dim, dirOrtho))
+        })
+
+        return parentData.ui = {
+            dim: toCoord(
+                maxPara + pad[dirPara][1],
+                maxOrtho + pad[dirOrtho][1]
+            ),
+            fillers: fillerDim ? fillers : undefined
+        }
+    }
+
+
     /* setUi:
-        1) if data has children,
-            resursively call itself.
-            now all children have dims
-        2) if data has children,
-            gather all dims of children
-            and based on these, set pos_s of children
-        3) set data's dim
-            if data has children, base dim on pos_s of children
+        Sets and returns data.ui.dim
+        Does not set data.ui.pos
+        If data contains children, recursively sets their .ui.dim and .ui.pos.
     */
     function setUi(data) {
         function oneChar() {
             return data.ui = {
                 dim: (function() {
                     var lnH = 16 // 1em
-                    var charW = 12 // arbitrary
+                    var charW = 8 // .5em
                     return [
                         charW * Math.max(data.type.length, data.display.length),
                         lnH * 2
@@ -26,95 +97,35 @@
             'Specific Char': oneChar,
             'Any Char': oneChar,
             'Alternative': function() {
-                var pad = {t:10,r:10,b:10,l:10}
-                var marginChildrenHor = 20
-                
-                var arrowW = 50
-                var arrowH = 32 // min h of terms
-                var arrowMarkerW = 12
+                return setUiOnChildren(
+                    data,
 
-                var maxChildXW = pad.l - marginChildrenHor
-                var maxChildH = 0
+                    'terms',
+                    {x: [10,10], y: [10,10]},
+                    5,
+                    'x',
 
-                data.arrows = []
-                data.terms.forEach(function(t, i) {
-                    var arrow
-                    if (i) {
-                        arrow = {
-                            dim: [
-                                arrowW, arrowH
-                            ],
-                            pos: [
-                                maxChildXW + marginChildrenHor,
-                                pad.t
-                            ],
-                            markerW: arrowMarkerW
-                        }
-                        data.arrows.push(arrow)
-                        maxChildXW = arrow.pos[0] + arrow.dim[0]
-                        maxChildH = Math.max(maxChildH, arrow.pos[1] + arrow.dim[1])
-                    }
-
-                    var tUi = setUi(t)
-                    tUi.pos = [
-                        maxChildXW + marginChildrenHor,
-                        pad.t
-                    ]
-                    maxChildXW = tUi.pos[0] + tUi.dim[0]
-                    maxChildH = Math.max(maxChildH, tUi.pos[1] + tUi.dim[1])
-                })
-
-                return data.ui = {
-                    dim: [
-                        maxChildXW + pad.r,
-                        maxChildH + pad.b
-                    ]
-                }
+                    {x: 40, y: 32}
+                )
             },
             'Disjunction': function() {
-                var pad = {t:10,r:10,b:10,l:10}
-                var marginChildrenVer = 5
+                var pad = {x: [10,10], y: [10,10]}
+                var ui = setUiOnChildren(
+                    data,
 
-                var hrH = 30
+                    'alternatives',
+                    pad,
+                    5,
+                    'y',
 
-                var maxChildW = 0
-                var maxChildYH = pad.t - marginChildrenVer
-
-                data.hrs = []
-                data.alternatives.forEach(function(alt ,i) {
-                    var hr
-                    if (i) {
-                        hr = {
-                            pos: [
-                                pad.l,
-                                maxChildYH + marginChildrenVer
-                            ]
-                        }
-                        data.hrs.push(hr)
-                        maxChildYH = hr.pos[1] + hrH
-                    }
-
-                    var aUi = setUi(alt)
-                    aUi.pos = [
-                        pad.l,
-                        maxChildYH + marginChildrenVer
-                    ]
-                    maxChildYH = aUi.pos[1] + aUi.dim[1]
-                    maxChildW = Math.max(maxChildW, aUi.pos[0] + aUi.dim[0])
+                    {x: 0, y: 30}
+                )
+                var hrW = ui.dim[0] - pad.x[0] - pad.x[1]
+                ui.fillers.forEach(function(hr) {
+                    debugger
+                    hr.dim[0] = hrW
                 })
-                data.hrs.forEach(function(hr) {
-                    hr.dim = [
-                        maxChildW - pad.l,
-                        hrH
-                    ]
-                })
-
-                return data.ui = {
-                    dim: [
-                        maxChildW + pad.r,
-                        maxChildYH + pad.b
-                    ]
-                }
+                return ui
             }
         }// end of var map
         return map[data.type]()
