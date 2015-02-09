@@ -673,7 +673,7 @@ function b() {
                 items = items.slice(1)
             }
             var result = {
-                type: 'Set of Characters',
+                type: 'Set of Chars',
                 possibilities: items,
                 inclusive: inclusive
             }
@@ -686,7 +686,7 @@ function b() {
         },
         predefinedCharSet: function(unescaped, meaning, hint) {
             return {
-                type: 'Pre-defined Set of Characters',
+                type: 'Pre-defined Set of Chars',
                 display: '\\' + unescaped,
                 meaning: meaning,
                 hint: hint

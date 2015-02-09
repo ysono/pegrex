@@ -10,10 +10,8 @@
             parentData,
 
             childrenProp, /* parentData[childrenProp] contains an array of children */
-            /*padPara, padOrtho,*/ /* [n,n] -- start and end paddings in the direction of expansion and the orthogonal direction, respectively */
             pad, /* {x: [n,n], y: [n,n]} -- where [n,n] are start and end paddings in that direction */
             intraMargin, /* spacing between a child and a filler */
-            /*isDirHor*/ /* boolean: is direction horizontal */
             dirPara, /* 'x' or 'y' */
 
             /* below is required if fillers are used between children */
@@ -94,20 +92,6 @@
             }
         }
         var map = {
-            'Specific Char': oneChar,
-            'Any Char': oneChar,
-            'Alternative': function() {
-                return setUiOnChildren(
-                    data,
-
-                    'terms',
-                    {x: [10,10], y: [10,10]},
-                    5,
-                    'x',
-
-                    {x: 40, y: 32}
-                )
-            },
             'Disjunction': function() {
                 var pad = {x: [10,10], y: [10,10]}
                 var ui = setUiOnChildren(
@@ -120,14 +104,69 @@
 
                     {x: 0, y: 30}
                 )
+                // set hr width as maximal width of alternatives
                 var hrW = ui.dim[0] - pad.x[0] - pad.x[1]
                 ui.fillers.forEach(function(hr) {
-                    debugger
                     hr.dim[0] = hrW
                 })
                 return ui
-            }
-        }// end of var map
+            },
+            'Alternative': function() {
+                var arrowH = 32 // b/c height of `oneChar` is 32
+                var ui = setUiOnChildren(
+                    data,
+
+                    'terms',
+                    {x: [10,10], y: [10,10]},
+                    5,
+                    'x',
+
+                    {x: 40, y: arrowH}
+                )
+                ui.fillers.forEach(function(arrow) {
+                    arrow.begin = [0, arrowH / 2]
+                    arrow.end = [arrow.dim[0], arrowH / 2]
+                })
+                return ui
+            },
+            'Set of Chars': function() {
+                var pad = {x: [30,30], y: [10,10]}
+                var ui = setUiOnChildren(
+                    data,
+
+                    'possibilities',
+                    pad,
+                    10,
+                    'y'
+                )
+
+                var arrowY = 16 // b/c height of `oneChar` is 32
+                var leftArrowBegin = [0, arrowY]
+                var rightArrowEnd = function() {
+                    // return a fresh copy b/c it's modified later to adjust for marker
+                    return [ui.dim[0], arrowY]
+                }
+                ui.arrows = data.possibilities.reduce(function(allArrows, possib) {
+                    var subUi = possib.ui
+                    var subUiYMid = subUi.pos[1] + subUi.dim[1] / 2
+
+                    var left = {
+                        pos: [0,0],
+                        begin: leftArrowBegin,
+                        end: [subUi.pos[0], subUiYMid]
+                    }
+                    var right = {
+                        pos: [0,0],
+                        begin: [subUi.pos[0] + subUi.dim[0], subUiYMid],
+                        end: rightArrowEnd()
+                    }
+                    return allArrows.concat(left, right)
+                }, [])
+                return ui
+            },
+            'Any Char': oneChar,
+            'Specific Char': oneChar
+        }
         return map[data.type]()
     }
     reactClasses.addDimPos = function(data) {
