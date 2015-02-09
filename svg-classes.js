@@ -37,7 +37,7 @@
             var altNodes = disj.alternatives.map(function(alt, i) {
                 return <Alternative key={i} alt={alt} />
             })
-            var hrNodes = disj.hrs.map(function(hr, i) {
+            var hrNodes = disj.ui.fillers.map(function(hr, i) {
                 return <Hr key={i} hr={hr} />
             })
 
@@ -71,7 +71,7 @@
             var termNodes = alt.terms.map(function(term, i) {
                 return <Unit key={i} term={term} />
             })
-            var arrowNodes = alt.arrows.map(function(arrow, i) {
+            var arrowNodes = alt.ui.fillers.map(function(arrow, i) {
                 return <ArrowFlat key={i} arrow={arrow} />
             })
 
@@ -111,8 +111,9 @@
 
             var txform = ['translate(', arrow.pos, ')'].join('')
 
+            var markerW = 12 // from defs>marker[markerWidth]
             var start = [0, arrow.dim[1] / 2]
-            var end = [arrow.dim[0] - arrow.markerW, start[1]]
+            var end = [arrow.dim[0] - markerW, start[1]]
             var d = ['M', start, 'L', end].join(' ')
 
             return (

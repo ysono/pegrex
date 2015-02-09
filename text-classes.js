@@ -2,21 +2,28 @@
     var Texts = React.createClass({
         getInitialState: function() {
             return {
-                escapedPattern: this.escape(this.props.pattern)
+                escapedPattern: this.escape(this.props.pattern),
+                escapedFlags: this.escape(this.props.flags.join(''))
             }
         },
         escape: function(str) {
             return str.replace(/\\/g, '\\\\')
         },
         unescape: function(str) {
+            // TODO add test
+
             // String literal with an odd number of slashes at the end is invalid.
             // TODO highlight it
-            if (/[^\\](?:\\{2})*\\$/.test(str)) {
+            if (/(?:^|[^\\])(?:\\{2})*\\$/.test(str)) {
                 return ''
             }
 
+            // Does not correctly escape a string, as eval() would do,
+            // but still produces an equivalent regex literal.
+            // e.g. stripping: (\a -> a) (\\a -> a) (\\ -> \)
+            //     not stripping: (\n -> \n) (\7 -> \7)
             // See [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-7.8.4)
-            return str.replace(/\\([^'"\\bfnrtvxu0-7])/g, '$1')
+            return str.replace(/\\([^'"bfnrtvxu0-7])/g, '$1')
         },
         bubbleUp: function(parts) {
             parts.flags = parts.flags.split('')
@@ -24,15 +31,18 @@
         },
         handleLiteralChange: function(parts) {
             this.setState({
-                escapedPattern: this.escape(parts.pattern)
+                escapedPattern: this.escape(parts.pattern),
+                escapedFlags: parts.flags
             })
             this.bubbleUp(parts)
         },
         handleCtorChange: function(parts) {
             this.setState({
-                escapedPattern: parts.pattern
+                escapedPattern: parts.pattern,
+                escapedFlags: parts.flags
             })
             parts.pattern = this.unescape(parts.pattern)
+            parts.flags = this.unescape(parts.flags)
             this.bubbleUp(parts)
         },
         render: function() {
@@ -43,7 +53,7 @@
                         pattern={this.props.pattern} flags={flags}
                         onChange={this.handleLiteralChange} />
                     <Constructor
-                        pattern={this.state.escapedPattern} flags={flags}
+                        pattern={this.state.escapedPattern} flags={this.state.escapedFlags}
                         onChange={this.handleCtorChange} />
                 </div>
             )
