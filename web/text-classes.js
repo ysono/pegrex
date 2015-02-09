@@ -1,95 +1,96 @@
 ;(function(reactClasses) {
     var Texts = React.createClass({
-        handleChange: function(parts) {
+        getInitialState: function() {
+            return {
+                escapedPattern: this.escape(this.props.pattern)
+            }
+        },
+        escape: function(str) {
+            return str.replace(/\\/g, '\\\\')
+        },
+        unescape: function(str) {
+            // String literal with an odd number of slashes at the end is invalid.
+            // TODO highlight it
+            if (/[^\\](?:\\{2})*\\$/.test(str)) {
+                return ''
+            }
+
+            // See [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-7.8.4)
+            return str.replace(/\\([^'"\\bfnrtvxu0-7])/g, '$1')
+        },
+        bubbleUp: function(parts) {
+            parts.flags = parts.flags.split('')
             this.props.onChange(parts)
-            // parent compo owns the states of parts.*
+        },
+        handleLiteralChange: function(parts) {
+            this.setState({
+                escapedPattern: this.escape(parts.pattern)
+            })
+            this.bubbleUp(parts)
+        },
+        handleCtorChange: function(parts) {
+            this.setState({
+                escapedPattern: parts.pattern
+            })
+            parts.pattern = this.unescape(parts.pattern)
+            this.bubbleUp(parts)
         },
         render: function() {
-            var parts = {
-                pattern: this.props.pattern,
-                flags: this.props.flags
-            }
+            var flags = this.props.flags.join('')
             return (
                 <div className="texts-parent">
-                    <Literal parts={parts} onChange={this.handleChange} />
-                    <Constructor parts={parts} onChange={this.handleChange} />
+                    <Literal
+                        pattern={this.props.pattern} flags={flags}
+                        onChange={this.handleLiteralChange} />
+                    <Constructor
+                        pattern={this.state.escapedPattern} flags={flags}
+                        onChange={this.handleCtorChange} />
                 </div>
             )
         }
     })
 
-    function parseInputValues(refs) {
-        var result = Object.keys(refs).reduce(function(map, refName) {
+    function getRefVals(refs) {
+        return Object.keys(refs).reduce(function(map, refName) {
             map[refName] = refs[refName].getDOMNode().value
             return map
         }, {})
-        result.flags = result.flags.split('')
-        return result
     }
     var Literal = React.createClass({
         handleChange: function() {
-            var parts = parseInputValues(this.refs)
+            var parts = getRefVals(this.refs)
             this.props.onChange(parts)
         },
         render: function() {
-            var parts = this.props.parts
-            var pattern = parts.pattern || '(?:)'
-            var flags = parts.flags.join('')
             return (
                 <fieldset>
                     <legend>Literal</legend>
                     <span>/</span>
                     <input ref="pattern" type="text"
-                        value={pattern} onChange={this.handleChange} />
+                        placeholder={'(?:)'}
+                        value={this.props.pattern} onChange={this.handleChange} />
                     <span>/</span>
                     <input ref="flags" type="text"
-                        value={flags} onChange={this.handleChange} />
+                        value={this.props.flags} onChange={this.handleChange} />
                 </fieldset>
             )
         }
     })
     var Constructor = React.createClass({
-        getInitialState: function() {
-            return {
-                escapeInProgress: false
-            }
-        },
         handleChange: function() {
-            function unescape(str) {
-                // eval() would not be wise
-                return str.replace(/\\\\/g, '\\')
-            }
-            function isEscapeInProgress(pattern) {
-                return /[^\\]\\$/.test(pattern)
-            }
-            var parts = parseInputValues(this.refs)
-            var escInP = isEscapeInProgress(parts.pattern)
-
-            if (! escInP) {
-                parts.pattern = unescape(parts.pattern)
-                this.props.onChange(parts)
-            }
-            this.setState({
-                escapeInProgress: escInP
-            })
+            var parts = getRefVals(this.refs)
+            this.props.onChange(parts)
         },
         render: function() {
-            var parts = this.props.parts
-            function escape(str) {
-                return str.replace(/\\/g, '\\\\')
-            }
-            var pattern = escape(parts.pattern)
-                + (this.state.escapeInProgress ? '\\' : '')
-            var flags = parts.flags.join('')
             return (
                 <fieldset>
                     <legend>Constructor</legend>
                     <span>{'new RegExp('}</span>
                     <input ref="pattern" type="text"
-                        value={pattern} onChange={this.handleChange} />
+                        value={this.props.pattern} onChange={this.handleChange} />
                     <span>,</span>
                     <input ref="flags" type="text"
-                        value={flags} onChange={this.handleChange} />
+                        value={this.props.flags} onChange={this.handleChange} />
                     <span>{')'}</span>
                 </fieldset>
             )
