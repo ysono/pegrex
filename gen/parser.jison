@@ -517,7 +517,8 @@ function b() {
 
         anyChar: function() {
             return {
-                type: 'Any Char'
+                type: 'Any Char',
+                display: '.'
             }
         },
         specificChar: function(display, hint) {

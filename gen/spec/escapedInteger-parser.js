@@ -19,6 +19,7 @@ function capturedSingleAnyChar(locBegin) {
         grouped: disjunction([
             {
                 type: 'Any Char',
+                display: '.',
                 location: [locBegin,locBegin+1]
             }
         ])
@@ -364,7 +365,8 @@ function runOne(regex, terms) {
     } else {
         act = stringify(act)
         exp = stringify(exp)
-        console.error(success, src, act, exp)
+        // node's console needs String(boolean) for the first arg, or \n in json doesn't work?
+        console.error(String(success), src, act, exp)
     }
 }
 _.each(specs, function(params) {

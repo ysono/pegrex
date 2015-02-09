@@ -75,7 +75,8 @@ var provide = {
             provide.PatternCharacter(),
             {
                 '.':  {
-                    type: 'Any Char'
+                    type: 'Any Char',
+                    display: '.'
                 }
             },
             provide.AtomEscape()

@@ -24,7 +24,8 @@ _.each(strToExpected, function(expected, str){
     if (success) {
         console.info(success, str)
     } else {
-        console.error(success, str, stringify(actual), stringify(expected))
+        // node's console needs String(boolean) for the first arg, or \n in json doesn't work?
+        console.error(String(success), str, stringify(actual), stringify(expected))
     }
 })
 
