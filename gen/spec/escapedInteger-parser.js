@@ -73,7 +73,7 @@ var specs = [
             capturedSingleAnyChar(1),
             capturedSingleAnyChar(4),
             {
-                type: 'Set of Characters',
+                type: 'Set of Chars',
                 inclusive: true,
                 possibilities: [
                     {
@@ -264,7 +264,7 @@ var specs = [
         /[\129]/,
         [
             {
-                type: 'Set of Characters',
+                type: 'Set of Chars',
                 inclusive: true,
                 possibilities: [
                     {
@@ -287,7 +287,7 @@ var specs = [
         /[\400]/,
         [
             {
-                type: 'Set of Characters',
+                type: 'Set of Chars',
                 inclusive: true,
                 possibilities: [
                     {

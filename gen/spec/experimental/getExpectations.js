@@ -153,12 +153,12 @@ var provide = {
     CharacterClassEscape: function() {
         return {
             '\\d': {
-                type: 'Pre-defined Set of Characters',
+                type: 'Pre-defined Set of Chars',
                 display: '\\d',
                 meaning: 'Digit Char'
             },
             '\\S': {
-                type: 'Pre-defined Set of Characters',
+                type: 'Pre-defined Set of Chars',
                 display: '\\S',
                 meaning: 'Non Whitespace Char'
             }

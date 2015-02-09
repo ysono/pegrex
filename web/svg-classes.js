@@ -1,4 +1,16 @@
 ;(function(reactClasses) {
+    var typeToCompo = {
+        'Set of Chars': function(term, i) {
+            return <CharSet key={i} term={term} />
+        },
+        'Any Char': function(term, i) {
+            return <Char key={i} term={term} />
+        },
+        'Specific Char': function(term, i) {
+            return <Char key={i} term={term} />
+        }
+    }
+
     var Surface = React.createClass({
         render: function() {
             var disj = this.props.tree
@@ -69,7 +81,7 @@
             var txform = ['translate(', alt.ui.pos, ')'].join('')
 
             var termNodes = alt.terms.map(function(term, i) {
-                return <Unit key={i} term={term} />
+                return typeToCompo[term.type](term, i)
             })
             var arrowNodes = alt.ui.fillers.map(function(arrow, i) {
                 return <ArrowFlat key={i} arrow={arrow} />
@@ -85,7 +97,30 @@
             )
         }
     })
-    var Unit = React.createClass({
+    var CharSet = React.createClass({
+        render: function() {
+            var term = this.props.term
+
+            var txform = ['translate(', term.ui.pos, ')'].join('')
+
+            var charNodes = term.possibilities.map(function(subTerm, i) {
+                return typeToCompo[subTerm.type](subTerm, i)
+            })
+            var arrowNodes = term.ui.arrows.map(function(arrow, i) {
+                return <ArrowFlat key={i} arrow={arrow} />
+            })
+
+            return (
+                <g transform={txform}>
+                    <rect width={term.ui.dim[0]} height={term.ui.dim[1]}
+                        stroke="purple" strokeWidth="3" fill="white" />
+                    {charNodes}
+                    {arrowNodes}
+                </g>
+            )
+        }
+    })
+    var Char = React.createClass({
         render: function() {
             var term = this.props.term
 
@@ -111,10 +146,19 @@
 
             var txform = ['translate(', arrow.pos, ')'].join('')
 
-            var markerW = 12 // from defs>marker[markerWidth]
-            var start = [0, arrow.dim[1] / 2]
-            var end = [arrow.dim[0] - markerW, start[1]]
-            var d = ['M', start, 'L', end].join(' ')
+            var vector = [
+                arrow.end[0] - arrow.begin[0],
+                arrow.end[1] - arrow.begin[1]
+            ]
+            var diagonal = Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2))
+
+            var markerLen = 10 // from defs>marker[markerWidth]
+            var markerW = markerLen / diagonal * vector[0]
+            var markerH = markerLen / diagonal * vector[1]
+
+            arrow.end[0] -= markerW
+            arrow.end[1] -= markerH
+            var d = ['M', arrow.begin, 'L', arrow.end].join(' ')
 
             return (
                 <g transform={txform}>
