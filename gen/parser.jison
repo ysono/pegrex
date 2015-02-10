@@ -739,9 +739,9 @@ parser.parse = (function(orig) {
     function postParse() {
         parser.yy.terms_s.forEach(function(terms) {
             var i, term
-            function splice(arr, index, replacement) {
-                var args = [index, 1].concat(replacement)
-                Array.prototype.splice.apply(arr, args)
+            function splice(replacement) {
+                var args = [i, 1].concat(replacement)
+                Array.prototype.splice.apply(terms, args)
 
                 // advance by repl.len to get to the element after repl
                 // subtract by 1 in anticipation of i++ by the for loop
@@ -752,15 +752,15 @@ parser.parse = (function(orig) {
             for(i = 0; i < terms.length; i++) {
                 term = terms[i]
                 if(term.type === 'delayedEscapedInteger') {
-                     splice(terms, i, b().escapedIntegerMaybeRef(term))
+                     splice(b().escapedIntegerMaybeRef(term))
                 } else if (term.type === 'Quantified' 
-                    && term.target.type === 'delayedEscapedInteger'){
+                    && term.target.type === 'delayedEscapedInteger') {
                     (function() {
                         var replacements = b().escapedIntegerMaybeRef(term.target)
                         var last = replacements.slice(-1)[0]
                         replacements = replacements.slice(0, -1).concat(
                             b().quantifiedAtom(last, term.quantifier))
-                        splice(terms, i, replacements)
+                        splice(replacements)
                     })()
                 }
             }
