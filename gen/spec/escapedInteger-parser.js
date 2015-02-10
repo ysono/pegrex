@@ -92,8 +92,9 @@ var specs = [
             capturedSingleAnyChar(1),
             capturedSingleAnyChar(4),
             {
-                type: 'Back Reference',
+                type: 'Reference',
                 number: 2,
+                isBack: true,
                 location: [6,8]
             }
         ]
@@ -141,8 +142,9 @@ var specs = [
             capturedSingleAnyChar(1),
             capturedSingleAnyChar(4),
             {
-                type: 'Back Reference',
+                type: 'Reference',
                 number: 2,
+                isBack: true,
                 location: [6,8]
             }
         ]
@@ -168,8 +170,9 @@ var specs = [
                 // location omitted
             },
             {
-                type: 'Forward Reference',
+                type: 'Reference',
                 number: 2,
+                isBack: false,
                 location: [4,6]
             },
             {
@@ -217,8 +220,9 @@ var specs = [
                     location: [8,11]
                 },
                 target: {
-                    type: 'Back Reference',
+                    type: 'Reference',
                     number: 1,
+                    isBack: true,
                     location: [6,8]
                 },
                 location: [6,11]

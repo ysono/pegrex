@@ -596,20 +596,22 @@ function b() {
         escapedIntegerMaybeRef: function(delayed) {
             /* parses delayedEscapedInteger
                 and returns array of
-                (backRef or fwdRef or specificChar or specificCharEsc)
+                (ref or specificChar or specificCharEsc)
             */
 
             function backRef(number) {
                 return {
-                    type: 'Back Reference',
+                    type: 'Reference',
                     number: number,
+                    isBack: true,
                     hint: 'Warning: This is a valid Back Reference, but it will match with an empty string if the target group has not been captured by the time this reference is expected. In practice, any group that is 1) outside the root-level Alternative that this Back Reference belongs to or 2) inside a Look-Forward Assertion will have not been captured.'
                 }
             }
             function fwdRef(number) {
                 return {
-                    type: 'Forward Reference',
+                    type: 'Reference',
                     number: number,
+                    isBack: false,
                     hint: 'Because the target group will never have been captured, a Forward Reference always matches with an empty string.'
                 }
             }
