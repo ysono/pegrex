@@ -141,12 +141,12 @@
         // detour arrow at the bottom
         if (needArrowBtm) {
             ;(function() {
-                var r = 5
+                var r = 10
                 function arc(clockwise, dx,dy) {
                     return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
                 }
-                var jointLeftX = pad.h / 2
-                var jointRightX = myUi.dim[0] - pad.h / 2
+                var jointLeftX = pad.h / 3
+                var jointRightX = myUi.dim[0] - jointLeftX
 
                 var detourArrow
                 if (data.quantifier.min === 0 && data.quantifier.max === 1) {
