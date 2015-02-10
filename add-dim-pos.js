@@ -1,4 +1,12 @@
 ;(function(reactClasses) {
+    'use strict'
+
+    /* standardize the y of arrows between terms.
+        A oneChar term is the smallest in height as well as likely most frequently seen.
+        Hence div that in half.
+    */
+    // TODO doesn't work for [x]{1}
+    var interTermArrowY = 16
 
     /* setUiOnCompoWithChildren:
         requires setUiByType
@@ -100,17 +108,15 @@
         Do the conversion here rather than parser b/c complication with escaped decimals
     */
     function setUiOnQuantifiedCompo(data) {
-        debugger
         var tUi
         var myUi
         (function() {
-            // Can't use Object.create, or else data.target.target....
+            // Can't use Object.create, or else we'll have data.target.target....
             var target = Object.keys(data).reduce(function(clone, key) {
-                if (key === 'quantifier') {
-                    return clone
+                if (key !== 'quantifier') {
+                    clone[key] = data[key]
+                    delete data[key]
                 }
-                clone[key] = data[key]
-                delete data[key]
                 return clone
             }, {})
             data.target = target
@@ -122,90 +128,117 @@
         })()
 
         var pad = {h: 40, v: 10}
-        var interArrowH = tUi.dim[1] / 2 + 10
+        var arrowEdgeY = interTermArrowY
+        var intraMargin = 10 // between target and the arrow that doesn't go thru it
+
+        var arrowMidTopY,
+            arrowMidBtmY,
+            targetY,
+            myH
+        var needArrowBtm = true
+        if (data.quantifier.min) {
+            // term is at the top
+            targetY = pad.v
+            arrowMidTopY = targetY + tUi.dim[1] / 2
+            arrowMidBtmY = targetY + tUi.dim[1] + intraMargin
+
+            if (data.quantifier.min === 1 && data.quantifier.max === 1) {
+                needArrowBtm = false
+                myH = targetY + tUi.dim[1] + intraMargin
+            } else {
+                myH = arrowMidBtmY + pad.v
+            }
+        } else {
+            // term is at the bottom
+            arrowMidTopY = interTermArrowY
+            targetY = arrowMidTopY + intraMargin
+            arrowMidBtmY = targetY + tUi.dim[1] / 2
+            myH = targetY + tUi.dim[1] + pad.v
+
+            if (! data.quantifier.max) {
+                // min and max are 0
+                needArrowBtm = false
+            }
+        }
 
         tUi.pos = [
             pad.h,
-            pad.v + (data.quantifier.min ? 0 : interArrowH)
+            targetY
         ]
         myUi.dim = [
             pad.h * 2 + tUi.dim[0],
-            tUi.pos[1] + tUi.dim[1] + pad.v
+            myH
         ]
 
-        // TODO how much of below should go to react class itself?
         // TODO need to show min,max
         
-        var edgeArrowY = 16
-        var targetMidY = pad.v + tUi.dim[1] / 2
-        
-        // straight arrow at the top
-        // TOOD for {0,0}, break shows
+        // thru arrow at the top
         myUi.arrows = [{
-            begin: [0, edgeArrowY],
-            end: [tUi.pos[0], targetMidY]
-        }, {
-            begin: [tUi.pos[0] + tUi.dim[0], targetMidY],
-            end: [myUi.dim[0], edgeArrowY]
+            d: [
+                [0, interTermArrowY],
+                [tUi.pos[0], arrowMidTopY],
+                [tUi.pos[0] + tUi.dim[0], arrowMidTopY],
+                [myUi.dim[0], interTermArrowY]
+            ]
         }]
         // detour arrow at the bottom
-        ;(function() {
-            var r = 5
-            function arc(clockwise, dx,dy) {
-                return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
-            }
-            var detourLPt = [pad.h / 2, targetMidY]
-            var detourRPt = [myUi.dim[0] - pad.h / 2, detourLPt[1]]
-            var detourLBtmPt = [detourLPt[0], detourLPt[1] + interArrowH]
-            var detourRBtmPt = [detourRPt[0], detourLBtmPt[1]]
-
-            var quantifier = data.quantifier
-
-            if ([0,1].indexOf(quantifier.min) >= 0 &&
-                quantifier.min === quantifier.max) {
-                // no detour line
-                return
-            }
-
-            var detourArrow
-            if (quantifier.min === 0 && quantifier.max === 1) {
-                // left of parent -> down -> right -> up -> right of parent
-                detourArrow = {
-                    d: [
-                        'M', 0, detourLPt[1],
-                        'L', detourLPt[0] - r, detourLPt[1],
-                        arc(1, r, r),
-                        'L', detourLBtmPt[0], detourLBtmPt[1] - r,
-                        arc(0, r, r),
-                        'L', detourRBtmPt[0] - r, detourRBtmPt[1],
-                        arc(0, r, -r),
-                        'L', detourRPt[0], detourRPt[1] + r,
-                        arc(1, r, -1*r)
-                    ].join(' '),
-                    end: [myUi.dim[0], detourLPt[1]]
+        if (needArrowBtm) {
+            ;(function() {
+                var r = 5
+                function arc(clockwise, dx,dy) {
+                    return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
                 }
-            } else {
-                // right of target -> down -> left -> up -> left of parent
-                detourArrow = {
-                    d: [
-                        'M', tUi.pos[0] + tUi.dim[0], detourRPt[1],
-                        'L', detourRPt[0] - r, detourRPt[1],
-                        arc(1, r, r),
-                        'L', detourRBtmPt[0], detourRBtmPt[1] - r,
-                        arc(1, -1*r, r),
-                        'L', detourLBtmPt[0] + r, detourLBtmPt[1],
-                        arc(1, -1*r, -1*r),
-                        'L', detourLPt[0], detourLPt[1] + r,
-                        arc(1, r, -1*r)
-                    ].join(' '),
-                    end: [tUi.pos[0], detourLPt[1]]
-                }
-            }
-            myUi.arrows.push(detourArrow)
+                var jointLeftX = pad.h / 2
+                var jointRightX = myUi.dim[0] - pad.h / 2
 
-            // readjust my height
-            myUi.dim[1] = Math.max(myUi.dim[1], detourLBtmPt[1] + pad.v)
-        })()
+                var detourArrow
+                if (data.quantifier.min === 0 && data.quantifier.max === 1) {
+                    // left edge -> down -> right -> up -> right edge
+                    detourArrow = (function() {
+                        var begin = [0, interTermArrowY]
+                        var path = [
+                            'M', begin,
+                            window.utils.reflectedQuadra(begin, [jointLeftX - r, arrowMidTopY]),
+                            arc(1, r, r),
+                            'L', jointLeftX, arrowMidBtmY - r,
+                            arc(0, r, r),
+                            'L', jointRightX - r, arrowMidBtmY,
+                            arc(0, r, -r),
+                            'L', jointRightX, arrowMidTopY + r,
+                            arc(1, r, -r)
+                        ].join(' ')
+                        return {
+                            d: [
+                                path,
+                                [myUi.dim[0], interTermArrowY]
+                            ]
+                        }
+                    })()
+                } else {
+                    // right edge -> down -> left -> up -> left edge
+                    detourArrow = (function() {
+                        var path = [
+                            'M', tUi.pos[0] + tUi.dim[0], arrowMidTopY,
+                            'L', jointRightX - r, arrowMidTopY,
+                            arc(1, r, r),
+                            'L', jointRightX, arrowMidBtmY - r,
+                            arc(1, -r, r),
+                            'L', jointLeftX + r, arrowMidBtmY,
+                            arc(1, -r, -r),
+                            'L', jointLeftX, arrowMidTopY + r,
+                            arc(1, r, -r)
+                        ].join(' ')
+                        return {
+                            d: [
+                                path,
+                                [tUi.pos[0], arrowMidTopY]
+                            ]
+                        }
+                    })()
+                }
+                myUi.arrows.push(detourArrow)
+            })()
+        }
 
         return myUi
     }
@@ -251,7 +284,6 @@
                 return ui
             },
             'Alternative': function() {
-                var arrowH = 32 // b/c height of `oneChar` is 32
                 var ui = setUiOnCompoWithChildren(
                     data,
 
@@ -260,11 +292,13 @@
                     5,
                     'x',
 
-                    {x: 40, y: arrowH}
+                    {x: 40, y: 0}
                 )
                 ui.fillers.forEach(function(arrow) {
-                    arrow.begin = [0, arrowH / 2]
-                    arrow.end = [arrow.dim[0], arrowH / 2]
+                    arrow.d = [
+                        [0, interTermArrowY],
+                        [arrow.dim[0], interTermArrowY]
+                    ]
                 })
                 return ui
             },
@@ -279,11 +313,10 @@
                     'y'
                 )
 
-                var arrowY = 16 // b/c height set by `oneChar` is 32
-                var leftArrowBegin = [0, arrowY]
+                var leftArrowBegin = [0, interTermArrowY]
                 var rightArrowEnd = function() {
                     // return a fresh copy b/c it's modified later to adjust for marker
-                    return [ui.dim[0], arrowY]
+                    return [ui.dim[0], interTermArrowY]
                 }
                 ui.arrows = data.possibilities.reduce(function(allArrows, possib) {
                     var subUi = possib.ui
@@ -291,13 +324,17 @@
 
                     var left = {
                         pos: [0,0],
-                        begin: leftArrowBegin,
-                        end: [subUi.pos[0], subUiYMid]
+                        d: [
+                            leftArrowBegin,
+                            [subUi.pos[0], subUiYMid]
+                        ]
                     }
                     var right = {
                         pos: [0,0],
-                        begin: [subUi.pos[0] + subUi.dim[0], subUiYMid],
-                        end: rightArrowEnd()
+                        d: [
+                            [subUi.pos[0] + subUi.dim[0], subUiYMid],
+                            rightArrowEnd()
+                        ]
                     }
                     return allArrows.concat(left, right)
                 }, [])

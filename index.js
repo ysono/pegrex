@@ -1,4 +1,6 @@
 ;(function() {
+    'use strict'
+    
     var Controls = React.createClass({
         getInitialState: function() {
             return {

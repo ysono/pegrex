@@ -1,4 +1,6 @@
 ;(function(reactClasses) {
+    'use strict'
+    
     var Texts = React.createClass({
         getInitialState: function() {
             return {
