@@ -3,7 +3,7 @@
 
     /* standardize the y of arrows between terms.
         A oneChar term is the smallest in height as well as likely most frequently seen.
-        Hence div that in half.
+        Its height is always 32; div this in half.
     */
     var interTermArrowY = 16
 
@@ -258,7 +258,20 @@
                 }
 
                 return myUi
-            }, // end of Quantified
+            },
+
+            'Group': function() {
+                var pad = {h: 10, v: 10}
+                debugger
+                var cUi = setUiByType(data.grouped)
+                cUi.pos = [pad.h, pad.v]
+                return data.ui = {
+                    dim: [
+                        cUi.dim[0] + pad.h * 2,
+                        cUi.dim[1] + pad.v * 2
+                    ]
+                }
+            },
 
             'Set of Chars': function() {
                 var pad = {x: [30,30], y: [10,10]}

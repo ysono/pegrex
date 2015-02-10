@@ -1,9 +1,19 @@
 ;(function(reactClasses) {
     'use strict'
 
+    // TODO compact this map and all the react classes together
+    //     there is a ton of repetition in them
     var typeToCompo = {
+        'Disjunction': function(disj, i) {
+            return <Disjunction key={i} disj={disj} />
+        },
+
         'Quantified': function(q, i) {
             return <Quantified key={i} q={q} />
+        },
+
+        'Group': function(group, i) {
+            return <Group key={i} group={group} />
         },
         
         'Set of Chars': function(term, i) {
@@ -30,7 +40,7 @@
             if (disj) {
                 reactClasses.addDimPos(disj)
                 svgDim = disj.ui.svgDim
-                childNode = <Disjunction disj={disj} />
+                childNode = typeToCompo[disj.type](disj)
             }
 
             var markerStr = '\
@@ -107,6 +117,25 @@
         }
     })
 
+    var Group = React.createClass({
+        render: function() {
+            var group = this.props.group
+
+            var txform = ['translate(', group.ui.pos, ')'].join('')
+
+            var grouped = group.grouped
+            var groupedNode = typeToCompo[grouped.type](grouped)
+
+            return (
+                <g transform={txform}>
+                    <rect width={group.ui.dim[0]} height={group.ui.dim[1]}
+                        stroke="blue" strokeWidth="3" fill="white" />
+                    {groupedNode}
+                </g>
+            )
+        }
+    })
+
     var Quantified = React.createClass({
         render: function() {
             var q = this.props.q
@@ -128,6 +157,7 @@
             )
         }
     })
+
     var CharSet = React.createClass({
         render: function() {
             var term = this.props.term
