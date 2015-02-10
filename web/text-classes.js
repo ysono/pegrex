@@ -46,6 +46,31 @@
         }
     })
     var Constructor = React.createClass({
+        /*
+            In a simple conditions, we can let react loop back our updates.
+            
+            E.g. a val in DOM is changed to `a\\`
+                -> update parent component that val has changed to the unescaped val of `a\`
+                -> looped back render fn sees that val (in this.props) is `a\`
+                -> escape, then set DOM val to `a\\`
+                -> what you type is what you get
+            
+            But in many conditions, the escaped and unescaped vals are not inverses of each other.
+            
+            E.g. val in DOM is `a\`
+                -> cannot unescape. There is no possible loop back that
+                    will give back `a\` in render fn.
+            
+            Hence we need a state to keep current unescaped val, whether valid or invalid.
+                --> use this.state.escParts
+            
+            In render fn, determine when to use val provided in props, and when to use this.state.escParts.
+                --> use this.state.prevParts.
+            If this.state.prevParts equals parts in props, then use this.state.escParts.
+            
+            When updating, if we want the next call of render to use this.state.escParts,
+            set this.state.prevParts to the current parts.
+        */
         getInitialState: function() {
             return {
                 prevParts: {},
@@ -88,22 +113,21 @@
         handleChange: function() {
             var escParts = getRefVals(this.refs)
             var parts = this.getUnescapedParts(escParts)
-            if (parts.pattern == null || parts.flags == null) {
-                // escape failed.
-                // 1. Want to `setState` to reflect escaped parts in dom.
-                // 2. Expect the looped back `render` to choose current escaped parts.
-                //     To do so, do not update `state.prevParts`.
-                // TODO document better
-                // TODO show error on text location
-                this.setState({
-                    escParts: escParts
-                })
-            } else {
+            var isEscapable = parts.pattern != null && parts.flags != null
+            if (isEscapable) {
                 this.setState({
                     prevParts: parts,
                     escParts: escParts
                 })
                 this.props.onChange(parts)
+            } else {
+                this.setState({
+                    prevParts: {
+                        pattern: this.props.pattern,
+                        flags: this.props.flags
+                    },
+                    escParts: escParts
+                })
             }
         },
         render: function() {
