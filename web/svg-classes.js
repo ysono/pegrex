@@ -1,4 +1,6 @@
 ;(function(reactClasses) {
+    'use strict'
+
     var typeToCompo = {
         'Quantified': function(q, i) {
             return <Quantified key={i} q={q} />
@@ -167,49 +169,47 @@
     })
     var Arrow = React.createClass({
         render: function() {
-            /* this.props.arrow:
-                either
-                {
+            // TODO test
+            /* required in this.props.arrow: {
                     pos: [n,n]
-                    start: [n,n]
-                    end: [n,n]
+                    d: array of (strings or [n,n]), but last element must be [n,n]
                 }
-                or
-                {
-                    pos: [n,n]
-                    d: the string value of this represents path before the end point.
-                    end: [n,n]
-                }
-
-                end is needed in either case only because of marker.
+                Segments in d are connected by
+                    reflected quadratic bezier between coords
+                    straight line between one more strings
+                Last point in d is adjusted for marker
+                All numbers in coords are absolute
             */
             var arrow = this.props.arrow
 
             var txform = ['translate(', arrow.pos, ')'].join('')
 
-            var markerLen = 12 // from defs>marker[markerWidth]
+            // from defs>marker[markerWidth]
+            var markerLen = 12
+            var end = arrow.d.slice(-1)[0]
+            // always move the end to the left b/c all our arrows point to the right
+            end[0] -= markerLen
 
-            var d = (function() {
-                arrow.end[0] -= markerLen
-
-                if (arrow.d) {
-                    return [arrow.d, 'L', arrow.end].join(' ')
-                }
-
-                var vector = [
-                    arrow.end[0] - arrow.begin[0],
-                    arrow.end[1] - arrow.begin[1]
-                ]
-                var qCtrlPt = [
-                    arrow.begin[0] + vector[0] / 4,
-                    arrow.begin[1]
-                ]
-                var midPt = [
-                    arrow.begin[0] + vector[0] / 2,
-                    arrow.begin[1] + vector[1] / 2
-                ]
-                return ['M', arrow.begin, 'Q', qCtrlPt, midPt, 'T', arrow.end].join(' ')
-            })()
+            var segms = arrow.d.reduce(function(segms, next, i) {
+                var segm = (function() {
+                    if (typeof next === 'string') {
+                        // (array or string or beginning of array) followed by string
+                        return next
+                    }
+                    if (arrow.d[i - 1] instanceof Array) {
+                        // array followed by array
+                        return window.utils.reflectedQuadra(arrow.d[i - 1], next)
+                    }
+                    if (i) {
+                        // string followed by array
+                        return ['L', next]
+                    }
+                    // beginning of array followed by array
+                    return ['M', next]
+                })()
+                return segms.concat(segm)
+            }, [])
+            var d = segms.join(' ')
 
             return (
                 <g transform={txform}>
