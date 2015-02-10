@@ -5,7 +5,6 @@
         A oneChar term is the smallest in height as well as likely most frequently seen.
         Hence div that in half.
     */
-    // TODO doesn't work for [x]{1}
     var interTermArrowY = 16
 
     /* setUiOnCompoWithChildren:
@@ -139,7 +138,7 @@
         if (data.quantifier.min) {
             // term is at the top
             targetY = pad.v
-            arrowMidTopY = targetY + tUi.dim[1] / 2
+            arrowMidTopY = targetY + interTermArrowY
             arrowMidBtmY = targetY + tUi.dim[1] + intraMargin
 
             if (data.quantifier.min === 1 && data.quantifier.max === 1) {
