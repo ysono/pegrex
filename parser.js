@@ -727,7 +727,7 @@ parser.parse = (function(orig) {
                 if(term.type === 'delayedEscapedInteger') {
                      splice(b().escapedIntegerMaybeRef(term))
                 } else if (term.type === 'Quantified' 
-                    && term.target.type === 'delayedEscapedInteger'){
+                    && term.target.type === 'delayedEscapedInteger') {
                     (function() {
                         var replacements = b().escapedIntegerMaybeRef(term.target)
                         var last = replacements.slice(-1)[0]
