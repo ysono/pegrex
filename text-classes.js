@@ -118,13 +118,13 @@
             return (
                 <fieldset>
                     <legend>Constructor</legend>
-                    <span>{'new RegExp('}</span>
+                    <span>new RegExp(</span>
                     <input ref="pattern" type="text"
                         value={escParts.pattern} onChange={this.handleChange} />
                     <span>,</span>
                     <input ref="flags" type="text"
                         value={escParts.flags} onChange={this.handleChange} />
-                    <span>{')'}</span>
+                    <span>)</span>
                 </fieldset>
             )
         }
