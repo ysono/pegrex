@@ -20,9 +20,10 @@ function capturedSingleAnyChar(locBegin) {
             {
                 type: 'Any Char',
                 display: '.',
-                location: [locBegin,locBegin+1]
+                location: [locBegin+1,locBegin+2]
             }
-        ])
+        ]),
+        location: [locBegin,locBegin+3]
     }
 }
 
@@ -70,8 +71,8 @@ var specs = [
     ], [
         /(.)(.)[\2]/,
         [
-            capturedSingleAnyChar(1),
-            capturedSingleAnyChar(4),
+            capturedSingleAnyChar(0),
+            capturedSingleAnyChar(3),
             {
                 type: 'Set of Chars',
                 inclusive: true,
@@ -89,8 +90,8 @@ var specs = [
     ], [
         /(.)(.)\2/,
         [
-            capturedSingleAnyChar(1),
-            capturedSingleAnyChar(4),
+            capturedSingleAnyChar(0),
+            capturedSingleAnyChar(3),
             {
                 type: 'Reference',
                 number: 2,
@@ -101,7 +102,7 @@ var specs = [
     ], [
         /(.)\0/,
         [
-            capturedSingleAnyChar(1),
+            capturedSingleAnyChar(0),
             {
                 type: 'Specific Char',
                 display: '\\0',
@@ -115,8 +116,8 @@ var specs = [
             {
                 type: 'Group',
                 isCapturing: true,
-                grouped: disjunction([])
-                // location omitted
+                grouped: disjunction([]),
+                location: [0,2]
             },
             {
                 type: 'Specific Char',
@@ -128,7 +129,7 @@ var specs = [
     ], [
         /(.)\2/,
         [
-            capturedSingleAnyChar(1),
+            capturedSingleAnyChar(0),
             {
                 type: 'Specific Char',
                 display: '\\2',
@@ -139,8 +140,8 @@ var specs = [
     ], [
         /(.)(.)\2/,
         [
-            capturedSingleAnyChar(1),
-            capturedSingleAnyChar(4),
+            capturedSingleAnyChar(0),
+            capturedSingleAnyChar(3),
             {
                 type: 'Reference',
                 number: 2,
@@ -166,8 +167,8 @@ var specs = [
                         display: 'q',
                         location: [2,3]
                     }
-                ])
-                // location omitted
+                ]),
+                location: [1,4]
             },
             {
                 type: 'Reference',
@@ -184,8 +185,8 @@ var specs = [
                         display: 'w',
                         location: [7,8]
                     }
-                ])
-                // location omitted
+                ]),
+                location: [6,9]
             },
             {
                 type: 'Assertion',
@@ -197,8 +198,8 @@ var specs = [
     ], [
         /(.)(.)\02/,
         [
-            capturedSingleAnyChar(1),
-            capturedSingleAnyChar(4),
+            capturedSingleAnyChar(0),
+            capturedSingleAnyChar(3),
             {
                 type: 'Specific Char',
                 display: '\\02',
@@ -209,8 +210,8 @@ var specs = [
     ], [
         /(.)(.)\1{2}/,
         [
-            capturedSingleAnyChar(1),
-            capturedSingleAnyChar(4),
+            capturedSingleAnyChar(0),
+            capturedSingleAnyChar(3),
             {
                 type: 'Quantified',
                 quantifier: {
@@ -385,8 +386,9 @@ function runOne(regex, terms) {
     var act = parser.parse(src)
     var success = _.isEqual(act, exp, function(act, exp){
         delete act.hint // not comparing hints
-        if (act.alternatives || act.terms || act.grouped) {
-            delete act.location // lazy - compare locations of terms and their children only
+        if (act.alternatives || act.terms) {
+            // lazy - compare locations of terms and their children only
+            delete act.location
         }
 
         if (typeof act === 'object'
