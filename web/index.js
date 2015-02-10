@@ -1,25 +1,13 @@
 ;(function() {
     'use strict'
-    
-    var Controls = React.createClass({
-        getInitialState: function() {
-            var parts = this.parseHash() || {
-                pattern: '',
-                flags: ''
-            }
-            parts.tree = this.textsToTree(parts)
-            return parts
-        },
-        componentDidMount: function() {
-            window.addEventListener('hashchange', this.updateSelfFromHash)
-        },
 
-        readHash: function() {
+    var hashUtil = {
+        read: function() {
             return decodeURIComponent(window.location.hash.slice(1))
         },
-        parseHash: function() {
+        parse: function() {
             // TODO test
-            var hash = this.readHash()
+            var hash = hashUtil.read()
             var commaIndex = hash.indexOf(',')
             if (commaIndex <= 0) { return }
             var patternLen = Number(hash.slice(0, commaIndex))
@@ -30,21 +18,35 @@
                 flags: hash.slice(flagsIndex)
             }
         },
-        updateSelfFromHash: function() {
-            var parts = this.parseHash()
-            if (parts) {
-                this.handleTextsChange(parts)
-            }
-        },
-        updateHash: function(parts) {
+        update: function(parts) {
             var hash = parts.pattern.length
                 + ','
                 + parts.pattern
                 + parts.flags
-            if (hash === this.readHash()) {
+            if (hash === hashUtil.read()) {
                 return
             }
             window.location.hash = encodeURIComponent(hash)
+        }
+    }
+    
+    var Controls = React.createClass({
+        getInitialState: function() {
+            var parts = hashUtil.parse() || {
+                pattern: '',
+                flags: ''
+            }
+            parts.tree = this.textsToTree(parts)
+            return parts
+        },
+        componentDidMount: function() {
+            var updateSelfFromHash = (function() {
+                var parts = hashUtil.parse()
+                if (parts) {
+                    this.handleTextsChange(parts)
+                }
+            }).bind(this)
+            window.addEventListener('hashchange', updateSelfFromHash)
         },
 
         textsToTree: function(parts) {
@@ -55,7 +57,6 @@
                 // TODO highlight text location
                 console.error('parsing failed', e)
             }
-            
         },
         handleTextsChange: function(parts) {
             if ( this.state.pattern === parts.pattern
@@ -67,7 +68,7 @@
                 flags: parts.flags,
                 tree: this.textsToTree(parts)
             }
-            this.updateHash(state)
+            hashUtil.update(state)
             this.setState(state)
         },
 
@@ -81,7 +82,6 @@
                     <reactClasses.Surface
                         tree={this.state.tree}
                         flags={this.state.flags} />
-                    
                 </div>
             )
         }
