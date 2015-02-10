@@ -209,13 +209,17 @@ var specs = [
             capturedSingleAnyChar(1),
             capturedSingleAnyChar(4),
             {
-                type: 'Back Reference',
-                number: 1,
+                type: 'Quantified',
                 quantifier: {
                     min: 2,
                     max: 2,
                     greedy: true,
                     location: [8,11]
+                },
+                target: {
+                    type: 'Back Reference',
+                    number: 1,
+                    location: [6,8]
                 },
                 location: [6,11]
             }
@@ -308,6 +312,28 @@ var specs = [
     ],
     [
         /* tests location of quantified decimals */
+        /\12{3}/,
+        [
+            {
+                type: 'Quantified',
+                quantifier: {
+                    min: 3,
+                    max: 3,
+                    greedy: true,
+                    location: [3,6]
+                },
+                target: {
+                    type: 'Specific Char',
+                    display: '\\12',
+                    meaning: 'Octal Notation',
+                    location: [0,3]
+                },
+                location: [0,6]
+            }
+        ]
+    ],
+    [
+        /* tests location of quantified decimals */
         /\1289{3,}?7/,
         [
             {
@@ -322,13 +348,17 @@ var specs = [
                 location: [3,4]
             },
             {
-                type: 'Specific Char',
-                display: '9',
+                type: 'Quantified',
                 quantifier: {
                     min: 3,
                     max: Infinity,
                     greedy: false,  
                     location: [5,10]
+                },
+                target: {
+                    type: 'Specific Char',
+                    display: '9',
+                    location: [4,5]
                 },
                 location: [4,10]
             },

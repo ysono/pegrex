@@ -80,51 +80,9 @@
         }
     }
 
-    /*
-        given data ~= {
-            type: 'Foo',
-            // other props of type Foo
-
-            quantifier: {
-                min
-                max
-                // other props of quantifier
-            }
-        }
-        return {
-            type: 'Quantified' // ui-only type
-            quantifier: {
-                min
-                max
-                // other props of quantifier
-            }
-            target: {
-                type: 'Foo',
-                // other props of type Foo
-            }
-        }
-
-        Do the conversion here rather than parser b/c complication with escaped decimals
-    */
     function setUiOnQuantifiedCompo(data) {
-        var tUi
-        var myUi
-        (function() {
-            // Can't use Object.create, or else we'll have data.target.target....
-            var target = Object.keys(data).reduce(function(clone, key) {
-                if (key !== 'quantifier') {
-                    clone[key] = data[key]
-                    delete data[key]
-                }
-                return clone
-            }, {})
-            data.target = target
-            tUi = setUiByType(target)
-
-            myUi = data.ui = {}
-
-            data.type = 'Quantified'
-        })()
+        var tUi = setUiByType(data.target)
+        var myUi = data.ui = {}
 
         var pad = {h: 40, v: 10}
         var arrowEdgeY = interTermArrowY
@@ -169,7 +127,7 @@
             myH
         ]
 
-        // TODO need to show min,max
+        // TODO need to show min,max, greedy
         
         // thru arrow at the top
         myUi.arrows = [{

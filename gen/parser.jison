@@ -97,7 +97,9 @@ Term
     : Assertion
     | Atom
     | Atom Quantifier
-        {$$ = b().quantifiedAtom($1, b().withLoc(@2).get($2))}
+        {{$$ = b().quantifiedAtom(
+            b().withLoc(@1).get($1),
+            b().withLoc(@2).get($2))}}
     ;
 Assertion
     /* assertion */
@@ -641,19 +643,16 @@ function b() {
                 }
             })(delayed.unparsed, delayed.backrefNumMax, delayed.loc)
 
-            if (delayed.quantifier) {
-                builders.quantifiedAtom(contained.slice(-1)[0], delayed.quantifier)
-            }
-
             return contained
         },
 
         quantifiedAtom: function(atom, quantifier) {
-            atom.quantifier = quantifier
-            if (atom.location) {
-                atom.location[1] = quantifier.location[1]
+            return {
+                type: 'Quantified',
+                quantifier: quantifier,
+                target: atom,
+                location: [atom.location[0], quantifier.location[1]]
             }
-            return atom
         },
         quantifier: function(quantifierRange, greedy) {
             quantifierRange.greedy = greedy
@@ -743,14 +742,29 @@ parser.parse = (function(orig) {
 
         parser.yy.terms_s.forEach(function(terms) {
             var i, term
+            function splice(arr, index, replacement) {
+                var args = [index, 1].concat(replacement)
+                Array.prototype.splice.apply(arr, args)
+
+                // advance by repl.len to get to the element after repl
+                // subtract by 1 in anticipation of i++ by the for loop
+                i = i + replacement.length - 1
+            }
+
             // `.length` is re-read for every loop
             for(i = 0; i < terms.length; i++) {
                 term = terms[i]
                 if(term.type === 'delayedEscapedInteger') {
-                    // no need to adjust i
-                    // b/c the replacement array is at least as long
-                    // as the length of 1 being spliced away.
-                    splice(terms, i, b().escapedIntegerMaybeRef(term))
+                     splice(terms, i, b().escapedIntegerMaybeRef(term))
+                } else if (term.type === 'Quantified' 
+                    && term.target.type === 'delayedEscapedInteger'){
+                    (function() {
+                        var replacements = b().escapedIntegerMaybeRef(term.target)
+                        var last = replacements.slice(-1)[0]
+                        replacements = replacements.slice(0, -1).concat(
+                            b().quantifiedAtom(last, term.quantifier))
+                        splice(terms, i, replacements)
+                    })()
                 }
             }
         })
