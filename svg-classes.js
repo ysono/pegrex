@@ -14,6 +14,10 @@
         },
         'Specific Char': function(term, i) {
             return <Char key={i} term={term} />
+        },
+        'Reference': function(assertion, i) {
+            assertion.display = assertion.number // TODO do this in parser if it's permanent
+            return <Char key={i} term={assertion} />
         }
     }
 
@@ -170,19 +174,20 @@
     var Arrow = React.createClass({
         render: function() {
             // TODO test
-            /* required in this.props.arrow: {
-                    pos: [n,n]
-                    d: array of (strings or [n,n]), but last element must be [n,n]
+            /* in this.props.arrow: {
+                    pos: optional -- [n,n]
+                    d: required -- array of (strings or [n,n]), but last element must be [n,n]
                 }
-                Segments in d are connected by
-                    reflected quadratic bezier between coords
-                    straight line between one more strings
+                Segments in d are connected by...
+                    * -> (nothing) -> string
+                    coord -> quadratic bezier -> coord
+                    string -> straight line -> coord
                 Last point in d is adjusted for marker
                 All numbers in coords are absolute
             */
             var arrow = this.props.arrow
 
-            var txform = ['translate(', arrow.pos, ')'].join('')
+            var txform = ['translate(', (arrow.pos || [0,0]), ')'].join('')
 
             // from defs>marker[markerWidth]
             var markerLen = 12
@@ -193,18 +198,18 @@
             var segms = arrow.d.reduce(function(segms, next, i) {
                 var segm = (function() {
                     if (typeof next === 'string') {
-                        // (array or string or beginning of array) followed by string
+                        // (coord or string or beginning of array) followed by string
                         return next
                     }
                     if (arrow.d[i - 1] instanceof Array) {
-                        // array followed by array
+                        // coord followed by coord
                         return window.utils.reflectedQuadra(arrow.d[i - 1], next)
                     }
                     if (i) {
-                        // string followed by array
+                        // string followed by coord
                         return ['L', next]
                     }
-                    // beginning of array followed by array
+                    // beginning of array followed by coord
                     return ['M', next]
                 })()
                 return segms.concat(segm)
