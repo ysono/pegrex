@@ -737,11 +737,6 @@ function b() {
 
 parser.parse = (function(orig) {
     function postParse() {
-        function splice(arr, index, replacement) {
-            var args = [index, 1].concat(replacement)
-            Array.prototype.splice.apply(arr, args)
-        }
-
         parser.yy.terms_s.forEach(function(terms) {
             var i, term
             function splice(arr, index, replacement) {
