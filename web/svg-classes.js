@@ -1,5 +1,9 @@
 ;(function(reactClasses) {
     var typeToCompo = {
+        'Quantified': function(q, i) {
+            return <Quantified key={i} q={q} />
+        },
+        
         'Set of Chars': function(term, i) {
             return <CharSet key={i} term={term} />
         },
@@ -30,8 +34,7 @@
                 </marker>'
             return (
                 <div className="surface-parent">
-                    <svg className="surface"
-                            width={svgDim[0]} height={svgDim[1]}>
+                    <svg width={svgDim[0]} height={svgDim[1]}>
                         <defs dangerouslySetInnerHTML={{__html: markerStr}}></defs>
                         {childNode}
                     </svg>
@@ -57,8 +60,8 @@
                 <g transform={txform}>
                     <rect width={disj.ui.dim[0]} height={disj.ui.dim[1]}
                         stroke="red" strokeWidth="6" fill="white" />
-                    {altNodes}
                     {hrNodes}
+                    {altNodes}
                 </g>
             )
         }
@@ -84,15 +87,37 @@
                 return typeToCompo[term.type](term, i)
             })
             var arrowNodes = alt.ui.fillers.map(function(arrow, i) {
-                return <ArrowFlat key={i} arrow={arrow} />
+                return <Arrow key={i} arrow={arrow} />
             })
 
             return (
                 <g transform={txform}>
                     <rect width={alt.ui.dim[0]} height={alt.ui.dim[1]}
                         stroke="green" strokeWidth="4" fill="white" />
-                    {termNodes}
                     {arrowNodes}
+                    {termNodes}
+                </g>
+            )
+        }
+    })
+
+    var Quantified = React.createClass({
+        render: function() {
+            var q = this.props.q
+
+            var txform = ['translate(', q.ui.pos, ')'].join('')
+
+            var termNode = typeToCompo[q.target.type](q.target)
+            var arrowNodes = q.ui.arrows.map(function(arrow, i) {
+                return <Arrow key={i} arrow={arrow} />
+            })
+
+            return (
+                <g transform={txform}>
+                    <rect width={q.ui.dim[0]} height={q.ui.dim[1]}
+                        stroke="red" strokeWidth="3" fill="white" />
+                    {arrowNodes}
+                    {termNode}
                 </g>
             )
         }
@@ -107,15 +132,15 @@
                 return typeToCompo[subTerm.type](subTerm, i)
             })
             var arrowNodes = term.ui.arrows.map(function(arrow, i) {
-                return <ArrowFlat key={i} arrow={arrow} />
+                return <Arrow key={i} arrow={arrow} />
             })
 
             return (
                 <g transform={txform}>
                     <rect width={term.ui.dim[0]} height={term.ui.dim[1]}
                         stroke="purple" strokeWidth="3" fill="white" />
-                    {charNodes}
                     {arrowNodes}
+                    {charNodes}
                 </g>
             )
         }
@@ -140,29 +165,51 @@
             )
         }
     })
-    var ArrowFlat = React.createClass({
+    var Arrow = React.createClass({
         render: function() {
+            /* this.props.arrow:
+                either
+                {
+                    pos: [n,n]
+                    start: [n,n]
+                    end: [n,n]
+                }
+                or
+                {
+                    pos: [n,n]
+                    d: the string value of this represents path before the end point.
+                    end: [n,n]
+                }
+
+                end is needed in either case only because of marker.
+            */
             var arrow = this.props.arrow
 
             var txform = ['translate(', arrow.pos, ')'].join('')
 
             var markerLen = 12 // from defs>marker[markerWidth]
-            arrow.end[0] -= markerLen
 
-            var vector = [
-                arrow.end[0] - arrow.begin[0],
-                arrow.end[1] - arrow.begin[1]
-            ]
-            var qCtrlPt = [
-                arrow.begin[0] + vector[0] / 4,
-                arrow.begin[1]
-            ]
-            var midPt = [
-                arrow.begin[0] + vector[0] / 2,
-                arrow.begin[1] + vector[1] / 2
-            ]
+            var d = (function() {
+                arrow.end[0] -= markerLen
 
-            var d = ['M', arrow.begin, 'Q', qCtrlPt, midPt, 'T', arrow.end].join(' ')
+                if (arrow.d) {
+                    return [arrow.d, 'L', arrow.end].join(' ')
+                }
+
+                var vector = [
+                    arrow.end[0] - arrow.begin[0],
+                    arrow.end[1] - arrow.begin[1]
+                ]
+                var qCtrlPt = [
+                    arrow.begin[0] + vector[0] / 4,
+                    arrow.begin[1]
+                ]
+                var midPt = [
+                    arrow.begin[0] + vector[0] / 2,
+                    arrow.begin[1] + vector[1] / 2
+                ]
+                return ['M', arrow.begin, 'Q', qCtrlPt, midPt, 'T', arrow.end].join(' ')
+            })()
 
             return (
                 <g transform={txform}>
