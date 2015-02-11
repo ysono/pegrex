@@ -10,9 +10,6 @@ Resrouces:
 %s TERM
 %s DISJ_IN_ASSERTN_FWD
 
-
-
-
 %%
 
 <<EOF>>         return 'EOF'
@@ -37,14 +34,14 @@ Resrouces:
 /* assertion */
 <TERM>[$^]                  return 'ASSERTN_LB'
 <TERM>[\\][bB]              return 'ASSERTN_WB'
-<TERM>[(][?][=!]            debugger; this.begin('DISJ'); return 'ASSERTN_LF_BEGIN'
+<TERM>[(][?][=!]            this.begin('DISJ'); return 'ASSERTN_LF_BEGIN'
 
 /* atom */
 <TERM>[\.]                  return 'ATOM_CHAR_ANY'
 <TERM>[\\][f]               return 'ATOM_ATOMESC' /* TODO not just f */
 /* todo char class */
-<TERM>[(][^?]               debugger; this.begin('DISJ'); this.unput(yytext[1]); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a ) */
-<TERM>[(][?][:]             debugger; this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
+<TERM>[(][^?]               this.begin('DISJ'); this.unput(yytext[1]); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a ) */
+<TERM>[(][?][:]             this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
 /* todo patterncharacter */
 
 /* quantifier */
@@ -61,11 +58,6 @@ function popTill(lexer, state) {
     do {
         st = lexer.popState()
     } while (st !== state)
-}
-
-function foo() {
-    var l = lexer
-    debugger
 }
 
 /lex
@@ -96,7 +88,8 @@ Term_s
     : /* empty */
         {$$ = []}
     | Term_s Term
-        {$$ = $1.concat($2)} /* TODO loc for all kinds of term here */
+        {$$ = $1.concat(b().withLoc(@2).get($2) )}
+        /* the withLoc here takes care of all kinds of terms. no need to add individually. */
     ;
 Term
     : Assertion
@@ -127,8 +120,6 @@ Atom
     ;
 
 %%
-
-// some js here
 
 function b() {
     var builders = {

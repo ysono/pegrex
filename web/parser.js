@@ -102,7 +102,7 @@ case 6:
 this.$ = []
 break;
 case 7:
-this.$ = $$[$0-1].concat($$[$0])
+this.$ = $$[$0-1].concat(b().withLoc(_$[$0]).get($$[$0]) )
 break;
 case 10:
 this.$ = b().quantified( $$[$0-1], 
@@ -272,8 +272,6 @@ parse: function parse(input) {
     return true;
 }};
 
-
-// some js here
 
 function b() {
     var builders = {
@@ -754,15 +752,15 @@ case 6:return 16
 break;
 case 7:return 17
 break;
-case 8:debugger; this.begin('DISJ'); return 18
+case 8:this.begin('DISJ'); return 18
 break;
 case 9:return 20
 break;
 case 10:return 21 /* TODO not just f */
 break;
-case 11:debugger; this.begin('DISJ'); this.unput(yy_.yytext[1]); return 22 /* note yy_.yytext[1] can be a ) */
+case 11:this.begin('DISJ'); this.unput(yy_.yytext[1]); return 22 /* note yy_.yytext[1] can be a ) */
 break;
-case 12:debugger; this.begin('DISJ'); return 23
+case 12:this.begin('DISJ'); return 23
 break;
 case 13:return 14
 break;
@@ -779,11 +777,6 @@ function popTill(lexer, state) {
     do {
         st = lexer.popState()
     } while (st !== state)
-}
-
-function foo() {
-    var l = lexer
-    debugger
 };
 return lexer;
 })();
