@@ -257,10 +257,10 @@
                         }
                         myUi.arrows.push(detourArrow)
                     })()
-                    myUi.arrows.forEach(function(arrow) {
-                        arrow.type = 'arrow'
-                    })
                 }
+                myUi.arrows.forEach(function(arrow) {
+                    arrow.type = 'arrow'
+                })
 
                 return myUi
             },

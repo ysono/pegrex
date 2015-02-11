@@ -186,7 +186,9 @@
         }
         var clazz = typeToClass[data.type]
             || typeToClass[aliases[data.type]]
-        // TODO if ! class, fail? react doesn't fail.
+        if (! clazz) {
+            console.error('could not find the react type for data', data)
+        }
         var instance = React.createElement(clazz, {
             data: data,
             key: key
