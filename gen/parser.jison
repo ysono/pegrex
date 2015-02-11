@@ -126,9 +126,9 @@ Quantifier
 QuantifierPrefix
     /* quantifierRange */
     : '*'
-        {$$ = b().quantifierRange(0, Intinify)}
+        {$$ = b().quantifierRange(0, Infinity)}
     | '+'
-        {$$ = b().quantifierRange(1, Intinify)}
+        {$$ = b().quantifierRange(1, Infinity)}
     | '?'
         {$$ = b().quantifierRange(0, 1)}
     | '{' integer '}'

@@ -115,6 +115,7 @@
                 // set hr width as maximal width of alternatives
                 var hrW = ui.dim[0] - pad.x[0] - pad.x[1]
                 ui.fillers.forEach(function(hr) {
+                    hr.type = 'hr'
                     hr.dim[0] = hrW
                 })
                 return ui
@@ -131,6 +132,7 @@
                     {x: 40, y: 0}
                 )
                 ui.fillers.forEach(function(arrow) {
+                    arrow.type = 'arrow'
                     arrow.d = [
                         [0, interTermArrowY],
                         [arrow.dim[0], interTermArrowY]
@@ -255,6 +257,9 @@
                         }
                         myUi.arrows.push(detourArrow)
                     })()
+                    myUi.arrows.forEach(function(arrow) {
+                        arrow.type = 'arrow'
+                    })
                 }
 
                 return myUi
@@ -262,7 +267,6 @@
 
             'Group': function() {
                 var pad = {h: 10, v: 10}
-                debugger
                 var cUi = setUiByType(data.grouped)
                 cUi.pos = [pad.h, pad.v]
                 return data.ui = {
@@ -294,12 +298,14 @@
                     var subUiYMid = subUi.pos[1] + subUi.dim[1] / 2
 
                     var left = {
+                        type: 'arrow',
                         d: [
                             leftArrowBegin,
                             [subUi.pos[0], subUiYMid]
                         ]
                     }
                     var right = {
+                        type: 'arrow',
                         d: [
                             [subUi.pos[0] + subUi.dim[0], subUiYMid],
                             rightArrowEnd()

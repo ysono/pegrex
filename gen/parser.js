@@ -134,10 +134,10 @@ case 18:
 this.$ = b().quantifier($$[$0-1], false)
 break;
 case 19:
-this.$ = b().quantifierRange(0, Intinify)
+this.$ = b().quantifierRange(0, Infinity)
 break;
 case 20:
-this.$ = b().quantifierRange(1, Intinify)
+this.$ = b().quantifierRange(1, Infinity)
 break;
 case 21:
 this.$ = b().quantifierRange(0, 1)
