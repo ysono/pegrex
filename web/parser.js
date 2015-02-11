@@ -72,12 +72,12 @@
   }
 */
 var parser = (function(){
-var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[2,6],$V1=[5,8,22],$V2=[5,8,14,15,16,17,18,19,21,22,23,29,30,32,35,40,45,46,47,48,49,50,52,53,54,55,56,57,58,59,61,65,70,71,72,73,74],$V3=[1,80],$V4=[1,81],$V5=[1,82],$V6=[1,83],$V7=[1,84],$V8=[1,86],$V9=[1,87],$Va=[1,85],$Vb=[1,88],$Vc=[1,89],$Vd=[1,90],$Ve=[1,91],$Vf=[1,92],$Vg=[1,93],$Vh=[1,94],$Vi=[1,98],$Vj=[1,63],$Vk=[1,73],$Vl=[1,74],$Vm=[1,75],$Vn=[1,76],$Vo=[1,77],$Vp=[1,78],$Vq=[1,79],$Vr=[1,67],$Vs=[1,68],$Vt=[1,69],$Vu=[1,70],$Vv=[1,71],$Vw=[1,72],$Vx=[1,95],$Vy=[1,96],$Vz=[1,97],$VA=[1,60],$VB=[1,61],$VC=[1,99],$VD=[1,100],$VE=[1,101],$VF=[1,102],$VG=[8,14,15,16,17,18,19,21,22,23,29,30,32,35,40,45,46,47,48,49,50,52,53,54,55,56,57,58,59,61,65,70,71,72,73,74],$VH=[5,8,14,15,16,17,18,19,20,21,22,23,25,26,27,29,30,32,35,40,45,46,47,48,49,50,52,53,54,55,56,57,58,59,61,65,70,71,72,73,74],$VI=[1,112],$VJ=[1,113],$VK=[1,114],$VL=[1,111],$VM=[1,129],$VN=[1,130],$VO=[1,115],$VP=[1,117],$VQ=[1,118],$VR=[1,116],$VS=[1,119],$VT=[1,120],$VU=[1,121],$VV=[1,122],$VW=[1,123],$VX=[1,124],$VY=[1,125],$VZ=[1,127],$V_=[1,131],$V$=[1,134],$V01=[1,135],$V11=[1,136],$V21=[1,139],$V31=[1,141],$V41=[1,140],$V51=[1,144],$V61=[1,132],$V71=[1,133],$V81=[1,137],$V91=[1,138],$Va1=[1,142],$Vb1=[1,143],$Vc1=[1,126],$Vd1=[2,53],$Ve1=[1,108],$Vf1=[1,145],$Vg1=[1,128],$Vh1=[1,146],$Vi1=[1,147],$Vj1=[1,148],$Vk1=[5,8,14,15,16,17,18,19,20,21,22,23,29,30,32,35,40,45,46,47,48,49,50,52,53,54,55,56,57,58,59,61,65,70,71,72,73,74],$Vl1=[1,174],$Vm1=[1,175],$Vn1=[1,176],$Vo1=[1,179],$Vp1=[1,177],$Vq1=[1,178],$Vr1=[1,180],$Vs1=[1,181],$Vt1=[8,14,15,16,17,18,19,20,21,22,23,25,26,27,29,30,32,35,40,45,46,47,48,49,50,52,53,54,55,56,57,58,59,61,65,70,71,72,73,74],$Vu1=[2,61],$Vv1=[2,62];
+var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[2,6],$V1=[5,8,18],$V2=[5,8,12,13,14,15,16,17,18,19],$V3=[8,12,13,14,15,16,17,18,19];
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"Pattern":3,"Disjunction":4,"EOF":5,"Alternative_s":6,"Alternative":7,"|":8,"Term_s":9,"Term":10,"Assertion":11,"Atom":12,"Quantifier":13,"^":14,"$":15,"\\\\":16,"b":17,"B":18,"(":19,"?":20,"=":21,")":22,"!":23,"QuantifierPrefix":24,"*":25,"+":26,"{":27,"integer":28,"}":29,",":30,"PatternCharacter":31,".":32,"AtomEscape":33,"CharacterClass":34,":":35,"DecimalDigits":36,"CharacterEscape":37,"CharacterClassEscape":38,"ControlEscape":39,"c":40,"ControlLetter":41,"HexEscapeSequence":42,"UnicodeEscapeSequence":43,"IdentityEscape":44,"f":45,"n":46,"r":47,"t":48,"v":49,"u":50,"HexDigit":51,"x":52,"d":53,"D":54,"s":55,"S":56,"w":57,"W":58,"[":59,"ClassRanges":60,"]":61,"NonemptyClassRanges":62,"ClassAtom":63,"NonemptyClassRangesNoDash":64,"-":65,"ClassAtomNoDash":66,"ClassAtomNoDash_single":67,"ClassEscape":68,"CHARS_DIGIT_DECIMAL":69,"CHAR_DIGIT_DECIMAL":70,"_":71,"CHAR_DIGIT_HEX":72,"CHAR_ALPHABET":73,"CHAR_OTHER":74,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"EOF",8:"|",14:"^",15:"$",16:"\\\\",17:"b",18:"B",19:"(",20:"?",21:"=",22:")",23:"!",25:"*",26:"+",27:"{",29:"}",30:",",32:".",35:":",40:"c",45:"f",46:"n",47:"r",48:"t",49:"v",50:"u",52:"x",53:"d",54:"D",55:"s",56:"S",57:"w",58:"W",59:"[",61:"]",65:"-",69:"CHARS_DIGIT_DECIMAL",70:"CHAR_DIGIT_DECIMAL",71:"_",72:"CHAR_DIGIT_HEX",73:"CHAR_ALPHABET",74:"CHAR_OTHER"},
-productions_: [0,[3,2],[4,1],[6,1],[6,3],[7,1],[9,0],[9,2],[10,1],[10,1],[10,2],[11,1],[11,1],[11,2],[11,2],[11,5],[11,5],[13,1],[13,2],[24,1],[24,1],[24,1],[24,3],[24,4],[24,5],[12,1],[12,1],[12,2],[12,1],[12,3],[12,5],[33,1],[33,1],[33,1],[37,1],[37,2],[37,1],[37,1],[37,1],[39,1],[39,1],[39,1],[39,1],[39,1],[42,5],[43,3],[38,1],[38,1],[38,1],[38,1],[38,1],[38,1],[34,3],[60,0],[60,1],[62,1],[62,2],[62,4],[64,1],[64,2],[64,4],[63,1],[63,1],[66,1],[66,2],[68,1],[68,1],[68,1],[68,1],[28,1],[36,1],[36,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[67,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[41,1],[51,1],[51,1],[51,1],[51,1],[51,1],[51,1],[51,1],[51,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1],[44,1]],
+symbols_: {"error":2,"Pattern":3,"Disjunction":4,"EOF":5,"Alternative_s":6,"Alternative":7,"ALT_DELIM":8,"Term_s":9,"Term":10,"Assertion":11,"TERM_GENERIC":12,"ASSERTN_LB_HEAD":13,"ASSERTN_LB_FOOT":14,"ASSERTN_WB_POS":15,"ASSERTN_WB_NEG":16,"ASSERTN_FWD_POS_BEGIN":17,"ASSERTN_FWD_END":18,"ASSERTN_FWD_NEG_BEGIN":19,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"EOF",8:"ALT_DELIM",12:"TERM_GENERIC",13:"ASSERTN_LB_HEAD",14:"ASSERTN_LB_FOOT",15:"ASSERTN_WB_POS",16:"ASSERTN_WB_NEG",17:"ASSERTN_FWD_POS_BEGIN",18:"ASSERTN_FWD_END",19:"ASSERTN_FWD_NEG_BEGIN"},
+productions_: [0,[3,2],[4,1],[6,1],[6,3],[7,1],[9,0],[9,2],[10,1],[10,1],[11,1],[11,1],[11,1],[11,1],[11,3],[11,3]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
@@ -86,162 +86,28 @@ switch (yystate) {
 case 1:
 return $$[$0-1]
 break;
-case 2:
-this.$ = b().withLoc(_$[$0]).disjunction($$[$0])
-break;
 case 3:
 this.$ = [$$[$0]]
 break;
 case 4:
-this.$ = $$[$0-2].concat($$[$0])
+this.$ = $$[$0-2].concat($$[$0-1])
 break;
-case 5:
-this.$ = b().withLoc(_$[$0]).alternative($$[$0])
-break;
-case 6: case 53:
+case 6:
 this.$ = []
 break;
 case 7:
-this.$ = $$[$0-1].concat( b().withLoc(_$[$0]).get($$[$0]) )
-break;
-case 10:
-this.$ = b().quantifiedAtom(
-            b().withLoc(_$[$0-1]).get($$[$0-1]),
-            b().withLoc(_$[$0]).get($$[$0]))
-break;
-case 11:
-this.$ = b().assertion('Line Boundary', true)
-break;
-case 12:
-this.$ = b().assertion('Line Boundary', false)
-break;
-case 13:
-this.$ = b().assertion('Word Boundary', true)
-break;
-case 14:
-this.$ = b().assertion('Word Boundary', false)
-break;
-case 15:
-this.$ = b().assertion('Look-Forward', true, $$[$0-1])
-break;
-case 16:
-this.$ = b().assertion('Look-Forward', false, $$[$0-1])
-break;
-case 17:
-this.$ = b().quantifier($$[$0], true)
-break;
-case 18:
-this.$ = b().quantifier($$[$0-1], false)
-break;
-case 19:
-this.$ = b().quantifierRange(0, Infinity)
-break;
-case 20:
-this.$ = b().quantifierRange(1, Infinity)
-break;
-case 21:
-this.$ = b().quantifierRange(0, 1)
-break;
-case 22:
-this.$ = b().quantifierRange($$[$0-1], $$[$0-1])
-break;
-case 23:
-this.$ = b().quantifierRange($$[$0-2], Infinity)
-break;
-case 24:
-this.$ = b().quantifierRange($$[$0-3], $$[$0-1])
-break;
-case 25:
-this.$ = b().specificChar($$[$0])
-break;
-case 26:
-this.$ = b().anyChar()
-break;
-case 27:
-this.$ = $$[$0];
-break;
-case 29:
-this.$ = b().group(true, $$[$0-1])
-break;
-case 30:
-this.$ = b().group(false, $$[$0-1])
-break;
-case 31:
-this.$ = b().delayedEscapedInteger(_$[$0], $$[$0])
-break;
-case 35:
-this.$ = b().specificCharEsc($$[$0-1]+$$[$0], 'Control Character')
-break;
-case 38:
-this.$ = b().specificChar($$[$0], 'Unnecessarily escaped')
-break;
-case 39:
-this.$ = b().specificCharEsc($$[$0], 'Form Feed')
-break;
-case 40:
-this.$ = b().specificCharEsc($$[$0], 'Newline')
-break;
-case 41:
-this.$ = b().specificCharEsc($$[$0], 'Carriage Return')
-break;
-case 42:
-this.$ = b().specificCharEsc($$[$0], 'Tab')
-break;
-case 43:
-this.$ = b().specificCharEsc($$[$0], 'Vertical Tab')
-break;
-case 44:
-this.$ = b().specificCharEsc($$[$0-4]+$$[$0-3]+$$[$0-2]+$$[$0-1]+$$[$0], 'Hexadecimal Notation')
-break;
-case 45:
-this.$ = b().specificCharEsc($$[$0-2]+$$[$0-1]+$$[$0], 'Hexadecimal Notation')
-break;
-case 46:
-this.$ = b().predefinedCharSet($$[$0], 'Digit Char', '[0-9]')
-break;
-case 47:
-this.$ = b().predefinedCharSet($$[$0], 'Non Digit Char', '[^0-9]')
-break;
-case 48:
-this.$ = b().predefinedCharSet($$[$0], 'Whitespace Char', 'Includes but is not limited to space nbsp \n \r \t \v \f')
-break;
-case 49:
-this.$ = b().predefinedCharSet($$[$0], 'Non Whitespace Char', 'Complement of \s')
-break;
-case 50:
-this.$ = b().predefinedCharSet($$[$0], 'Word Char', '[0-9A-Z_a-z]')
-break;
-case 51:
-this.$ = b().predefinedCharSet($$[$0], 'Non Word Char', '[^0-9A-Z_a-z]')
-break;
-case 52:
-this.$ = b().charSet($$[$0-1])
-break;
-case 56: case 59:
 this.$ = $$[$0-1].concat($$[$0])
 break;
-case 57: case 60:
-this.$ = b().withLoc(_$[$0-3],_$[$0-1]).charRange($$[$0-3],$$[$0-1],$$[$0])
+case 14:
+this.$ = {assertion: 'Look-Forward', pos: true, disj: $$[$0-1]}
 break;
-case 61: case 63:
-this.$ = [b().withLoc(_$[$0]).specificChar($$[$0])]
-break;
-case 64:
-this.$ = [].concat(b().withLoc(_$[$0-1],_$[$0]).get($$[$0]))
-break;
-case 65:
-this.$ = b().escapedInteger(_$[$0], $$[$0])
-break;
-case 66:
-this.$ = b().specificCharEsc($$[$0], 'Backspace')
-break;
-case 69:
-this.$ = Number($$[$0])
+case 15:
+this.$ = {assertion: 'Look-Forward', pos: false, disj: $$[$0-1]}
 break;
 }
 },
-table: [o([5,8,14,15,16,17,18,19,21,23,29,30,32,35,40,45,46,47,48,49,50,52,53,54,55,56,57,58,59,61,65,70,71,72,73,74],$V0,{3:1,4:2,6:3,7:4,9:5}),{1:[3]},{5:[1,6]},o([5,22],[2,2],{8:[1,7]}),o($V1,[2,3]),o($V1,[2,5],{10:8,11:9,12:10,31:15,34:17,14:[1,11],15:[1,12],16:[1,13],17:[1,26],18:[1,27],19:[1,14],21:[1,18],23:[1,19],29:[1,20],30:[1,21],32:[1,16],35:[1,24],40:[1,28],45:[1,31],46:[1,32],47:[1,33],48:[1,36],49:[1,38],50:[1,37],52:[1,41],53:[1,29],54:[1,30],55:[1,34],56:[1,35],57:[1,39],58:[1,40],59:[1,46],61:[1,22],65:[1,23],70:[1,42],71:[1,25],72:[1,43],73:[1,44],74:[1,45]}),{1:[2,1]},o($V2,$V0,{9:5,7:47}),o($V2,[2,7]),o($V2,[2,8]),o($V2,[2,9],{13:48,24:49,20:[1,52],25:[1,50],26:[1,51],27:[1,53]}),o($V2,[2,11]),o($V2,[2,12]),{8:$V3,14:$V4,15:$V5,16:$V6,17:[1,54],18:[1,55],19:$V7,20:$V8,21:$V9,22:$Va,23:$Vb,25:$Vc,26:$Vd,27:$Ve,29:$Vf,30:$Vg,32:$Vh,33:56,35:$Vi,36:57,37:58,38:59,39:62,40:$Vj,42:64,43:65,44:66,45:$Vk,46:$Vl,47:$Vm,48:$Vn,49:$Vo,50:$Vp,52:$Vq,53:$Vr,54:$Vs,55:$Vt,56:$Vu,57:$Vv,58:$Vw,59:$Vx,61:$Vy,65:$Vz,69:$VA,70:$VB,71:$VC,72:$VD,73:$VE,74:$VF},o($VG,$V0,{6:3,7:4,9:5,4:104,20:[1,103]}),o($VH,[2,25]),o($VH,[2,26]),o($VH,[2,28]),o($VH,[2,72]),o($VH,[2,73]),o($VH,[2,74]),o($VH,[2,75]),o($VH,[2,76]),o($VH,[2,77]),o($VH,[2,78]),o($VH,[2,79]),o($VH,[2,80]),o($VH,[2,81]),o($VH,[2,82]),o($VH,[2,83]),o($VH,[2,84]),o($VH,[2,85]),o($VH,[2,86]),o($VH,[2,87]),o($VH,[2,88]),o($VH,[2,89]),o($VH,[2,90]),o($VH,[2,91]),o($VH,[2,92]),o($VH,[2,93]),o($VH,[2,94]),o($VH,[2,95]),o($VH,[2,96]),o($VH,[2,97]),o($VH,[2,98]),o($VH,[2,99]),{8:$VI,14:$VJ,15:$VK,16:$VL,17:$VM,18:$VN,19:$VO,20:$VP,21:$VQ,22:$VR,23:$VS,25:$VT,26:$VU,27:$VV,29:$VW,30:$VX,32:$VY,35:$VZ,40:$V_,45:$V$,46:$V01,47:$V11,48:$V21,49:$V31,50:$V41,52:$V51,53:$V61,54:$V71,55:$V81,56:$V91,57:$Va1,58:$Vb1,59:$Vc1,60:105,61:$Vd1,62:106,63:107,65:$Ve1,66:109,67:110,70:$Vf1,71:$Vg1,72:$Vh1,73:$Vi1,74:$Vj1},o($V1,[2,4]),o($V2,[2,10]),o($V2,[2,17],{20:[1,149]}),o($Vk1,[2,19]),o($Vk1,[2,20]),o($Vk1,[2,21]),{28:150,36:151,69:$VA,70:$VB},o($V2,[2,13]),o($V2,[2,14]),o($VH,[2,27]),o($VH,[2,31]),o($VH,[2,32]),o($VH,[2,33]),o($VH,[2,70]),o($VH,[2,71]),o($VH,[2,34]),{17:[1,154],18:[1,155],40:[1,156],41:152,45:[1,159],46:[1,160],47:[1,161],48:[1,164],49:[1,166],50:[1,165],52:[1,169],53:[1,157],54:[1,158],55:[1,162],56:[1,163],57:[1,167],58:[1,168],70:[1,170],71:[1,153],72:[1,171],73:[1,172]},o($VH,[2,36]),o($VH,[2,37]),o($VH,[2,38]),o($VH,[2,46]),o($VH,[2,47]),o($VH,[2,48]),o($VH,[2,49]),o($VH,[2,50]),o($VH,[2,51]),o($VH,[2,39]),o($VH,[2,40]),o($VH,[2,41]),o($VH,[2,42]),o($VH,[2,43]),{17:$Vl1,18:$Vm1,40:$Vn1,45:$Vo1,51:173,53:$Vp1,54:$Vq1,70:$Vr1,72:$Vs1},{17:$Vl1,18:$Vm1,40:$Vn1,45:$Vo1,51:182,53:$Vp1,54:$Vq1,70:$Vr1,72:$Vs1},o($VH,[2,165]),o($VH,[2,166]),o($VH,[2,167]),o($VH,[2,168]),o($VH,[2,169]),o($VH,[2,170]),o($VH,[2,171]),o($VH,[2,172]),o($VH,[2,173]),o($VH,[2,174]),o($VH,[2,175]),o($VH,[2,176]),o($VH,[2,177]),o($VH,[2,178]),o($VH,[2,179]),o($VH,[2,180]),o($VH,[2,181]),o($VH,[2,182]),o($VH,[2,183]),o($VH,[2,184]),o($VH,[2,185]),o($VH,[2,186]),o($VH,[2,187]),{21:[1,183],23:[1,184],35:[1,185]},{22:[1,186]},{61:[1,187]},{61:[2,54]},{8:$VI,14:$VJ,15:$VK,16:$VL,17:$VM,18:$VN,19:$VO,20:$VP,21:$VQ,22:$VR,23:$VS,25:$VT,26:$VU,27:$VV,29:$VW,30:$VX,32:$VY,35:$VZ,40:$V_,45:$V$,46:$V01,47:$V11,48:$V21,49:$V31,50:$V41,52:$V51,53:$V61,54:$V71,55:$V81,56:$V91,57:$Va1,58:$Vb1,59:$Vc1,61:[2,55],63:190,64:188,65:[1,189],66:191,67:110,70:$Vf1,71:$Vg1,72:$Vh1,73:$Vi1,74:$Vj1},o($Vt1,$Vu1),o($Vt1,$Vv1),o($Vt1,[2,63]),{8:$V3,14:$V4,15:$V5,16:$V6,17:[1,194],19:$V7,20:$V8,21:$V9,22:$Va,23:$Vb,25:$Vc,26:$Vd,27:$Ve,29:$Vf,30:$Vg,32:$Vh,35:$Vi,36:193,37:195,38:196,39:62,40:$Vj,42:64,43:65,44:66,45:$Vk,46:$Vl,47:$Vm,48:$Vn,49:$Vo,50:$Vp,52:$Vq,53:$Vr,54:$Vs,55:$Vt,56:$Vu,57:$Vv,58:$Vw,59:$Vx,61:$Vy,65:$Vz,68:192,69:$VA,70:$VB,71:$VC,72:$VD,73:$VE,74:$VF},o($Vt1,[2,100]),o($Vt1,[2,101]),o($Vt1,[2,102]),o($Vt1,[2,103]),o($Vt1,[2,104]),o($Vt1,[2,105]),o($Vt1,[2,106]),o($Vt1,[2,107]),o($Vt1,[2,108]),o($Vt1,[2,109]),o($Vt1,[2,110]),o($Vt1,[2,111]),o($Vt1,[2,112]),o($Vt1,[2,113]),o($Vt1,[2,114]),o($Vt1,[2,115]),o($Vt1,[2,116]),o($Vt1,[2,117]),o($Vt1,[2,118]),o($Vt1,[2,119]),o($Vt1,[2,120]),o($Vt1,[2,121]),o($Vt1,[2,122]),o($Vt1,[2,123]),o($Vt1,[2,124]),o($Vt1,[2,125]),o($Vt1,[2,126]),o($Vt1,[2,127]),o($Vt1,[2,128]),o($Vt1,[2,129]),o($Vt1,[2,130]),o($Vt1,[2,131]),o($Vt1,[2,132]),o($Vt1,[2,133]),o($Vt1,[2,134]),o($Vt1,[2,135]),o($Vt1,[2,136]),o($V2,[2,18]),{29:[1,197],30:[1,198]},o([29,30],[2,69]),o($VH,[2,35]),o($VH,[2,137]),o($VH,[2,138]),o($VH,[2,139]),o($VH,[2,140]),o($VH,[2,141]),o($VH,[2,142]),o($VH,[2,143]),o($VH,[2,144]),o($VH,[2,145]),o($VH,[2,146]),o($VH,[2,147]),o($VH,[2,148]),o($VH,[2,149]),o($VH,[2,150]),o($VH,[2,151]),o($VH,[2,152]),o($VH,[2,153]),o($VH,[2,154]),o($VH,[2,155]),o($VH,[2,156]),{17:$Vl1,18:$Vm1,40:$Vn1,45:$Vo1,51:199,53:$Vp1,54:$Vq1,70:$Vr1,72:$Vs1},o($VH,[2,157]),o($VH,[2,158]),o($VH,[2,159]),o($VH,[2,160]),o($VH,[2,161]),o($VH,[2,162]),o($VH,[2,163]),o($VH,[2,164]),{17:$Vl1,18:$Vm1,40:$Vn1,45:$Vo1,51:200,53:$Vp1,54:$Vq1,70:$Vr1,72:$Vs1},o($VG,$V0,{6:3,7:4,9:5,4:201}),o($VG,$V0,{6:3,7:4,9:5,4:202}),o($VG,$V0,{6:3,7:4,9:5,4:203}),o($VH,[2,29]),o($VH,[2,52]),{61:[2,56]},{8:$VI,14:$VJ,15:$VK,16:$VL,17:$VM,18:$VN,19:$VO,20:$VP,21:$VQ,22:$VR,23:$VS,25:$VT,26:$VU,27:$VV,29:$VW,30:$VX,32:$VY,35:$VZ,40:$V_,45:$V$,46:$V01,47:$V11,48:$V21,49:$V31,50:$V41,52:$V51,53:$V61,54:$V71,55:$V81,56:$V91,57:$Va1,58:$Vb1,59:$Vc1,61:$Vu1,63:204,65:$Ve1,66:109,67:110,70:$Vf1,71:$Vg1,72:$Vh1,73:$Vi1,74:$Vj1},{61:[2,58]},{8:$VI,14:$VJ,15:$VK,16:$VL,17:$VM,18:$VN,19:$VO,20:$VP,21:$VQ,22:$VR,23:$VS,25:$VT,26:$VU,27:$VV,29:$VW,30:$VX,32:$VY,35:$VZ,40:$V_,45:$V$,46:$V01,47:$V11,48:$V21,49:$V31,50:$V41,52:$V51,53:$V61,54:$V71,55:$V81,56:$V91,57:$Va1,58:$Vb1,59:$Vc1,61:$Vv1,63:190,64:205,65:[1,206],66:191,67:110,70:$Vf1,71:$Vg1,72:$Vh1,73:$Vi1,74:$Vj1},o($Vt1,[2,64]),o($Vt1,[2,65]),o($Vt1,[2,66]),o($Vt1,[2,67]),o($Vt1,[2,68]),o($Vk1,[2,22]),{28:208,29:[1,207],36:151,69:$VA,70:$VB},{17:$Vl1,18:$Vm1,40:$Vn1,45:$Vo1,51:209,53:$Vp1,54:$Vq1,70:$Vr1,72:$Vs1},o($VH,[2,45]),{22:[1,210]},{22:[1,211]},{22:[1,212]},{8:$VI,14:$VJ,15:$VK,16:$VL,17:$VM,18:$VN,19:$VO,20:$VP,21:$VQ,22:$VR,23:$VS,25:$VT,26:$VU,27:$VV,29:$VW,30:$VX,32:$VY,35:$VZ,40:$V_,45:$V$,46:$V01,47:$V11,48:$V21,49:$V31,50:$V41,52:$V51,53:$V61,54:$V71,55:$V81,56:$V91,57:$Va1,58:$Vb1,59:$Vc1,60:213,61:$Vd1,62:106,63:107,65:$Ve1,66:109,67:110,70:$Vf1,71:$Vg1,72:$Vh1,73:$Vi1,74:$Vj1},{61:[2,59]},{8:$VI,14:$VJ,15:$VK,16:$VL,17:$VM,18:$VN,19:$VO,20:$VP,21:$VQ,22:$VR,23:$VS,25:$VT,26:$VU,27:$VV,29:$VW,30:$VX,32:$VY,35:$VZ,40:$V_,45:$V$,46:$V01,47:$V11,48:$V21,49:$V31,50:$V41,52:$V51,53:$V61,54:$V71,55:$V81,56:$V91,57:$Va1,58:$Vb1,59:$Vc1,61:$Vu1,63:214,65:$Ve1,66:109,67:110,70:$Vf1,71:$Vg1,72:$Vh1,73:$Vi1,74:$Vj1},o($Vk1,[2,23]),{29:[1,215]},{17:$Vl1,18:$Vm1,40:$Vn1,45:$Vo1,51:216,53:$Vp1,54:$Vq1,70:$Vr1,72:$Vs1},o($V2,[2,15]),o($V2,[2,16]),o($VH,[2,30]),{61:[2,57]},{8:$VI,14:$VJ,15:$VK,16:$VL,17:$VM,18:$VN,19:$VO,20:$VP,21:$VQ,22:$VR,23:$VS,25:$VT,26:$VU,27:$VV,29:$VW,30:$VX,32:$VY,35:$VZ,40:$V_,45:$V$,46:$V01,47:$V11,48:$V21,49:$V31,50:$V41,52:$V51,53:$V61,54:$V71,55:$V81,56:$V91,57:$Va1,58:$Vb1,59:$Vc1,60:217,61:$Vd1,62:106,63:107,65:$Ve1,66:109,67:110,70:$Vf1,71:$Vg1,72:$Vh1,73:$Vi1,74:$Vj1},o($Vk1,[2,24]),o($VH,[2,44]),{61:[2,60]}],
-defaultActions: {6:[2,1],106:[2,54],188:[2,56],190:[2,58],205:[2,59],213:[2,57],217:[2,60]},
+table: [o([5,8,12,13,14,15,16,17,19],$V0,{3:1,4:2,6:3,7:4,9:5}),{1:[3]},{5:[1,6]},o([5,18],[2,2],{8:[1,7]}),o($V1,[2,3]),o($V1,[2,5],{10:8,11:9,12:[1,10],13:[1,11],14:[1,12],15:[1,13],16:[1,14],17:[1,15],19:[1,16]}),{1:[2,1]},o($V2,$V0,{9:5,7:17}),o($V2,[2,7]),o($V2,[2,8]),o($V2,[2,9]),o($V2,[2,10]),o($V2,[2,11]),o($V2,[2,12]),o($V2,[2,13]),o($V3,$V0,{6:3,7:4,9:5,4:18}),o($V3,$V0,{6:3,7:4,9:5,4:19}),o($V1,[2,4]),{18:[1,20]},{18:[1,21]},o($V2,[2,14]),o($V2,[2,15])],
+defaultActions: {6:[2,1]},
 parseError: function parseError(str, hash) {
     if (hash.recoverable) {
         this.trace(str);
@@ -388,366 +254,7 @@ parse: function parse(input) {
 }};
 
 
-// this helper needs to be fn literal b/c it's defined after `var parser`
-function b() {
-    var builders = {
-        withLoc: function(begin, end) {
-            function assign(o) {
-                if (o instanceof Array) {
-                    // The concept of location is valid with one token only.
-                    // Not an error if token can be an array or an obj
-                    // e.g. ClassEscape
-                    return o
-                }
-                o.location = [
-                    begin.first_column,
-                    (end || begin).last_column
-                ]
-                return o
-            }
-            var augmented = Object.keys(builders).reduce(function(map, key) {
-                map[key] = function() {
-                    var token = builders[key].apply(builders, arguments)
-                    return assign(token)
-                }
-                return map
-            }, {})
-            augmented.get = assign
-            return augmented
-        },
-
-        disjunction: function(alts) {
-            return {
-                type: 'Disjunction',
-                alternatives: alts
-            }
-        },
-        alternative: function(terms) {
-            var result = {
-                type: 'Alternative',
-                terms: terms
-            }
-            if (! terms.length) {
-                result.hint = 'Matches zero-length string.'
-            }
-
-            // we will revisit each array of terms, parsing and expanding
-            // any `delayedEscapedInteger` item the array contains
-            (parser.yy.terms_s = parser.yy.terms_s || [])
-                .push(terms)
-
-            return result
-        },
-
-        assertion: function(key, etc0, etc1) {
-            var map = {
-                'Line Boundary': function() {
-                    var atBeg = etc0
-                    var prepo = atBeg ? 'after' : 'before'
-                    var char0 = atBeg ? 'beginning of string' : 'end of string'
-                    var charlist = [char0].concat([
-                        'newline (\\n)',
-                        'carriage return (\\r)',
-                        'line separator',
-                        'paragraph separator'
-                    ])
-                    var hint = [
-                        'Matches the zero-length string ',
-                        prepo,
-                        ' a new line char, i.e. one of [',
-                        String(charlist),
-                        ']'
-                    ].join('')
-                    return {
-                        atBeginning: atBeg,
-                        hint: hint
-                    }
-                },
-                'Word Boundary': function() {
-                    var atWb = etc0
-                    var hint = atWb
-                        ? '(a word char (\\w)) and (a non-word char (\\W) or the beginning or the end of a line")'
-                        : 'a word char (\\w) and a word char (\\w)'
-                    hint = 'Matches the zero-length string between ' + hint
-
-                    return {
-                        atBoundary: atWb,
-                        hint: hint
-                    }
-                },
-                'Look-Forward': function() {
-                    var isPos = etc0
-                    var disj = etc1
-                    return {
-                        isPositive: isPos,
-                        grouped: builders.group(false, disj)
-                    }
-                }
-            }
-            var result = map[key]()
-            result.type = 'Assertion'
-            result.assertion = key
-            return result
-        },
-
-        anyChar: function() {
-            return {
-                type: 'Any Char',
-                display: '.'
-            }
-        },
-        specificChar: function(display, hint) {
-            return {
-                type: 'Specific Char',
-                display: display,
-                hint: hint
-            }
-        },
-        specificCharEsc: function(unescaped, meaning) {
-            return {
-                type: 'Specific Char',
-                display: '\\' + unescaped,
-                meaning: meaning
-            }
-        },
-
-        escapedInteger: function(loc, decimals) {
-            /* returns array of specificChar or specificCharEsc */
-
-            var loc0 = loc.first_column
-            var loc1 = loc.last_column
-            var octEndWrtDecimals
-            var locEndOfFirstChar
-
-            // piggy back on string literal evaluation. it's safe.
-            // the first 1 to 3 chars could be octal.
-            var evalled = eval("'\\" + decimals + "'")
-            var parsed
-            if (evalled === decimals) {
-                locEndOfFirstChar = loc0 + 1
-                parsed = [
-                    builders
-                        .withLoc({
-                            first_column: loc0 - 1, // -1 for the '\\'
-                            last_column: locEndOfFirstChar
-                        })
-                        .specificChar(evalled[0], 'Unnecessarily escaped')
-                ]
-            } else {
-                octEndWrtDecimals = decimals.length - evalled.length + 1
-                locEndOfFirstChar = loc0 + octEndWrtDecimals
-                parsed = [
-                    builders
-                        .withLoc({
-                            first_column: loc0 - 1, // -1 for the '\\'
-                            last_column: locEndOfFirstChar
-                        })
-                        .specificCharEsc(
-                            decimals.slice(0, octEndWrtDecimals),
-                            'Octal Notation')
-                ]
-            }
-            return parsed.concat(evalled.slice(1).split('').map(function(c, i) {
-                return builders
-                    .withLoc({
-                        first_column: locEndOfFirstChar + i,
-                        last_column: locEndOfFirstChar + i + 1
-                    })
-                    .specificChar(c)
-            }))
-        },
-        delayedEscapedInteger: function(loc, decimals) {
-            // delay parsing till all capturing groups have been found.
-            var result = {
-                type: 'delayedEscapedInteger',
-                unparsed: decimals,
-                backrefNumMax: parser.yy.numCapturedGroups || 0,
-                loc: loc
-            }
-            return result
-        },
-        escapedIntegerMaybeRef: function(delayed) {
-            /* parses delayedEscapedInteger
-                and returns array of
-                (ref or specificChar or specificCharEsc)
-            */
-
-            function backRef(number) {
-                return {
-                    type: 'Reference',
-                    number: number,
-                    isBack: true,
-                    hint: 'Warning: This is a valid Back Reference, but it will match with an empty string if the target group has not been captured by the time this reference is expected. In practice, any group that is 1) outside the root-level Alternative that this Back Reference belongs to or 2) inside a Look-Forward Assertion will have not been captured.'
-                }
-            }
-            function fwdRef(number) {
-                return {
-                    type: 'Reference',
-                    number: number,
-                    isBack: false,
-                    hint: 'Because the target group will never have been captured, a Forward Reference always matches with an empty string.'
-                }
-            }
-
-            var contained = (function(decimals, backrefNumMax, loc) {
-                // This whole logic is not covered by [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9)
-                // but is consistent with major browsers.
-                // e.g. see [Webkit](https://github.com/WebKit/webkit/blob/master/Source/JavaScriptCore/yarr/YarrParser.h)  Parser::parseEscape
-
-                var int = Number(decimals)
-                var ref
-                if (decimals[0] > '0' &&
-                        int <= (parser.yy.numCapturedGroups || 0)
-                        ) {
-                    // only then could it be fwd or back ref
-                    if (int > backrefNumMax) {
-                        ref = fwdRef(int)
-                    } else {
-                        ref = backRef(int)
-                    }
-                    return [
-                        builders.withLoc({
-                            first_column: loc.first_column - 1, // -1 for the '\\'
-                            last_column: loc.first_column + 1
-                        }).get(ref)
-                    ]
-                } else {
-                    // contrary to [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.11),
-                    // \0 can be followed by other digits.
-                    return builders.escapedInteger(loc, decimals)
-                }
-            })(delayed.unparsed, delayed.backrefNumMax, delayed.loc)
-
-            return contained
-        },
-
-        quantifiedAtom: function(atom, quantifier) {
-            return {
-                type: 'Quantified',
-                quantifier: quantifier,
-                target: atom,
-                location: [atom.location[0], quantifier.location[1]]
-            }
-        },
-        quantifier: function(quantifierRange, greedy) {
-            quantifierRange.greedy = greedy
-            return quantifierRange
-        },
-        quantifierRange: function(min, max) {
-            var result = {
-                min: min,
-                max: max
-            }
-            if (min > max) {
-                result.error = 'Repetition range must be specified in the increasing order of numbers'
-            }
-            return result
-        },
-
-        charRange: function(before, after, beyond) {
-            // all 3 args are arrays of specificChar or specificCharEsc
-            return before.slice(0, -1)
-                .concat(
-                    (function() {
-                        var begin = before.slice(-1)[0].display
-                        var end = after[0].display
-                        var range = {
-                            type: 'Range of Characters',
-                            begin: begin,
-                            end: end
-                        }
-                        if (begin.charCodeAt(0) - end.charCodeAt(0) < 0) {
-                            range.error = 'Char range must be specified in the increasing order of unicode values'
-                        }
-                        return range
-                    })()
-                )
-                .concat(after.slice(1))
-                .concat(beyond)
-        },
-        charSet: function(items) {
-            var inclusive = true
-            if (items[0]
-                    && items[0].type === 'Specific Char'
-                    && items[0].display === '^') {
-                inclusive = false
-                items = items.slice(1)
-            }
-            var result = {
-                type: 'Set of Chars',
-                possibilities: items,
-                inclusive: inclusive
-            }
-            if (! items.length) {
-                result.hint = inclusive
-                    ? 'Since this attempts to match with nothing, rather than an empty string, the whole regex will not match with anything.'
-                    : 'This matches with any single character "barring none".'
-            }
-            return result
-        },
-        predefinedCharSet: function(unescaped, meaning, hint) {
-            return {
-                type: 'Pre-defined Set of Chars',
-                display: '\\' + unescaped,
-                meaning: meaning,
-                hint: hint
-            }
-        },
-
-        group: function(isCapturing, grouped) {
-            if (isCapturing) {
-                parser.yy.numCapturedGroups = (parser.yy.numCapturedGroups || 0) + 1
-            }
-            return {
-                type: 'Group',
-                isCapturing: isCapturing,
-                grouped: grouped
-            }
-        }
-    } // end of var builders
-    return builders
-}
-
-parser.parse = (function(orig) {
-    function postParse() {
-        parser.yy.terms_s.forEach(function(terms) {
-            var i, term
-            function splice(replacement) {
-                var args = [i, 1].concat(replacement)
-                Array.prototype.splice.apply(terms, args)
-
-                // advance by repl.len to get to the element after repl
-                // subtract by 1 in anticipation of i++ by the for loop
-                i = i + replacement.length - 1
-            }
-
-            // `.length` is re-read for every loop
-            for(i = 0; i < terms.length; i++) {
-                term = terms[i]
-                if(term.type === 'delayedEscapedInteger') {
-                     splice(b().escapedIntegerMaybeRef(term))
-                } else if (term.type === 'Quantified' 
-                    && term.target.type === 'delayedEscapedInteger') {
-                    (function() {
-                        var replacements = b().escapedIntegerMaybeRef(term.target)
-                        var last = replacements.slice(-1)[0]
-                        replacements = replacements.slice(0, -1).concat(
-                            b().quantifiedAtom(last, term.quantifier))
-                        splice(replacements)
-                    })()
-                }
-            }
-        })
-        // reset these values that make parser stateful
-        parser.yy.terms_s.length = 0
-        parser.yy.numCapturedGroups = 0
-    }
-    return function() {
-        var parsed = orig.apply(this, arguments)
-        postParse()
-        return parsed
-    }
-})(parser.parse)
+// some js here
 /* generated by jison-lex 0.3.4 */
 var lexer = (function(){
 var lexer = ({
@@ -1076,95 +583,43 @@ options: {},
 performAction: function anonymous(yy,yy_,$avoiding_name_collisions,YY_START) {
 var YYSTATE=YY_START;
 switch($avoiding_name_collisions) {
-case 0:return 69
+case 0:debugger; return 5
 break;
-case 1:return 8
+case 1:this.begin('DISJ'); this.unput(yy_.yytext); return
 break;
-case 2:return 14
+case 2:debugger; this.begin('ALT'); this.unput(yy_.yytext); return
 break;
-case 3:return 15
+case 3:this.begin('ALT'); return 8
 break;
-case 4:return 16
+case 4:this.begin('TERM'); this.unput(yy_.yytext); return
 break;
-case 5:return 19
+case 5:return 13
 break;
-case 6:return 22
+case 6:return 14
 break;
-case 7:return 20
+case 7:return 15
 break;
-case 8:return 21
+case 8:return 16
 break;
-case 9:return 23
+case 9:debugger; this.begin('DISJ_IN_ASSERTN_FWD'); return 17
 break;
-case 10:return 25
+case 10:this.begin('DISJ_IN_ASSERTN_FWD'); return 19
 break;
-case 11:return 26
+case 11:return 12
 break;
-case 12:return 27
+case 12:debugger; this.popState(); return 18
 break;
-case 13:return 29
-break;
-case 14:return 30
-break;
-case 15:return 32
-break;
-case 16:return 59
-break;
-case 17:return 61
-break;
-case 18:return 65
-break;
-case 19:return 35
-break;
-case 20:return 71
-break;
-case 21:return 17
-break;
-case 22:return 18
-break;
-case 23:return 40
-break;
-case 24:return 53
-break;
-case 25:return 54
-break;
-case 26:return 45
-break;
-case 27:return 46
-break;
-case 28:return 47
-break;
-case 29:return 55
-break;
-case 30:return 56
-break;
-case 31:return 48
-break;
-case 32:return 50
-break;
-case 33:return 49
-break;
-case 34:return 57
-break;
-case 35:return 58
-break;
-case 36:return 52
-break;
-case 37:return 5
-break;
-case 38:return 70
-break;
-case 39:return 72
-break;
-case 40:return 73
-break;
-case 41:return 74
+case 13:debugger; this.begin('ALT'); this.unput(yy_.yytext); return /* debugger; this.begin('DISJ'); this.unput(yy_.yytext); return */
 break;
 }
 },
-rules: [/^(?:[0-9]{2,})/,/^(?:[|])/,/^(?:[\^])/,/^(?:[$])/,/^(?:[\\])/,/^(?:[(])/,/^(?:[)])/,/^(?:[?])/,/^(?:[=])/,/^(?:[!])/,/^(?:[*])/,/^(?:[+])/,/^(?:[{])/,/^(?:[}])/,/^(?:[,])/,/^(?:[\.])/,/^(?:[\[])/,/^(?:[\]])/,/^(?:[-])/,/^(?:[:])/,/^(?:[_])/,/^(?:[b])/,/^(?:[B])/,/^(?:[c])/,/^(?:[d])/,/^(?:[D])/,/^(?:[f])/,/^(?:[n])/,/^(?:[r])/,/^(?:[s])/,/^(?:[S])/,/^(?:[t])/,/^(?:[u])/,/^(?:[v])/,/^(?:[w])/,/^(?:[W])/,/^(?:[x])/,/^(?:$)/,/^(?:[0-9])/,/^(?:[a-fA-F])/,/^(?:[a-zA-Z])/,/^(?:.)/],
-conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41],"inclusive":true}}
+rules: [/^(?:$)/,/^(?:.)/,/^(?:.)/,/^(?:[|])/,/^(?:.)/,/^(?:[\^])/,/^(?:[$])/,/^(?:[\\][b])/,/^(?:[\\][B])/,/^(?:[(][?][=])/,/^(?:[(][?][!])/,/^(?:x\b)/,/^(?:[)])/,/^(?:.)/],
+conditions: {"DISJ_IN_ASSERTN_FWD":{"rules":[0,3,12,13],"inclusive":true},"TERM":{"rules":[0,3,5,6,7,8,9,10,11],"inclusive":true},"ALT":{"rules":[0,3,4],"inclusive":true},"DISJ":{"rules":[0,2,3],"inclusive":true},"INITIAL":{"rules":[0,1,3],"inclusive":true}}
 });
+function foo() {
+    var l = lexer
+    debugger
+};
 return lexer;
 })();
 parser.lexer = lexer;
