@@ -72,12 +72,12 @@
   }
 */
 var parser = (function(){
-var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[2,6],$V1=[5,8,18],$V2=[5,8,12,13,14,15,16,17,18,19],$V3=[8,12,13,14,15,16,17,18,19];
+var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[2,6],$V1=[5,8,19],$V2=[5,8,16,17,18,19,20,21,22,23],$V3=[8,16,17,18,19,20,21,22,23],$V4=[5,8,14,15,16,17,18,19,20,21,22,23];
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"Pattern":3,"Disjunction":4,"EOF":5,"Alternative_s":6,"Alternative":7,"ALT_DELIM":8,"Term_s":9,"Term":10,"Assertion":11,"TERM_GENERIC":12,"ASSERTN_LB_HEAD":13,"ASSERTN_LB_FOOT":14,"ASSERTN_WB_POS":15,"ASSERTN_WB_NEG":16,"ASSERTN_FWD_POS_BEGIN":17,"ASSERTN_FWD_END":18,"ASSERTN_FWD_NEG_BEGIN":19,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"EOF",8:"ALT_DELIM",12:"TERM_GENERIC",13:"ASSERTN_LB_HEAD",14:"ASSERTN_LB_FOOT",15:"ASSERTN_WB_POS",16:"ASSERTN_WB_NEG",17:"ASSERTN_FWD_POS_BEGIN",18:"ASSERTN_FWD_END",19:"ASSERTN_FWD_NEG_BEGIN"},
-productions_: [0,[3,2],[4,1],[6,1],[6,3],[7,1],[9,0],[9,2],[10,1],[10,1],[11,1],[11,1],[11,1],[11,1],[11,3],[11,3]],
+symbols_: {"error":2,"Pattern":3,"Disjunction":4,"EOF":5,"Alternative_s":6,"Alternative":7,"ALT_DELIM":8,"Term_s":9,"Term":10,"Assertion":11,"Atom":12,"Quantifier":13,"ATOM_QUANT_SHORT":14,"ATOM_QUANT_NUM":15,"ASSERTN_LB":16,"ASSERTN_WB":17,"ASSERTN_LF_BEGIN":18,"CLOSE_PAREN":19,"ATOM_CHAR_ANY":20,"ATOM_ATOMESC":21,"ATOM_GROUP_CAPTR":22,"ATOM_GROUP_NONCAPTR":23,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"EOF",8:"ALT_DELIM",14:"ATOM_QUANT_SHORT",15:"ATOM_QUANT_NUM",16:"ASSERTN_LB",17:"ASSERTN_WB",18:"ASSERTN_LF_BEGIN",19:"CLOSE_PAREN",20:"ATOM_CHAR_ANY",21:"ATOM_ATOMESC",22:"ATOM_GROUP_CAPTR",23:"ATOM_GROUP_NONCAPTR"},
+productions_: [0,[3,2],[4,1],[6,1],[6,3],[7,1],[9,0],[9,2],[10,1],[10,1],[10,2],[13,1],[13,1],[11,1],[11,1],[11,3],[12,1],[12,1],[12,3],[12,3]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
@@ -86,11 +86,17 @@ switch (yystate) {
 case 1:
 return $$[$0-1]
 break;
+case 2:
+this.$ = b().withLoc(_$[$0]).disjunction($$[$0])
+break;
 case 3:
 this.$ = [$$[$0]]
 break;
 case 4:
 this.$ = $$[$0-2].concat($$[$0-1])
+break;
+case 5:
+this.$ = b().withLoc(_$[$0]).alternative($$[$0])
 break;
 case 6:
 this.$ = []
@@ -98,15 +104,28 @@ break;
 case 7:
 this.$ = $$[$0-1].concat($$[$0])
 break;
+case 10:
+this.$ = b().quantified( $$[$0-1], 
+            b().withLoc(_$[$0]).quantifier($$[$0]) )
+break;
+case 13:
+this.$ = b().withLoc(_$[$0]).assertionLB($$[$0])
+break;
 case 14:
-this.$ = {assertion: 'Look-Forward', pos: true, disj: $$[$0-1]}
+this.$ = b().withLoc(_$[$0]).assertionWB($$[$0])
 break;
 case 15:
-this.$ = {assertion: 'Look-Forward', pos: false, disj: $$[$0-1]}
+this.$ = b().withLoc(_$[$0-2],_$[$0]).assertionLF($$[$0-2], $$[$0-1])
+break;
+case 18:
+this.$ = b().group(true, $$[$0-1])
+break;
+case 19:
+this.$ = b().group(false, $$[$0-1])
 break;
 }
 },
-table: [o([5,8,12,13,14,15,16,17,19],$V0,{3:1,4:2,6:3,7:4,9:5}),{1:[3]},{5:[1,6]},o([5,18],[2,2],{8:[1,7]}),o($V1,[2,3]),o($V1,[2,5],{10:8,11:9,12:[1,10],13:[1,11],14:[1,12],15:[1,13],16:[1,14],17:[1,15],19:[1,16]}),{1:[2,1]},o($V2,$V0,{9:5,7:17}),o($V2,[2,7]),o($V2,[2,8]),o($V2,[2,9]),o($V2,[2,10]),o($V2,[2,11]),o($V2,[2,12]),o($V2,[2,13]),o($V3,$V0,{6:3,7:4,9:5,4:18}),o($V3,$V0,{6:3,7:4,9:5,4:19}),o($V1,[2,4]),{18:[1,20]},{18:[1,21]},o($V2,[2,14]),o($V2,[2,15])],
+table: [o([5,8,16,17,18,20,21,22,23],$V0,{3:1,4:2,6:3,7:4,9:5}),{1:[3]},{5:[1,6]},o([5,19],[2,2],{8:[1,7]}),o($V1,[2,3]),o($V1,[2,5],{10:8,11:9,12:10,16:[1,11],17:[1,12],18:[1,13],20:[1,14],21:[1,15],22:[1,16],23:[1,17]}),{1:[2,1]},o($V2,$V0,{9:5,7:18}),o($V2,[2,7]),o($V2,[2,8]),o($V2,[2,9],{13:19,14:[1,20],15:[1,21]}),o($V2,[2,13]),o($V2,[2,14]),o($V3,$V0,{6:3,7:4,9:5,4:22}),o($V4,[2,16]),o($V4,[2,17]),o($V3,$V0,{6:3,7:4,9:5,4:23}),o($V3,$V0,{6:3,7:4,9:5,4:24}),o($V1,[2,4]),o($V2,[2,10]),o($V2,[2,11]),o($V2,[2,12]),{19:[1,25]},{19:[1,26]},{19:[1,27]},o($V2,[2,15]),o($V4,[2,18]),o($V4,[2,19])],
 defaultActions: {6:[2,1]},
 parseError: function parseError(str, hash) {
     if (hash.recoverable) {
@@ -255,6 +274,135 @@ parse: function parse(input) {
 
 
 // some js here
+
+function b() {
+    var builders = {
+        withLoc: function(begin, end) {
+            function assign(o) {
+                if (o instanceof Array) {
+                    // The concept of location is valid with one token only.
+                    // Not an error if token can be an array or an obj
+                    // e.g. ClassEscape
+                    return o
+                }
+                o.location = [
+                    begin.first_column,
+                    (end || begin).last_column
+                ]
+                return o
+            }
+            var augmented = Object.keys(builders).reduce(function(map, key) {
+                map[key] = function() {
+                    var token = builders[key].apply(builders, arguments)
+                    return assign(token)
+                }
+                return map
+            }, {})
+            augmented.get = assign
+            return augmented
+        },
+        disjunction: function(alts) {
+            return {
+                type: 'Disjunction',
+                alternatives: alts
+            }
+        },
+        alternative: function(terms) {
+            var result = {
+                type: 'Alternative',
+                terms: terms
+            }
+            if (! terms.length) {
+                result.hint = 'Matches zero-length string.'
+            }
+            return result
+        },
+
+        quantifier: function(token) {
+            if (token.length === 1) {
+                return {
+                    type: 'Quantifier',
+                    min: token === '+' ? 1 : 0,
+                    max: token === '?' ? 1 : Infinity
+                }
+            }
+            var matched = token.match(/{(\d+)(?:(,)(\d*))?}/)
+            return {
+                type: 'Quantifier',
+                min: Number(matched[1]),
+                max: matched[3]
+                    ? Number(matched[3])
+                    : matched[2]
+                        ? Infinity
+                        : Number(matched[1])
+            }
+        },
+        quantified: function(atom, quantifier) {
+            return {
+                type: 'Quantified',
+                target: atom,
+                quantifier: quantifier
+            }
+        },
+
+        assertionLB: function(token) {
+            var atBeg = token === '^'
+            var hint = (function() {
+                var prepo = atBeg ? 'after' : 'before'
+                var char0 = atBeg ? 'beginning of string' : 'end of string'
+                var charlist = [char0].concat([
+                    'newline (\\n)',
+                    'carriage return (\\r)',
+                    'line separator',
+                    'paragraph separator'
+                ])
+                return [
+                    'Matches the zero-length string ',
+                    prepo,
+                    ' a new line char, i.e. one of [',
+                    String(charlist),
+                    ']'
+                ].join('')
+            })()
+            return {
+                type: 'Assertion',
+                assertion: 'Line Boundary',
+                atBeginning: atBeg,
+                hint: hint
+            }
+        },
+        assertionWB: function(token) {
+            var atWb = token[1] === 'b'
+            var hint = atWb
+                ? '(a word char (\\w)) and (a non-word char (\\W) or the beginning or the end of a line")'
+                : 'a word char (\\w) and a word char (\\w)'
+            hint = 'Matches the zero-length string between ' + hint
+            return {
+                type: 'Assertion',
+                assertion: 'Word Boundary',
+                atBoundary: atWb,
+                hint: hint
+            }
+        },
+        assertionLF: function(token, disj) {
+            return {
+                type: 'Assertion',
+                assertion: 'Look-Forward',
+                isPositive: token[2] === '=',
+                grouped: disj
+            }
+        },
+
+        group: function(isCapturing, disj) {
+            return {
+                type: 'Group',
+                isCapturing: isCapturing,
+                grouped: disj
+            }
+        }
+    }
+    return builders
+}
 /* generated by jison-lex 0.3.4 */
 var lexer = (function(){
 var lexer = ({
@@ -583,39 +731,56 @@ options: {},
 performAction: function anonymous(yy,yy_,$avoiding_name_collisions,YY_START) {
 var YYSTATE=YY_START;
 switch($avoiding_name_collisions) {
-case 0:debugger; return 5
+case 0:return 5
 break;
 case 1:this.begin('DISJ'); this.unput(yy_.yytext); return
 break;
-case 2:debugger; this.begin('ALT'); this.unput(yy_.yytext); return
+case 2:
+                    popTill(this, 'DISJ')
+                    this.popState()
+                    return 19
+                
 break;
-case 3:this.begin('ALT'); return 8
+case 3:this.begin('ALT'); this.unput(yy_.yytext); return  
 break;
-case 4:this.begin('TERM'); this.unput(yy_.yytext); return
+case 4:
+                    popTill('ALT')
+                    return 8
+                
 break;
-case 5:return 13
+case 5:this.begin('TERM'); this.unput(yy_.yytext); return
 break;
-case 6:return 14
+case 6:return 16
 break;
-case 7:return 15
+case 7:return 17
 break;
-case 8:return 16
+case 8:debugger; this.begin('DISJ'); return 18
 break;
-case 9:debugger; this.begin('DISJ_IN_ASSERTN_FWD'); return 17
+case 9:return 20
 break;
-case 10:this.begin('DISJ_IN_ASSERTN_FWD'); return 19
+case 10:return 21 /* TODO not just f */
 break;
-case 11:return 12
+case 11:debugger; this.begin('DISJ'); this.unput(yy_.yytext[1]); return 22 /* note yy_.yytext[1] can be a ) */
 break;
-case 12:debugger; this.popState(); return 18
+case 12:debugger; this.begin('DISJ'); return 23
 break;
-case 13:debugger; this.begin('ALT'); this.unput(yy_.yytext); return /* debugger; this.begin('DISJ'); this.unput(yy_.yytext); return */
+case 13:return 14
+break;
+case 14:return 15
 break;
 }
 },
-rules: [/^(?:$)/,/^(?:.)/,/^(?:.)/,/^(?:[|])/,/^(?:.)/,/^(?:[\^])/,/^(?:[$])/,/^(?:[\\][b])/,/^(?:[\\][B])/,/^(?:[(][?][=])/,/^(?:[(][?][!])/,/^(?:x\b)/,/^(?:[)])/,/^(?:.)/],
-conditions: {"DISJ_IN_ASSERTN_FWD":{"rules":[0,3,12,13],"inclusive":true},"TERM":{"rules":[0,3,5,6,7,8,9,10,11],"inclusive":true},"ALT":{"rules":[0,3,4],"inclusive":true},"DISJ":{"rules":[0,2,3],"inclusive":true},"INITIAL":{"rules":[0,1,3],"inclusive":true}}
+rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:.)/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[(][?][=!])/,/^(?:[\.])/,/^(?:[\\][f])/,/^(?:[(][^?])/,/^(?:[(][?][:])/,/^(?:[*+?])/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}])/],
+conditions: {"DISJ_IN_ASSERTN_FWD":{"rules":[0,2,4],"inclusive":true},"TERM":{"rules":[0,2,4,6,7,8,9,10,11,12,13,14],"inclusive":true},"ALT":{"rules":[0,2,4,5],"inclusive":true},"DISJ":{"rules":[0,2,3,4],"inclusive":true},"INITIAL":{"rules":[0,1,2,4],"inclusive":true}}
 });
+function popTill(lexer, state) {
+    debugger
+    var st
+    do {
+        st = lexer.popState()
+    } while (st !== state)
+}
+
 function foo() {
     var l = lexer
     debugger
