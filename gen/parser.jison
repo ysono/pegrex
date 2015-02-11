@@ -8,7 +8,8 @@ Resrouces:
 %s DISJ
 %s ALT
 %s TERM
-%s DISJ_IN_ASSERTN_FWD
+%s ESCAPED_ATOM
+%s ESCAPED_NONDECI
 
 %%
 
@@ -16,7 +17,7 @@ Resrouces:
 
 <INITIAL>.      this.begin('DISJ'); this.unput(yytext); return
 
-/* disjunction */
+/* Disjunction */
 [)]             %{
                     popTill(this, 'DISJ')
                     this.popState()
@@ -24,36 +25,51 @@ Resrouces:
                 %}
 <DISJ>.         this.begin('ALT'); this.unput(yytext); return  
 
-/* alternative */
+/* Alternative */
 [|]             %{
                     popTill('ALT')
                     return 'ALT_DELIM'
                 %}
 <ALT>.          this.begin('TERM'); this.unput(yytext); return
 
-/* assertion */
+/* Quantifier */
+<TERM>[*+?]                         return 'ATOM_QUANT_SHORT'
+<TERM>[{][0-9]+(?:[,][0-9]*)?[}]    return 'ATOM_QUANT_NUM'
+
+/* Assertion */
 <TERM>[$^]                  return 'ASSERTN_LB'
 <TERM>[\\][bB]              return 'ASSERTN_WB'
 <TERM>[(][?][=!]            this.begin('DISJ'); return 'ASSERTN_LF_BEGIN'
 
-/* atom */
+/* Atom */
 <TERM>[\.]                  return 'ATOM_CHAR_ANY'
-<TERM>[\\][f]               return 'ATOM_ATOMESC' /* TODO not just f */
+<TERM>[\\]                  this.begin('ESCAPED_ATOM'); return
 /* todo char class */
-<TERM>[(][^?]               this.begin('DISJ'); this.unput(yytext[1]); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a ) */
+<TERM>[(][^?]               this.begin('DISJ'); this.unput(yytext[1]); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a `)` */
 <TERM>[(][?][:]             this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
-/* todo patterncharacter */
 
-/* quantifier */
-<TERM>[*+?]                         return 'ATOM_QUANT_SHORT'
-<TERM>[{][0-9]+(?:[,][0-9]*)?[}]    return 'ATOM_QUANT_NUM'
+/* PatternCharacter */
+/* contrary to ecma, major browsers, as does this filtering scheme, allow `]` and `}` */
+<TERM>.                     return 'ATOM_ETC'
 
+/* AtomEscape */
+<ESCAPED_ATOM>[0-9]+        this.popState(); return 'ATOM_ESCAPE_DECIMALS'
+<ESCAPED_ATOM>.             this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yytext); return
 
+/* CharacterClass */
+/* TODO */
+
+/* CharacterEscape and ChracterClassEscape */
+<ESCAPED_NONDECI>[c][0-9A-Z_a-z]        this.popState(); return 'ESC_DECI' /* contrary to ecma, major browsers allow `0-9_` */
+<ESCAPED_NONDECI>[fnrtv]                this.popState(); return 'ESC_CTRL'
+<ESCAPED_NONDECI>[x][0-9A-Fa-f]{4}      this.popState(); return 'ESC_HEX4'
+<ESCAPED_NONDECI>[u][0-9A-Fa-f]{2}      this.popState(); return 'ESC_HEX2'
+<ESCAPED_NONDECI>[dDsSwW]               this.popState(); return 'ESC_CLASS'
+<ESCAPED_NONDECI>.                      this.popState(); return 'ESC_ETC' /* an approx. ecma's defn is much more involved. */
 
 %%
 
 function popTill(lexer, state) {
-    debugger
     var st
     do {
         st = lexer.popState()
@@ -95,8 +111,9 @@ Term
     : Assertion
     | Atom
     | Atom Quantifier
-        {$$ = b().quantified( $1, 
-            b().withLoc(@2).quantifier($2) )}
+        {{ $$ = b().quantified(
+                b().withLoc(@1).get($1),
+                b().withLoc(@2).quantifier($2) ) }}
     ;
 Quantifier
     : ATOM_QUANT_SHORT
@@ -110,13 +127,36 @@ Assertion
     | ASSERTN_LF_BEGIN Disjunction CLOSE_PAREN
         {$$ = b().withLoc(@1,@3).assertionLF($1, $2)}
     ;
+
 Atom
-    : ATOM_CHAR_ANY /* TODO */
-    | ATOM_ATOMESC /* TODO from token */
+    : ATOM_CHAR_ANY
+        {$$ = b().anyChar()}
+    | AtomEscape
     | ATOM_GROUP_CAPTR Disjunction CLOSE_PAREN
         {$$ = b().group(true, $2)}
     | ATOM_GROUP_NONCAPTR Disjunction CLOSE_PAREN
         {$$ = b().group(false, $2)}
+    | ATOM_ETC
+        {$$ = b().specificChar($1)}
+    ;
+AtomEscape
+    /* returns specificChar or array thereof */
+    : ATOM_ESCAPE_DECIMALS
+        {$$ = b().decimalsEscape($1)}
+    | CharacterEscapeOrChracterClassEscape
+        {$$ = b().specificChar($1, true)}
+    ;
+
+
+
+
+CharacterEscapeOrChracterClassEscape
+    : ESC_DECI
+    | ESC_CTRL
+    | ESC_HEX4
+    | ESC_HEX2
+    | ESC_CLASS
+    | ESC_ETC
     ;
 
 %%
@@ -244,6 +284,28 @@ function b() {
                 type: 'Group',
                 isCapturing: isCapturing,
                 grouped: disj
+            }
+        },
+
+        anyChar: function() {
+            return {
+                type: 'Any Char',
+                display: '.'
+            }
+        },
+        specificChar: function(display, isEscaped) {
+            return {
+                type: 'Specific Char',
+                display: (isEscaped ? '\\' : '') + display,
+                isEscaped: !! isEscaped
+            }
+        },
+
+        decimalsEscape: function(decimals) {
+            // TODO octal
+            return {
+                type: 'asdf',
+                decimals: decimals
             }
         }
     }

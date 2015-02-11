@@ -72,12 +72,12 @@
   }
 */
 var parser = (function(){
-var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[2,6],$V1=[5,8,19],$V2=[5,8,16,17,18,19,20,21,22,23],$V3=[8,16,17,18,19,20,21,22,23],$V4=[5,8,14,15,16,17,18,19,20,21,22,23];
+var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[2,6],$V1=[5,8,19],$V2=[5,8,16,17,18,19,20,22,23,24,25,27,28,29,30,31,32],$V3=[8,16,17,18,19,20,22,23,24,25,27,28,29,30,31,32],$V4=[5,8,14,15,16,17,18,19,20,22,23,24,25,27,28,29,30,31,32];
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"Pattern":3,"Disjunction":4,"EOF":5,"Alternative_s":6,"Alternative":7,"ALT_DELIM":8,"Term_s":9,"Term":10,"Assertion":11,"Atom":12,"Quantifier":13,"ATOM_QUANT_SHORT":14,"ATOM_QUANT_NUM":15,"ASSERTN_LB":16,"ASSERTN_WB":17,"ASSERTN_LF_BEGIN":18,"CLOSE_PAREN":19,"ATOM_CHAR_ANY":20,"ATOM_ATOMESC":21,"ATOM_GROUP_CAPTR":22,"ATOM_GROUP_NONCAPTR":23,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"EOF",8:"ALT_DELIM",14:"ATOM_QUANT_SHORT",15:"ATOM_QUANT_NUM",16:"ASSERTN_LB",17:"ASSERTN_WB",18:"ASSERTN_LF_BEGIN",19:"CLOSE_PAREN",20:"ATOM_CHAR_ANY",21:"ATOM_ATOMESC",22:"ATOM_GROUP_CAPTR",23:"ATOM_GROUP_NONCAPTR"},
-productions_: [0,[3,2],[4,1],[6,1],[6,3],[7,1],[9,0],[9,2],[10,1],[10,1],[10,2],[13,1],[13,1],[11,1],[11,1],[11,3],[12,1],[12,1],[12,3],[12,3]],
+symbols_: {"error":2,"Pattern":3,"Disjunction":4,"EOF":5,"Alternative_s":6,"Alternative":7,"ALT_DELIM":8,"Term_s":9,"Term":10,"Assertion":11,"Atom":12,"Quantifier":13,"ATOM_QUANT_SHORT":14,"ATOM_QUANT_NUM":15,"ASSERTN_LB":16,"ASSERTN_WB":17,"ASSERTN_LF_BEGIN":18,"CLOSE_PAREN":19,"ATOM_CHAR_ANY":20,"AtomEscape":21,"ATOM_GROUP_CAPTR":22,"ATOM_GROUP_NONCAPTR":23,"ATOM_ETC":24,"ATOM_ESCAPE_DECIMALS":25,"CharacterEscapeOrChracterClassEscape":26,"ESC_DECI":27,"ESC_CTRL":28,"ESC_HEX4":29,"ESC_HEX2":30,"ESC_CLASS":31,"ESC_ETC":32,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"EOF",8:"ALT_DELIM",14:"ATOM_QUANT_SHORT",15:"ATOM_QUANT_NUM",16:"ASSERTN_LB",17:"ASSERTN_WB",18:"ASSERTN_LF_BEGIN",19:"CLOSE_PAREN",20:"ATOM_CHAR_ANY",22:"ATOM_GROUP_CAPTR",23:"ATOM_GROUP_NONCAPTR",24:"ATOM_ETC",25:"ATOM_ESCAPE_DECIMALS",27:"ESC_DECI",28:"ESC_CTRL",29:"ESC_HEX4",30:"ESC_HEX2",31:"ESC_CLASS",32:"ESC_ETC"},
+productions_: [0,[3,2],[4,1],[6,1],[6,3],[7,1],[9,0],[9,2],[10,1],[10,1],[10,2],[13,1],[13,1],[11,1],[11,1],[11,3],[12,1],[12,1],[12,3],[12,3],[12,1],[21,1],[21,1],[26,1],[26,1],[26,1],[26,1],[26,1],[26,1]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
@@ -105,8 +105,9 @@ case 7:
 this.$ = $$[$0-1].concat(b().withLoc(_$[$0]).get($$[$0]) )
 break;
 case 10:
-this.$ = b().quantified( $$[$0-1], 
-            b().withLoc(_$[$0]).quantifier($$[$0]) )
+ this.$ = b().quantified(
+                b().withLoc(_$[$0-1]).get($$[$0-1]),
+                b().withLoc(_$[$0]).quantifier($$[$0]) ) 
 break;
 case 13:
 this.$ = b().withLoc(_$[$0]).assertionLB($$[$0])
@@ -117,15 +118,27 @@ break;
 case 15:
 this.$ = b().withLoc(_$[$0-2],_$[$0]).assertionLF($$[$0-2], $$[$0-1])
 break;
+case 16:
+this.$ = b().anyChar()
+break;
 case 18:
 this.$ = b().group(true, $$[$0-1])
 break;
 case 19:
 this.$ = b().group(false, $$[$0-1])
 break;
+case 20:
+this.$ = b().specificChar($$[$0])
+break;
+case 21:
+this.$ = b().decimalsEscape($$[$0])
+break;
+case 22:
+this.$ = b().specificChar($$[$0], true)
+break;
 }
 },
-table: [o([5,8,16,17,18,20,21,22,23],$V0,{3:1,4:2,6:3,7:4,9:5}),{1:[3]},{5:[1,6]},o([5,19],[2,2],{8:[1,7]}),o($V1,[2,3]),o($V1,[2,5],{10:8,11:9,12:10,16:[1,11],17:[1,12],18:[1,13],20:[1,14],21:[1,15],22:[1,16],23:[1,17]}),{1:[2,1]},o($V2,$V0,{9:5,7:18}),o($V2,[2,7]),o($V2,[2,8]),o($V2,[2,9],{13:19,14:[1,20],15:[1,21]}),o($V2,[2,13]),o($V2,[2,14]),o($V3,$V0,{6:3,7:4,9:5,4:22}),o($V4,[2,16]),o($V4,[2,17]),o($V3,$V0,{6:3,7:4,9:5,4:23}),o($V3,$V0,{6:3,7:4,9:5,4:24}),o($V1,[2,4]),o($V2,[2,10]),o($V2,[2,11]),o($V2,[2,12]),{19:[1,25]},{19:[1,26]},{19:[1,27]},o($V2,[2,15]),o($V4,[2,18]),o($V4,[2,19])],
+table: [o([5,8,16,17,18,20,22,23,24,25,27,28,29,30,31,32],$V0,{3:1,4:2,6:3,7:4,9:5}),{1:[3]},{5:[1,6]},o([5,19],[2,2],{8:[1,7]}),o($V1,[2,3]),o($V1,[2,5],{10:8,11:9,12:10,21:15,26:20,16:[1,11],17:[1,12],18:[1,13],20:[1,14],22:[1,16],23:[1,17],24:[1,18],25:[1,19],27:[1,21],28:[1,22],29:[1,23],30:[1,24],31:[1,25],32:[1,26]}),{1:[2,1]},o($V2,$V0,{9:5,7:27}),o($V2,[2,7]),o($V2,[2,8]),o($V2,[2,9],{13:28,14:[1,29],15:[1,30]}),o($V2,[2,13]),o($V2,[2,14]),o($V3,$V0,{6:3,7:4,9:5,4:31}),o($V4,[2,16]),o($V4,[2,17]),o($V3,$V0,{6:3,7:4,9:5,4:32}),o($V3,$V0,{6:3,7:4,9:5,4:33}),o($V4,[2,20]),o($V4,[2,21]),o($V4,[2,22]),o($V4,[2,23]),o($V4,[2,24]),o($V4,[2,25]),o($V4,[2,26]),o($V4,[2,27]),o($V4,[2,28]),o($V1,[2,4]),o($V2,[2,10]),o($V2,[2,11]),o($V2,[2,12]),{19:[1,34]},{19:[1,35]},{19:[1,36]},o($V2,[2,15]),o($V4,[2,18]),o($V4,[2,19])],
 defaultActions: {6:[2,1]},
 parseError: function parseError(str, hash) {
     if (hash.recoverable) {
@@ -396,6 +409,28 @@ function b() {
                 type: 'Group',
                 isCapturing: isCapturing,
                 grouped: disj
+            }
+        },
+
+        anyChar: function() {
+            return {
+                type: 'Any Char',
+                display: '.'
+            }
+        },
+        specificChar: function(display, isEscaped) {
+            return {
+                type: 'Specific Char',
+                display: (isEscaped ? '\\' : '') + display,
+                isEscaped: !! isEscaped
+            }
+        },
+
+        decimalsEscape: function(decimals) {
+            // TODO octal
+            return {
+                type: 'asdf',
+                decimals: decimals
             }
         }
     }
@@ -748,31 +783,48 @@ case 4:
 break;
 case 5:this.begin('TERM'); this.unput(yy_.yytext); return
 break;
-case 6:return 16
+case 6:return 14
 break;
-case 7:return 17
+case 7:return 15
 break;
-case 8:this.begin('DISJ'); return 18
+case 8:return 16
 break;
-case 9:return 20
+case 9:return 17
 break;
-case 10:return 21 /* TODO not just f */
+case 10:this.begin('DISJ'); return 18
 break;
-case 11:this.begin('DISJ'); this.unput(yy_.yytext[1]); return 22 /* note yy_.yytext[1] can be a ) */
+case 11:return 20
 break;
-case 12:this.begin('DISJ'); return 23
+case 12:this.begin('ESCAPED_ATOM'); return
 break;
-case 13:return 14
+case 13:this.begin('DISJ'); this.unput(yy_.yytext[1]); return 22 /* note yy_.yytext[1] can be a `)` */
 break;
-case 14:return 15
+case 14:this.begin('DISJ'); return 23
+break;
+case 15:return 24
+break;
+case 16:this.popState(); return 25
+break;
+case 17:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
+break;
+case 18:this.popState(); return 27 /* contrary to ecma, major browsers allow `0-9_` */
+break;
+case 19:this.popState(); return 28
+break;
+case 20:this.popState(); return 29
+break;
+case 21:this.popState(); return 30
+break;
+case 22:this.popState(); return 31
+break;
+case 23:this.popState(); return 32 /* an approx. ecma's defn is much more involved. */
 break;
 }
 },
-rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:.)/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[(][?][=!])/,/^(?:[\.])/,/^(?:[\\][f])/,/^(?:[(][^?])/,/^(?:[(][?][:])/,/^(?:[*+?])/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}])/],
-conditions: {"DISJ_IN_ASSERTN_FWD":{"rules":[0,2,4],"inclusive":true},"TERM":{"rules":[0,2,4,6,7,8,9,10,11,12,13,14],"inclusive":true},"ALT":{"rules":[0,2,4,5],"inclusive":true},"DISJ":{"rules":[0,2,3,4],"inclusive":true},"INITIAL":{"rules":[0,1,2,4],"inclusive":true}}
+rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?])/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[(][?][=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[(][^?])/,/^(?:[(][?][:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{4})/,/^(?:[u][0-9A-Fa-f]{2})/,/^(?:[dDsSwW])/,/^(?:.)/],
+conditions: {"ESCAPED_NONDECI":{"rules":[0,2,4,18,19,20,21,22,23],"inclusive":true},"ESCAPED_ATOM":{"rules":[0,2,4,16,17],"inclusive":true},"TERM":{"rules":[0,2,4,6,7,8,9,10,11,12,13,14,15],"inclusive":true},"ALT":{"rules":[0,2,4,5],"inclusive":true},"DISJ":{"rules":[0,2,3,4],"inclusive":true},"INITIAL":{"rules":[0,1,2,4],"inclusive":true}}
 });
 function popTill(lexer, state) {
-    debugger
     var st
     do {
         st = lexer.popState()
