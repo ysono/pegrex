@@ -124,12 +124,10 @@ Term_s
 Term
     : Assertion
     | Atom
-        /* Atom can be array, due to decimalsEscapeMaybeRef and decimalsEscape, or obj otherwise. */
-        /* Hence always convert to array. */
-        /* Add loc so b().quantified can use it. */
-        {$$ = [].concat( b().withLoc(@1).get($1) )}
     | Atom Quantifier
-        {{ $$ = b().quantified( $1,
+        /* Add loc to $1 so b().quantified can use it. */
+        {{ $$ = b().quantified(
+            b().withLoc(@1).get($1),
             b().withLoc(@2).quantifier($2) ) }}
     ;
 Quantifier
@@ -159,9 +157,8 @@ Atom
         {$$ = b().specificChar($1)}
     ;
 AtomEscape
-    /* returned val can be array, due to decimalsEscapeMaybeRef, or obj otherwise. */
     : ATOM_ESCAPE_DECIMALS
-        {$$ = b().decimalsEscapeMaybeRef(@1, $1)}
+        {$$ = b().decimalsEscMaybeRefPlaceholder(@1, $1)}
     | CharacterEscapeOrChracterClassEscape
         {$$ = b().specificCharEsc($1)}
     ;
@@ -179,9 +176,9 @@ ClassAtom
         {$$ = b().specificChar($1)}
     ;
 ClassEscape
-    /* returned val can be array, due to decimalsEscape, or obj otherwise. */
+    /* returned val can be array, due to decimalsEsc, or obj otherwise. */
     : CLASS_ATOM_ESCAPE_DECIMALS
-        {$$ = b().decimalsEscape(@1, $1)}
+        {$$ = b().decimalsEsc(@1, $1)}
     | CLASS_ATOM_ESCAPE_BS
         {$$ = b().specificCharEsc($1, 'Backspace')}
     | CharacterEscapeOrChracterClassEscape
@@ -239,6 +236,10 @@ function b() {
             if (! terms.length) {
                 result.hint = 'Matches zero-length string.'
             }
+
+            // save so we can parse decimalsEscMaybeRefPlaceholder later
+            savedTerms_s(terms)
+
             return result
         },
 
@@ -262,16 +263,13 @@ function b() {
                         : Number(matched[1])
             }
         },
-        quantified: function(atoms, quantifier) {
-            var target = atoms.slice(-1)[0]
-            var quantified = {
+        quantified: function(target, quantifier) {
+            return {
                 type: 'Quantified',
                 target: target,
                 quantifier: quantifier,
                 textLoc: [target.textLoc[0], quantifier.textLoc[1]]
             }
-            atoms.splice(-1, 1, quantified)
-            return atoms
         },
 
         assertionLB: function(token) {
@@ -323,6 +321,7 @@ function b() {
         },
 
         group: function(isCapturing, disj) {
+            numCapturedGroups(isCapturing)
             return {
                 type: 'Group',
                 isCapturing: isCapturing,
@@ -355,8 +354,7 @@ function b() {
                         ]
                     })
 
-                    // we want to point i to the added 1 item
-                    // which is now at (i - 1)
+                    // point i to the replacement item
                     i = i - 1
                 }
             }
@@ -402,27 +400,150 @@ function b() {
             }
             return {
                 type: 'Specific Char',
-                display: key,
+                display: '\\' + key,
                 meaning: meaning || keyToMeaning()
             }
         },
 
-        decimalsEscapeMaybeRef: function(loc, decimals) {
-            // TODO ref
-            return [{
-                type: 'asdf',
+        decimalsEscMaybeRefPlaceholder: function(loc, decimals) {
+            return {
+                type: 'decimalsEscMaybeRefPlaceholder',
+                maxCapturedGroupNum: numCapturedGroups(),
                 decimals: decimals,
                 loc: loc
-            }]
+            }
         },
-        decimalsEscape: function(loc, decimals) {
-            // TODO octal
-            return [{
-                type: 'asdf',
-                decimals: decimals,
-                loc: loc
-            }]
+        decimalsEscMaybeRef: function(placeholder) {
+            /* returns an array of specificChar or specificCharEsc
+                or Reference or Quantified */
+            /* TODO test 
+                placeholder -> specificCharEsc and specificChar
+                placeholder -> Reference
+                Quantified -> [specific* , Quantified specific] // \1+, \8+, \18+, \88+
+                Quantified -> [Quantified Reference]
+            */
+            function parse(p) {
+                var intVal = Number(p.decimals)
+
+                var isRef = p.decimals[0] > '0'
+                    && intVal <= numCapturedGroups()
+                if (! isRef) {
+                    return builders.decimalsEsc(p.loc, p.decimals)
+                }
+
+                var isBack = intVal <= p.maxCapturedGroupNum
+                var hint = isBack
+                    ? 'Warning: A Back Reference will match with an empty string if the target group has not been captured by the time this reference is expected. In practice, any group that is 1) outside the root-level Alternative that this Back Reference belongs to or 2) inside a Look-Forward Assertion will have not been captured.'
+                    : 'Because its target group will never have been captured, a Forward Reference always matches with an empty string.'
+                return [{
+                    type: 'Reference',
+                    number: intVal,
+                    isBack: isBack,
+                    hint: hint,
+                    textLoc: [
+                        p.loc.first_column - 1, // -1 for the `\`
+                        p.loc.last_column
+                    ]
+                }]
+            }
+            if (placeholder.type !== 'Quantified') {
+                return parse(placeholder)
+            }
+            var items = parse(placeholder.target)
+            var quantified = builders.quantified(
+                items.slice(-1)[0], placeholder.quantifier)
+            items.splice(-1, 1, quantified)
+            return items
+        },
+        decimalsEsc: function(loc, decimals) {
+            var evalled = eval("'\\" + decimals + "'") // it's safe.
+            var hasOctal = evalled[0] !== decimals[0]
+
+            var loc0 = loc.first_column                
+
+            var item0Len
+            var item0Meaning
+            if (hasOctal) {
+                item0Len = decimals.length - evalled.length + 1
+                item0Meaning = 'Octal Notation'
+            } else {
+                item0Len = 1
+                item0Meaning = 'Unnecessarily escaped'
+            }
+            var item0 = builders.specificCharEsc(
+                    decimals.slice(0, item0Len),
+                    item0Meaning)
+            item0.textLoc = [
+                loc0 - 1, // -1 for the `\`
+                loc0 + item0Len
+            ]
+
+            var item1Loc = item0.textLoc[1]
+            var items = [item0]
+                .concat(
+                    evalled.slice(1).split('').map(function(c, i) {
+                        var item = builders.specificChar(c)
+                        item.textLoc = [
+                            item1Loc + i,
+                            item1Loc + i + 1
+                        ]
+                        return item
+                    })
+                )
+            return items
         }
     }
     return builders
+} // end of b()
+
+// TODO can we parse placeholder in parser.yy provided by outside?
+
+function savedTerms_s(terms) {
+    var terms_s = parser.yy.terms_s = parser.yy.terms_s || []
+    if (terms) {
+        terms_s.push(terms)
+    }
+    return terms_s
 }
+function numCapturedGroups(set) {
+    parser.yy.numCapturedGroups = parser.yy.numCapturedGroups || 0
+    if (set) { parser.yy.numCapturedGroups++ }
+    return parser.yy.numCapturedGroups
+}
+
+parser.parse = (function(orig) {
+    function postParse() {
+        var terms_s = savedTerms_s()
+        terms_s.forEach(function(terms) {
+            function splice() {
+                var args = [i, 1].concat(replacement)
+                Array.prototype.splice.apply(terms, args)
+            }
+            var i, term, replacement
+            for (i = 0; i < terms.length; i++) {
+                term = terms[i]
+
+                var isPlaceholder =
+                    term.type === 'decimalsEscMaybeRefPlaceholder'
+                    || (term.type === 'Quantified'
+                        && term.target.type === 'decimalsEscMaybeRefPlaceholder')
+                if (isPlaceholder) {
+                    replacement = b().decimalsEscMaybeRef(term)
+                    splice()
+
+                    // point i to the last elm of replacement
+                    i = i + replacement.length - 1
+                }
+            }
+        })
+
+        // reset these values that make parser stateful
+        terms_s.length = 0
+        parser.yy.numCapturedGroups = 0
+    }
+    return function() {
+        var parsed = orig.apply(this, arguments)
+        postParse()
+        return parsed
+    }
+})(parser.parse)
