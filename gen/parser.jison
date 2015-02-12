@@ -1,6 +1,9 @@
 /*
-Resrouces:
-- [ECMA](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10)
+Rule names come from [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10).
+
+This spec supersedes ecma specification, in line with the behavior of major browsers.
+For discrepancies noted below, a real-life example can be found in
+`Parser::parseEscape` method from [Webkit](https://github.com/WebKit/webkit/blob/master/Source/JavaScriptCore/yarr/YarrParser.h)
 */
 
 %lex
@@ -52,7 +55,7 @@ Resrouces:
 <TERM>[(][?][:]             this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
 
 /* PatternCharacter */
-/* contrary to ecma, major browsers, as does this filtering scheme, allow `]` and `}` */
+/* contrary to ecma, allow `]` and `}` */
 <TERM>.                     return 'ATOM_ETC'
 
 /* AtomEscape */
@@ -71,10 +74,10 @@ Resrouces:
 /* ClassEscape */
 <ESCAPED_IN_CLASS>[0-9]+    this.popState(); return 'CLASS_ATOM_ESCAPE_DECIMALS' /* parse later in grammar */
 <ESCAPED_IN_CLASS>[b]       this.popState(); return 'CLASS_ATOM_ESCAPE_BS'
-<ESCAPED_IN_CLASS>.         his.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yytext); return
+<ESCAPED_IN_CLASS>.         this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yytext); return
 
 /* CharacterEscape and ChracterClassEscape */
-<ESCAPED_NONDECI>[c][0-9A-Z_a-z]        this.popState(); return 'ESC_DECI' /* contrary to ecma, major browsers allow `0-9_` */
+<ESCAPED_NONDECI>[c][0-9A-Z_a-z]        this.popState(); return 'ESC_DECI' /* contrary to ecma, allow `[0-9_]` */
 <ESCAPED_NONDECI>[fnrtv]                this.popState(); return 'ESC_CTRL'
 <ESCAPED_NONDECI>[x][0-9A-Fa-f]{2}      this.popState(); return 'ESC_HEX2'
 <ESCAPED_NONDECI>[u][0-9A-Fa-f]{4}      this.popState(); return 'ESC_HEX4'
@@ -444,6 +447,9 @@ function b() {
                     return builders.decimalsEsc(p.loc, p.decimals)
                 }
 
+                // Contrary to [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9),
+                // allow non-ref interpretation.
+
                 var isBack = intVal <= p.maxCapturedGroupNum
                 var hint = isBack
                     ? 'Warning: A Back Reference will match with an empty string if the target group has not been captured by the time this reference is expected. In practice, any group that is 1) outside the root-level Alternative that this Back Reference belongs to or 2) inside a Look-Forward Assertion will have not been captured.'
@@ -469,6 +475,9 @@ function b() {
             return items
         },
         decimalsEsc: function(loc, decimals) {
+            // Contrary to [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.11),
+            // support octal notations other than `\0`.
+
             var evalled = eval("'\\" + decimals + "'") // it's safe.
             var hasOctal = evalled[0] !== decimals[0]
 
