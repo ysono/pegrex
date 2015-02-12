@@ -192,7 +192,8 @@
         var aliases = {
             'Any Char': 'TextsOnly',
             'Specific Char': 'TextsOnly',
-            'Reference': 'TextsOnly'
+            'Reference': 'TextsOnly',
+            'Assertion': 'TextsOnly'
         }
         var clazz = typeToClass[data.type]
             || typeToClass[aliases[data.type]]

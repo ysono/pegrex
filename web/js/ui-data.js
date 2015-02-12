@@ -7,13 +7,13 @@
     */
     var interTermArrowY = 16
 
-    /* compoWithChildren:
+    /* withChildren:
         requires setUiByType
         1) call setUiByType on all children -> now they each have dim
         2) gather all dims of children -> set pos of children, and dim/pos of fillers
         3) based on dim/pos of the farthest child -> set parentData's dim
     */
-    function compoWithChildren(
+    function withChildren(
         parentData,
 
         childrenProp, /* parentData[childrenProp] contains an array of children */
@@ -80,12 +80,12 @@
         }
     }
 
-    function compoWithTextsOnly(data, textProps) {
+    function withTextsOnly(data, textProps) {
         return function() {
             var lnH = 16 // 1em
             var charW = lnH / 2
             var texts = textProps.map(function(prop) {
-                return data[prop]
+                return String(data[prop])
             })
             var textLens = texts.map(function(t) {
                 return t.length
@@ -118,7 +118,7 @@
         var map = {
             'Disjunction': function() {
                 var pad = {x: [10,10], y: [10,10]}
-                var ui = compoWithChildren(
+                var ui = withChildren(
                     data,
 
                     'alternatives',
@@ -137,7 +137,7 @@
                 return ui
             },
             'Alternative': function() {
-                var ui = compoWithChildren(
+                var ui = withChildren(
                     data,
 
                     'terms',
@@ -280,6 +280,7 @@
                 return myUi
             },
             'Group': function() {
+                // TODO show/link number
                 var pad = {h: 10, v: 10}
                 var cUi = setUiByType(data.grouped)
                 cUi.pos = [pad.h, pad.v]
@@ -292,7 +293,7 @@
             },
             'Set of Chars': function() {
                 var pad = {x: [30,30], y: [10,10]}
-                var ui = compoWithChildren(
+                var ui = withChildren(
                     data,
 
                     'possibilities',
@@ -329,7 +330,7 @@
                 return ui
             },
             'Range of Chars': function() {
-                var ui = compoWithChildren(
+                var ui = withChildren(
                     data,
 
                     'range',
@@ -354,8 +355,10 @@
                 link.usesMarker = false
                 return ui
             },
-            'Any Char': compoWithTextsOnly(data, ['type', 'display']),
-            'Specific Char': compoWithTextsOnly(data, ['type', 'display'])
+            'Any Char': withTextsOnly(data, ['type', 'display']),
+            'Specific Char': withTextsOnly(data, ['type', 'display']),
+            'Reference': withTextsOnly(data, ['type', 'number']),
+            'Assertion': withTextsOnly(data, ['type', 'assertion'])
         } // end of var map
 
         var fn = map[data.type]

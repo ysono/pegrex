@@ -12,10 +12,10 @@ function disjunction(terms) {
         ]
     }
 }
-function capturedSingleAnyChar(locBegin) {
+function capturedSingleAnyChar(groupNum, locBegin) {
     return {
         type: 'Group',
-        isCapturing: true,
+        number: groupNum,
         grouped: disjunction([
             {
                 type: 'Any Char',
@@ -71,8 +71,8 @@ var specs = [
     ], [
         /(.)(.)[\2]/,
         [
-            capturedSingleAnyChar(0),
-            capturedSingleAnyChar(3),
+            capturedSingleAnyChar(1,0),
+            capturedSingleAnyChar(2,3),
             {
                 type: 'Set of Chars',
                 inclusive: true,
@@ -91,8 +91,8 @@ var specs = [
     ], [
         /(.)(.)\2/,
         [
-            capturedSingleAnyChar(0),
-            capturedSingleAnyChar(3),
+            capturedSingleAnyChar(1,0),
+            capturedSingleAnyChar(2,3),
             {
                 type: 'Reference',
                 number: 2,
@@ -103,7 +103,7 @@ var specs = [
     ], [
         /(.)\0/,
         [
-            capturedSingleAnyChar(0),
+            capturedSingleAnyChar(1,0),
             {
                 type: 'Specific Char',
                 display: '\\0',
@@ -116,7 +116,7 @@ var specs = [
         [
             {
                 type: 'Group',
-                isCapturing: true,
+                number: 1,
                 grouped: disjunction([]),
                 textLoc: [0,2]
             },
@@ -130,7 +130,7 @@ var specs = [
     ], [
         /(.)\2/,
         [
-            capturedSingleAnyChar(0),
+            capturedSingleAnyChar(1,0),
             {
                 type: 'Specific Char',
                 display: '\\2',
@@ -141,8 +141,8 @@ var specs = [
     ], [
         /(.)(.)\2/,
         [
-            capturedSingleAnyChar(0),
-            capturedSingleAnyChar(3),
+            capturedSingleAnyChar(1,0),
+            capturedSingleAnyChar(2,3),
             {
                 type: 'Reference',
                 number: 2,
@@ -155,13 +155,12 @@ var specs = [
         [
             {
                 type: 'Assertion',
-                assertion: 'Line Boundary',
-                atBeginning: true,
+                assertion: 'After Line Boundary',
                 textLoc: [0,1]
             },
             {
                 type: 'Group',
-                isCapturing: true,
+                number: 1,
                 grouped: disjunction([
                     {
                         type: 'Specific Char',
@@ -179,7 +178,7 @@ var specs = [
             },
             {
                 type: 'Group',
-                isCapturing: true,
+                number: 2,
                 grouped: disjunction([
                     {
                         type: 'Specific Char',
@@ -191,16 +190,15 @@ var specs = [
             },
             {
                 type: 'Assertion',
-                assertion: 'Line Boundary',
-                atBeginning: false,
+                assertion: 'Before Line Boundary',
                 textLoc: [9,10]
             }
         ]
     ], [
         /(.)(.)\02/,
         [
-            capturedSingleAnyChar(0),
-            capturedSingleAnyChar(3),
+            capturedSingleAnyChar(1,0),
+            capturedSingleAnyChar(2,3),
             {
                 type: 'Specific Char',
                 display: '\\02',
@@ -211,8 +209,8 @@ var specs = [
     ], [
         /(.)(.)\1{2}/,
         [
-            capturedSingleAnyChar(0),
-            capturedSingleAnyChar(3),
+            capturedSingleAnyChar(1,0),
+            capturedSingleAnyChar(2,3),
             {
                 type: 'Quantified',
                 quantifier: {
