@@ -8,7 +8,10 @@ Resrouces:
 %s DISJ
 %s ALT
 %s TERM
-%s ESCAPED_ATOM
+%s ESCAPED_IN_ATOM
+%s CLASS
+%s CLASS_ATOM
+%s ESCAPED_IN_CLASS
 %s ESCAPED_NONDECI
 
 %%
@@ -43,8 +46,8 @@ Resrouces:
 
 /* Atom */
 <TERM>[\.]                  return 'ATOM_CHAR_ANY'
-<TERM>[\\]                  this.begin('ESCAPED_ATOM'); return
-/* todo char class */
+<TERM>[\\]                  this.begin('ESCAPED_IN_ATOM'); return
+<TERM>[\[]                  this.begin('CLASS'); return 'CLASS_BEGIN'
 <TERM>[(][^?]               this.begin('DISJ'); this.unput(yytext[1]); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a `)` */
 <TERM>[(][?][:]             this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
 
@@ -53,11 +56,22 @@ Resrouces:
 <TERM>.                     return 'ATOM_ETC'
 
 /* AtomEscape */
-<ESCAPED_ATOM>[0-9]+        this.popState(); return 'ATOM_ESCAPE_DECIMALS'
-<ESCAPED_ATOM>.             this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yytext); return
+<ESCAPED_IN_ATOM>[0-9]+     this.popState(); return 'ATOM_ESCAPE_DECIMALS' /* parse later in grammar */
+<ESCAPED_IN_ATOM>.          this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yytext); return
 
 /* CharacterClass */
-/* TODO */
+<CLASS>[\]]                 this.popState(); return 'CLASS_END'
+<CLASS>.                    this.begin('CLASS_ATOM'); this.unput(yytext); return
+
+/* ClassAtom */
+<CLASS_ATOM>[\\]            this.popState(); this.begin('ESCAPED_IN_CLASS'); return
+<CLASS_ATOM>.               this.popState(); return 'CLASS_ATOM_ETC'
+/* handle `^` and `-` later in grammar */
+
+/* ClassEscape */
+<ESCAPED_IN_CLASS>[0-9]+    this.popState(); return 'CLASS_ATOM_ESCAPE_DECIMALS' /* parse later in grammar */
+<ESCAPED_IN_CLASS>[b]       this.popState(); return 'CLASS_ATOM_ESCAPE_BS'
+<ESCAPED_IN_CLASS>.         his.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yytext); return
 
 /* CharacterEscape and ChracterClassEscape */
 <ESCAPED_NONDECI>[c][0-9A-Z_a-z]        this.popState(); return 'ESC_DECI' /* contrary to ecma, major browsers allow `0-9_` */
@@ -110,10 +124,13 @@ Term_s
 Term
     : Assertion
     | Atom
+        /* Atom can be array, due to decimalsEscapeMaybeRef and decimalsEscape, or obj otherwise. */
+        /* Hence always convert to array. */
+        /* Add loc so b().quantified can use it. */
+        {$$ = [].concat( b().withLoc(@1).get($1) )}
     | Atom Quantifier
-        {{ $$ = b().quantified(
-                b().withLoc(@1).get($1),
-                b().withLoc(@2).quantifier($2) ) }}
+        {{ $$ = b().quantified( $1,
+            b().withLoc(@2).quantifier($2) ) }}
     ;
 Quantifier
     : ATOM_QUANT_SHORT
@@ -132,6 +149,8 @@ Atom
     : ATOM_CHAR_ANY
         {$$ = b().anyChar()}
     | AtomEscape
+    | CLASS_BEGIN ClassAtom_s CLASS_END
+        {$$ = b().charSet($2)}
     | ATOM_GROUP_CAPTR Disjunction CLOSE_PAREN
         {$$ = b().group(true, $2)}
     | ATOM_GROUP_NONCAPTR Disjunction CLOSE_PAREN
@@ -140,15 +159,34 @@ Atom
         {$$ = b().specificChar($1)}
     ;
 AtomEscape
-    /* returns specificChar or array thereof */
+    /* returned val can be array, due to decimalsEscapeMaybeRef, or obj otherwise. */
     : ATOM_ESCAPE_DECIMALS
-        {$$ = b().decimalsEscape($1)}
+        {$$ = b().decimalsEscapeMaybeRef(@1, $1)}
     | CharacterEscapeOrChracterClassEscape
-        {$$ = b().specificChar($1, true)}
+        {$$ = b().specificCharEsc($1)}
     ;
 
-
-
+ClassAtom_s
+    : /* empty */
+        {$$ = []}
+    | ClassAtom_s ClassAtom
+        /* add loc so b().charSet can use it */
+        {$$ = $1.concat( b().withLoc(@2).get($2) )}
+    ;
+ClassAtom
+    : ClassEscape
+    | CLASS_ATOM_ETC
+        {$$ = b().specificChar($1)}
+    ;
+ClassEscape
+    /* returned val can be array, due to decimalsEscape, or obj otherwise. */
+    : CLASS_ATOM_ESCAPE_DECIMALS
+        {$$ = b().decimalsEscape(@1, $1)}
+    | CLASS_ATOM_ESCAPE_BS
+        {$$ = b().specificCharEsc($1, 'Backspace')}
+    | CharacterEscapeOrChracterClassEscape
+        {$$ = b().specificCharEsc($1)}
+    ;
 
 CharacterEscapeOrChracterClassEscape
     : ESC_DECI
@@ -168,10 +206,10 @@ function b() {
                 if (o instanceof Array) {
                     // The concept of location is valid with one token only.
                     // Not an error if token can be an array or an obj
-                    // e.g. ClassEscape
+                    // namely AtomEscape and ClassEscape
                     return o
                 }
-                o.location = [
+                o.textLoc = [
                     begin.first_column,
                     (end || begin).last_column
                 ]
@@ -205,6 +243,7 @@ function b() {
         },
 
         quantifier: function(token) {
+            // TODO validate min <= max
             if (token.length === 1) {
                 return {
                     type: 'Quantifier',
@@ -223,12 +262,16 @@ function b() {
                         : Number(matched[1])
             }
         },
-        quantified: function(atom, quantifier) {
-            return {
+        quantified: function(atoms, quantifier) {
+            var target = atoms.slice(-1)[0]
+            var quantified = {
                 type: 'Quantified',
-                target: atom,
-                quantifier: quantifier
+                target: target,
+                quantifier: quantifier,
+                textLoc: [target.textLoc[0], quantifier.textLoc[1]]
             }
+            atoms.splice(-1, 1, quantified)
+            return atoms
         },
 
         assertionLB: function(token) {
@@ -287,26 +330,98 @@ function b() {
             }
         },
 
+        charSet: function(items) {
+            // TODO test: start with ^, ^-, -^, -
+            // TODO validate (range begin < range end)
+            var inclusive = true
+            if (items[0]
+                    && items[0].type === 'Specific Char'
+                    && items[0].display === '^') {
+                inclusive = false
+                items = items.slice(1)
+            }
+
+            var i, item
+            for (i = 1; i < items.length - 1; i++) {
+                item = items[1]
+                if (item.type === 'Specific Char'
+                        && item.display === '-') {
+                    items.splice(i - 1, 3, {
+                        type: 'Range of Chars',
+                        range: [items[i - 1], items[i + 1]],
+                        textLoc: [
+                            items[i - 1].textLoc[0],
+                            items[i + 1].textLoc[1]
+                        ]
+                    })
+
+                    // we want to point i to the added 1 item
+                    // which is now at (i - 1)
+                    i = i - 1
+                }
+            }
+
+            return {
+                type: 'Set of Chars',
+                items: items,
+                inclusive: inclusive
+            }
+        },
+
         anyChar: function() {
             return {
                 type: 'Any Char',
                 display: '.'
             }
         },
-        specificChar: function(display, isEscaped) {
+        specificChar: function(display) {
             return {
                 type: 'Specific Char',
-                display: (isEscaped ? '\\' : '') + display,
-                isEscaped: !! isEscaped
+                display: display
+            }
+        },
+        specificCharEsc: function(key, meaning) {
+            function keyToMeaning() {
+                var map = {
+                    c: 'Control Char',
+                    f: 'Form Feed',
+                    n: 'New Line',
+                    r: 'Carriage Return',
+                    t: 'Horizontal Tab',
+                    v: 'Vertical Tab',
+                    x: 'Hexadecimal Notation',
+                    u: 'Hexadecimal Notation',
+                    d: 'Decimal: [0-9]',
+                    D: 'Non-Decimal: [^0-9]',
+                    s: 'Whitepace',
+                    S: 'Non-Whitespace',
+                    w: 'Word Char: [0-9A-Z_a-z]',
+                    W: 'Non-Word Char: [^0-9A-Z_a-z]'
+                }
+                return map[key[0]]
+            }
+            return {
+                type: 'Specific Char',
+                display: key,
+                meaning: meaning || keyToMeaning()
             }
         },
 
-        decimalsEscape: function(decimals) {
-            // TODO octal
-            return {
+        decimalsEscapeMaybeRef: function(loc, decimals) {
+            // TODO ref
+            return [{
                 type: 'asdf',
-                decimals: decimals
-            }
+                decimals: decimals,
+                loc: loc
+            }]
+        },
+        decimalsEscape: function(loc, decimals) {
+            // TODO octal
+            return [{
+                type: 'asdf',
+                decimals: decimals,
+                loc: loc
+            }]
         }
     }
     return builders
