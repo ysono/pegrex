@@ -7,13 +7,13 @@
     */
     var interTermArrowY = 16
 
-    /* setUiOnCompoWithChildren:
+    /* compoWithChildren:
         requires setUiByType
         1) call setUiByType on all children -> now they each have dim
         2) gather all dims of children -> set pos of children, and dim/pos of fillers
         3) based on dim/pos of the farthest child -> set parentData's dim
     */
-    function setUiOnCompoWithChildren(
+    function compoWithChildren(
         parentData,
 
         childrenProp, /* parentData[childrenProp] contains an array of children */
@@ -80,29 +80,45 @@
         }
     }
 
+    function compoWithTextsOnly(data, textProps) {
+        return function() {
+            var lnH = 16 // 1em
+            var charW = lnH / 2
+            var texts = textProps.map(function(prop) {
+                return data[prop]
+            })
+            var textLens = texts.map(function(t) {
+                return t.length
+            })
+            var myW = charW * Math.max.apply(Math, textLens)
+            return data.ui = {
+                dim: [myW, lnH * texts.length],
+                rows: texts.map(function(text, i) {
+                    return {
+                        text: text,
+                        pos: [
+                            myW / 2,
+                            lnH * (i + 3/4) // TODO why 3/4?
+                        ],
+                        anchor: 'middle'
+                    }
+                })
+            }
+        }
+    }
+
     /* setUiByType:
         Sets and returns data.ui.dim
         Does not set data.ui.pos
         If data contains children, recursively sets their .ui.dim and .ui.pos.
     */
     function setUiByType(data) {
-        function oneChar() {
-            return data.ui = {
-                dim: (function() {
-                    var lnH = 16 // 1em
-                    var charW = 8 // .5em
-                    return [
-                        charW * Math.max(data.type.length, data.display.length),
-                        lnH * 2
-                    ]
-                })()
-            }
-        }
+        
 
         var map = {
             'Disjunction': function() {
                 var pad = {x: [10,10], y: [10,10]}
-                var ui = setUiOnCompoWithChildren(
+                var ui = compoWithChildren(
                     data,
 
                     'alternatives',
@@ -121,7 +137,7 @@
                 return ui
             },
             'Alternative': function() {
-                var ui = setUiOnCompoWithChildren(
+                var ui = compoWithChildren(
                     data,
 
                     'terms',
@@ -276,7 +292,7 @@
             },
             'Set of Chars': function() {
                 var pad = {x: [30,30], y: [10,10]}
-                var ui = setUiOnCompoWithChildren(
+                var ui = compoWithChildren(
                     data,
 
                     'possibilities',
@@ -313,7 +329,7 @@
                 return ui
             },
             'Range of Chars': function() {
-                var ui = setUiOnCompoWithChildren(
+                var ui = compoWithChildren(
                     data,
 
                     'range',
@@ -338,8 +354,8 @@
                 link.usesMarker = false
                 return ui
             },
-            'Any Char': oneChar,
-            'Specific Char': oneChar
+            'Any Char': compoWithTextsOnly(data, ['type', 'display']),
+            'Specific Char': compoWithTextsOnly(data, ['type', 'display'])
         } // end of var map
 
         var fn = map[data.type]

@@ -104,17 +104,16 @@
             strokeW: 2,
             childProps: ['ui.fillers', 'range']
         }),
-        'Char': createBoxedClass({
+        'TextsOnly': createBoxedClass({
             stroke: '#bbb',
             strokeW: 2,
             moreChildElms: function(data) {
-                // TODO 12 and 28
-                return (<g>
-                    <text x={data.ui.dim[0]/2} y="12" textAnchor="middle"
-                        fontFamily="monospace">{data.type}</text> 
-                    <text x={data.ui.dim[0]/2} y="28" textAnchor="middle"
-                        fontFamily="monospace">{data.display}</text>
-                </g>)
+                return data.ui.rows.map(function(row) {
+                    return (
+                        <text x={row.pos[0]} y={row.pos[1]} textAnchor={row.anchor}
+                            fontFamily="monospace">{row.text}</text>
+                    )
+                })
             }
         }),
 
@@ -191,9 +190,9 @@
     }
     function createInstance(data, key) {
         var aliases = {
-            'Any Char': 'Char',
-            'Specific Char': 'Char',
-            'Reference': 'Char'
+            'Any Char': 'TextsOnly',
+            'Specific Char': 'TextsOnly',
+            'Reference': 'TextsOnly'
         }
         var clazz = typeToClass[data.type]
             || typeToClass[aliases[data.type]]
