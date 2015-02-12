@@ -152,14 +152,80 @@ var provide = {
     CharacterClassEscape: function() {
         return {
             '\\d': {
-                type: 'Pre-defined Set of Chars',
-                display: '\\d',
-                meaning: 'Decimal: [0-9]'
+                type: 'Set of Chars',
+                possibilities: [
+                    {
+                        type: 'Range of Chars',
+                        range: [
+                            {
+                                type: 'Specific Char',
+                                display: '0'
+                            },
+                            {
+                                type: 'Specific Char',
+                                display: '9'
+                            }
+                        ]
+                    }
+                ],
+                inclusive: true,
+                predefined: {
+                    display: '\\d',
+                    meaning: 'Decimal'
+                }
             },
-            '\\S': {
-                type: 'Pre-defined Set of Chars',
-                display: '\\S',
-                meaning: 'Non-Whitespace'
+            '\\W': {
+                type: 'Set of Chars',
+                possibilities: [
+                    {
+                        type: 'Range of Chars',
+                        range: [
+                            {
+                                type: 'Specific Char',
+                                display: '0'
+                            },
+                            {
+                                type: 'Specific Char',
+                                display: '9'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'Range of Chars',
+                        range: [
+                            {
+                                type: 'Specific Char',
+                                display: 'A'
+                            },
+                            {
+                                type: 'Specific Char',
+                                display: 'Z'
+                            }
+                        ]
+                    },
+                    {
+                        type: 'Specific Char',
+                        display: '_'
+                    },
+                    {
+                        type: 'Range of Chars',
+                        range: [
+                            {
+                                type: 'Specific Char',
+                                display: 'a'
+                            },
+                            {
+                                type: 'Specific Char',
+                                display: 'z'
+                            }
+                        ]
+                    }
+                ],  
+                inclusive: false,
+                predefined: {
+                    display: '\\W',
+                    meaning: 'Non-Word Char'
+                }
             }
         }
     }

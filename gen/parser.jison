@@ -50,7 +50,7 @@ For discrepancies noted below, a real-life example can be found in
 /* Atom */
 <TERM>[\.]                  return 'ATOM_CHAR_ANY'
 <TERM>[\\]                  this.begin('ESCAPED_IN_ATOM'); return
-<TERM>[\[]                  this.begin('CLASS'); return 'CLASS_BEGIN'
+<TERM>[\[][\^]?             this.begin('CLASS'); return 'CLASS_BEGIN'
 <TERM>[(][^?]               this.begin('DISJ'); this.unput(yytext[1]); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a `)` */
 <TERM>[(][?][:]             this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
 
@@ -76,7 +76,7 @@ For discrepancies noted below, a real-life example can be found in
 <ESCAPED_IN_CLASS>[b]       this.popState(); return 'CLASS_ATOM_ESCAPE_BS'
 <ESCAPED_IN_CLASS>.         this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yytext); return
 
-/* CharacterEscape and ChracterClassEscape */
+/* CharacterEscape and CharacterClassEscape */
 <ESCAPED_NONDECI>[c][0-9A-Z_a-z]        this.popState(); return 'ESC_DECI' /* contrary to ecma, allow `[0-9_]` */
 <ESCAPED_NONDECI>[fnrtv]                this.popState(); return 'ESC_CTRL'
 <ESCAPED_NONDECI>[x][0-9A-Fa-f]{2}      this.popState(); return 'ESC_HEX2'
@@ -151,7 +151,7 @@ Atom
         {$$ = b().anyChar()}
     | AtomEscape
     | CLASS_BEGIN ClassAtom_s CLASS_END
-        {$$ = b().charSetCustom($2)}
+        {$$ = b().charSet($2, $1.length === 1)}
     | ATOM_GROUP_CAPTR Disjunction CLOSE_PAREN
         {$$ = b().group(true, $2)}
     | ATOM_GROUP_NONCAPTR Disjunction CLOSE_PAREN
@@ -169,7 +169,7 @@ ClassAtom_s
     : /* empty */
         {$$ = []}
     | ClassAtom_s ClassAtom
-        /* add loc so b().charSetCustom can use it */
+        /* add loc so b().charSet can use it */
         {$$ = $1.concat( b().withLoc(@2).get($2) )}
     ;
 ClassAtom
@@ -336,30 +336,27 @@ function b() {
             }
         },
 
-        charSetCustom: function(items) {
-            // TODO test: start with ^, ^-, -^, -
+        charSetRange: function(from, to) {
             // TODO validate (range begin < range end)
-            var inclusive = true
-            if (items[0]
-                    && items[0].type === 'Specific Char'
-                    && items[0].display === '^') {
-                inclusive = false
-                items = items.slice(1)
+            return {
+                type: 'Range of Chars',
+                range: [from, to],
+                textLoc: from.textLoc && to.textLoc
+                    ? [from.textLoc[0], to.textLoc[1]]
+                    : undefined
             }
-
-            var i, item
+        },
+        charSet: function(items, inclusive, predefined) {
+            // TODO test: start with ^, ^-, -^, -
+            
+            var i, item, replacement
             for (i = 1; i < items.length - 1; i++) {
                 item = items[1]
                 if (item.type === 'Specific Char'
                         && item.display === '-') {
-                    items.splice(i - 1, 3, {
-                        type: 'Range of Chars',
-                        range: [items[i - 1], items[i + 1]],
-                        textLoc: [
-                            items[i - 1].textLoc[0],
-                            items[i + 1].textLoc[1]
-                        ]
-                    })
+                    replacement = builders.charSetRange(
+                        items[i - 1], items[i + 1])
+                    items.splice(i - 1, 3, replacement)
 
                     // point i to the replacement item
                     i = i - 1
@@ -369,23 +366,53 @@ function b() {
             return {
                 type: 'Set of Chars',
                 possibilities: items,
-                inclusive: inclusive
+                inclusive: inclusive,
+                predefined: predefined
             }
         },
         charSetPreDefn: function(key) {
-            var map = {
-                d: 'Decimal: [0-9]',
-                D: 'Non-Decimal: [^0-9]',
+            function makeRange(fromChar, toChar) {
+                return builders.charSetRange(
+                    builders.specificChar(fromChar),
+                    builders.specificChar(toChar)
+                )
+            }
+            var possibilities = {
+                d: function() {
+                    debugger
+                    return [makeRange('0', '9')]
+                },
+                s: function() {
+                    return [builders.specificCharEsc('n')] // TODO
+                },
+                w: function() {
+                    debugger
+                    return [
+                        makeRange('0', '9'),
+                        makeRange('A', 'Z'),
+                        builders.specificChar('_'),
+                        makeRange('a', 'z')
+                    ]
+                }
+            }[key.toLowerCase()]()
+
+            var meaning = {
+                d: 'Decimal',
+                D: 'Non-Decimal',
                 s: 'Whitepace',
                 S: 'Non-Whitespace',
-                w: 'Word Char: [0-9A-Z_a-z]',
-                W: 'Non-Word Char: [^0-9A-Z_a-z]'
-            }
-            return {
-                type: 'Pre-defined Set of Chars',
-                display: '\\' + key,
-                meaning: map[key]
-            }
+                w: 'Word Char',
+                W: 'Non-Word Char'
+            }[key]
+
+            return builders.charSet(
+                possibilities,
+                key >= 'a',
+                {
+                    display: '\\' + key,
+                    meaning: meaning
+                }
+            )
         },
 
         anyChar: function() {

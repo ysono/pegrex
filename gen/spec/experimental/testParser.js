@@ -18,8 +18,10 @@ var strToExpected = getExpectations()
 _.each(strToExpected, function(expected, str){
     var actual = parser.parse(str)
     var success = _.isEqual(actual, expected, function(act, exp){
-        delete act.hint // not comparing hints
-        delete act.textLoc // lazy - not comparing locations
+        if (act) {
+            delete act.hint // not comparing hints
+            delete act.textLoc // lazy - not comparing locations
+        }
     })
     if (success) {
         console.info(success, str)

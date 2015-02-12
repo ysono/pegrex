@@ -84,6 +84,7 @@ var specs = [
                         textLoc: [7,9]
                     }
                 ],
+                predefined: undefined,
                 textLoc: [6,10]
             }
         ]
@@ -289,6 +290,7 @@ var specs = [
                         textLoc: [4,5]
                     }
                 ],
+                predefined: undefined,
                 textLoc: [0,6]
             }
         ]
@@ -312,6 +314,7 @@ var specs = [
                         textLoc: [4,5]
                     }
                 ],
+                predefined: undefined,
                 textLoc: [0,6]
             }
         ]
@@ -386,10 +389,12 @@ function runOne(regex, terms) {
     var exp = disjunction(terms)
     var act = parser.parse(src)
     var success = _.isEqual(act, exp, function(act, exp){
-        delete act.hint // not comparing hints
-        if (act.alternatives || act.terms) {
-            // lazy - compare locations of terms and their children only
-            delete act.textLoc
+        if (act) {
+            delete act.hint // not comparing hints
+            if (act.alternatives || act.terms) {
+                // lazy - compare locations of terms and their children only
+                delete act.textLoc
+            }
         }
 
         if (typeof act === 'object'
