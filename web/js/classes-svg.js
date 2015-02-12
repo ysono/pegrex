@@ -8,7 +8,6 @@
             var svgDim = [0,0]
             var childNode
             if (tree) {
-                reactClasses.addDimPos(tree)
                 svgDim = tree.ui.svgDim
                 childNode = createInstance(tree)
             }
@@ -169,7 +168,7 @@
                         }
                         if (path.d[i - 1] instanceof Array) {
                             // coord followed by coord
-                            return window.utils.reflectedQuadra(path.d[i - 1], next, path.isVertical)
+                            return reactClasses.utils.reflectedQuadra(path.d[i - 1], next, path.isVertical)
                         }
                         if (i) {
                             // string followed by coord

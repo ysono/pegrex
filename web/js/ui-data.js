@@ -83,7 +83,6 @@
     /* setUiByType:
         Sets and returns data.ui.dim
         Does not set data.ui.pos
-        Does not modify any other prop of data than `ui`
         If data contains children, recursively sets their .ui.dim and .ui.pos.
     */
     function setUiByType(data) {
@@ -349,8 +348,15 @@
         } else {
             console.error('could not determine how to set ui data', data)
         }
-    }
-    reactClasses.addDimPos = function(data) {
+    } // end of fn setUiByType
+
+    /*
+        Recursively sets `ui` prop to the data obj and its children.
+        Does not modify any other prop.
+        `ui` will contain at minimum `pos` and `dim` props,
+            and it can contain other info for drawing other things inside the compo.
+    */
+    reactClasses.addUiData = function(data) {
         var pad = {t:10,r:10,b:10,l:10}
 
         var dUi = setUiByType(data)
