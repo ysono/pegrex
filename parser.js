@@ -548,6 +548,9 @@ function b() {
                     return builders.decimalsEsc(p.loc, p.decimals)
                 }
 
+                // Contrary to [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.9),
+                // allow non-ref interpretation.
+
                 var isBack = intVal <= p.maxCapturedGroupNum
                 var hint = isBack
                     ? 'Warning: A Back Reference will match with an empty string if the target group has not been captured by the time this reference is expected. In practice, any group that is 1) outside the root-level Alternative that this Back Reference belongs to or 2) inside a Look-Forward Assertion will have not been captured.'
@@ -573,6 +576,9 @@ function b() {
             return items
         },
         decimalsEsc: function(loc, decimals) {
+            // Contrary to [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.11),
+            // support octal notations other than `\0`.
+
             var evalled = eval("'\\" + decimals + "'") // it's safe.
             var hasOctal = evalled[0] !== decimals[0]
 
@@ -1049,9 +1055,9 @@ case 23:this.popState(); return 33 /* parse later in grammar */
 break;
 case 24:this.popState(); return 34
 break;
-case 25:his.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
+case 25:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
 break;
-case 26:this.popState(); return 35 /* contrary to ecma, major browsers allow `0-9_` */
+case 26:this.popState(); return 35 /* contrary to ecma, allow `[0-9_]` */
 break;
 case 27:this.popState(); return 36
 break;
