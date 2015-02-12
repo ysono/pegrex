@@ -827,8 +827,8 @@ if (typeof module !== 'undefined' && require.main === module) {
 
         assertionLB: function(token) {
             var atBeg = token === '^'
+            var prepo = atBeg ? 'After' : 'Before'
             var hint = (function() {
-                var prepo = atBeg ? 'after' : 'before'
                 var char0 = atBeg ? 'beginning of string' : 'end of string'
                 var charlist = [char0].concat([
                     'newline (\\n)',
@@ -838,7 +838,7 @@ if (typeof module !== 'undefined' && require.main === module) {
                 ])
                 return [
                     'Matches the zero-length string ',
-                    prepo,
+                    prepo.toLowerCase(),
                     ' a new line char, i.e. one of [',
                     String(charlist),
                     ']'
@@ -846,8 +846,7 @@ if (typeof module !== 'undefined' && require.main === module) {
             })()
             return {
                 type: 'Assertion',
-                assertion: 'Line Boundary',
-                atBeginning: atBeg,
+                assertion: prepo + ' Line Boundary',
                 hint: hint
             }
         },
@@ -859,25 +858,23 @@ if (typeof module !== 'undefined' && require.main === module) {
             hint = 'Matches the zero-length string between ' + hint
             return {
                 type: 'Assertion',
-                assertion: 'Word Boundary',
-                atBoundary: atWb,
+                assertion: (atWb ? '' : 'Non-') + 'Word Boundary',
                 hint: hint
             }
         },
         assertionLF: function(flag, disj) {
             return {
                 type: 'Assertion',
-                assertion: 'Look-Forward',
-                isPositive: flag === '=',
+                assertion: (flag === '=' ? 'Positive' : 'Negative')
+                    + ' Look-Forward',
                 grouped: disj
             }
         },
 
         group: function(isCapturing, disj) {
-            if (isCapturing) { numCapturedGroups++ }
             return {
                 type: 'Group',
-                isCapturing: isCapturing,
+                number: isCapturing ? ++numCapturedGroups : undefined,
                 grouped: disj
             }
         },
@@ -1078,9 +1075,7 @@ if (typeof module !== 'undefined' && require.main === module) {
             return items
         }
     }
-    parser.yy = {
-        b: builders
-    }
+    parser.yy.b = builders
 
     parser.parse = (function(orig) {
         function postParse() {
