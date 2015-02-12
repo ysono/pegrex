@@ -83,6 +83,7 @@
     /* setUiByType:
         Sets and returns data.ui.dim
         Does not set data.ui.pos
+        Does not modify any other prop of data than `ui`
         If data contains children, recursively sets their .ui.dim and .ui.pos.
     */
     function setUiByType(data) {
@@ -147,10 +148,10 @@
 
                 var pad = {h: 40, v: 10}
                 var arrowEdgeY = interTermArrowY
-                var intraMargin = 10 // between target and the arrow that doesn't go thru it
+                var intraMargin = 10 // between top/btm edge of target and the arrow that doesn't go thru it
 
-                var arrowMidTopY,
-                    arrowMidBtmY,
+                var arrowMidTopY, /* y where top arrow runs in the middle */
+                    arrowMidBtmY, /* ditto bottom */
                     targetY,
                     myH
                 var needArrowBtm = true
@@ -234,7 +235,7 @@
                                 }
                             })()
                         } else {
-                            // right edge -> down -> left -> up -> left edge
+                            // right of target -> down -> left -> up -> left of target
                             detourArrow = (function() {
                                 var path = [
                                     'M', tUi.pos[0] + tUi.dim[0], arrowMidTopY,
