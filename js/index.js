@@ -50,8 +50,11 @@
         },
 
         textsToTree: function(parts) {
+            var tree
             try {
-                return parser.parse(parts.pattern)
+                tree = parser.parse(parts.pattern)
+                reactClasses.addUiData(tree)
+                return tree
             } catch(e) {
                 // don't propagate b/c still want text states updated
                 // TODO highlight text location
