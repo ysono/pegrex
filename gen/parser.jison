@@ -24,18 +24,24 @@ For discrepancies noted below, a real-life example can be found in
 <INITIAL>.      this.begin('DISJ'); this.unput(yytext); return
 
 /* Disjunction */
-[)]             %{
-                    popTill(this, 'DISJ')
-                    this.popState()
-                    return 'CLOSE_PAREN'
-                %}
+<CLASS_ATOM>[)]             return 'CLASS_ATOM_ETC'
+<ESCAPED_IN_ATOM>[)]        return 'ESC_ETC'
+<ESCAPED_IN_CLASS>[)]       return 'ESC_ETC'
+[)]                         %{debugger
+                                popTill(this, 'DISJ')
+                                this.popState()
+                                return 'CLOSE_PAREN'
+                            %}
 <DISJ>.         this.begin('ALT'); this.unput(yytext); return  
 
 /* Alternative */
-[|]             %{
-                    popTill('ALT')
-                    return 'ALT_DELIM'
-                %}
+<CLASS_ATOM>[|]             return 'CLASS_ATOM_ETC'
+<ESCAPED_IN_ATOM>[|]        return 'ESC_ETC'
+<ESCAPED_IN_CLASS>[|]       return 'ESC_ETC'
+[|]                         %{
+                                popTill('ALT')
+                                return 'ALT_DELIM'
+                            %}
 <ALT>.          this.begin('TERM'); this.unput(yytext); return
 
 /* Quantifier */
@@ -182,7 +188,7 @@ ClassEscape
     : CLASS_ATOM_ESCAPE_DECIMALS
         {$$ = b().decimalsEsc(@1, $1)}
     | CLASS_ATOM_ESCAPE_BS
-        {$$ = b().specificCharEsc($1, 'Backspace')}
+        {$$ = b().specificCharEsc($1)}
     | CharacterEscapeOrChracterClassEscape
     ;
 
@@ -198,7 +204,7 @@ CharacterEscapeOrChracterClassEscape
     | ESC_CLASS
         {$$ = b().charSetPreDefn($1)}
     | ESC_ETC
-        {$$ = b().specificCharEsc($1, 'Unnecessarily escaped')}
+        {$$ = b().specificCharEsc($1)}
     ;
 
 %%
@@ -427,24 +433,22 @@ function b() {
                 display: display
             }
         },
-        specificCharEsc: function(key, meaning) {
-            function keyToMeaning() {
-                var map = {
-                    c: 'Control Char',
-                    f: 'Form Feed',
-                    n: 'New Line',
-                    r: 'Carriage Return',
-                    t: 'Horizontal Tab',
-                    v: 'Vertical Tab',
-                    x: 'Hexadecimal Notation',
-                    u: 'Hexadecimal Notation'
-                }
-                return map[key[0]]
-            }
+        specificCharEsc: function(key) {
+            var meaning = {
+                b: 'Backspace',
+                c: 'Control Char',
+                f: 'Form Feed',
+                n: 'New Line',
+                r: 'Carriage Return',
+                t: 'Horizontal Tab',
+                v: 'Vertical Tab',
+                x: 'Hexadecimal Notation',
+                u: 'Hexadecimal Notation'
+            }[key[0]]
             return {
                 type: 'Specific Char',
                 display: '\\' + key,
-                meaning: meaning || keyToMeaning()
+                meaning: meaning
             }
         },
 
@@ -510,18 +514,11 @@ function b() {
 
             var loc0 = loc.first_column                
 
-            var item0Len
-            var item0Meaning
-            if (hasOctal) {
-                item0Len = decimals.length - evalled.length + 1
-                item0Meaning = 'Octal Notation'
-            } else {
-                item0Len = 1
-                item0Meaning = 'Unnecessarily escaped'
-            }
+            var item0Len = hasOctal
+                ? decimals.length - evalled.length + 1
+                : 1
             var item0 = builders.specificCharEsc(
-                    decimals.slice(0, item0Len),
-                    item0Meaning)
+                    decimals.slice(0, item0Len) )
             item0.textLoc = [
                 loc0 - 1, // -1 for the `\`
                 loc0 + item0Len

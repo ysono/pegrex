@@ -142,17 +142,11 @@ break;
 case 28:
 this.$ = b().decimalsEsc(_$[$0], $$[$0])
 break;
-case 29:
-this.$ = b().specificCharEsc($$[$0], 'Backspace')
-break;
-case 31: case 32: case 33: case 34:
+case 29: case 31: case 32: case 33: case 34: case 36:
 this.$ = b().specificCharEsc($$[$0])
 break;
 case 35:
 this.$ = b().charSetPreDefn($$[$0])
-break;
-case 36:
-this.$ = b().specificCharEsc($$[$0], 'Unnecessarily escaped')
 break;
 }
 },
@@ -528,24 +522,22 @@ function b() {
                 display: display
             }
         },
-        specificCharEsc: function(key, meaning) {
-            function keyToMeaning() {
-                var map = {
-                    c: 'Control Char',
-                    f: 'Form Feed',
-                    n: 'New Line',
-                    r: 'Carriage Return',
-                    t: 'Horizontal Tab',
-                    v: 'Vertical Tab',
-                    x: 'Hexadecimal Notation',
-                    u: 'Hexadecimal Notation'
-                }
-                return map[key[0]]
-            }
+        specificCharEsc: function(key) {
+            var meaning = {
+                b: 'Backspace',
+                c: 'Control Char',
+                f: 'Form Feed',
+                n: 'New Line',
+                r: 'Carriage Return',
+                t: 'Horizontal Tab',
+                v: 'Vertical Tab',
+                x: 'Hexadecimal Notation',
+                u: 'Hexadecimal Notation'
+            }[key[0]]
             return {
                 type: 'Specific Char',
                 display: '\\' + key,
-                meaning: meaning || keyToMeaning()
+                meaning: meaning
             }
         },
 
@@ -611,18 +603,11 @@ function b() {
 
             var loc0 = loc.first_column                
 
-            var item0Len
-            var item0Meaning
-            if (hasOctal) {
-                item0Len = decimals.length - evalled.length + 1
-                item0Meaning = 'Octal Notation'
-            } else {
-                item0Len = 1
-                item0Meaning = 'Unnecessarily escaped'
-            }
+            var item0Len = hasOctal
+                ? decimals.length - evalled.length + 1
+                : 1
             var item0 = builders.specificCharEsc(
-                    decimals.slice(0, item0Len),
-                    item0Meaning)
+                    decimals.slice(0, item0Len) )
             item0.textLoc = [
                 loc0 - 1, // -1 for the `\`
                 loc0 + item0Len
@@ -1029,77 +1014,89 @@ case 0:return 5
 break;
 case 1:this.begin('DISJ'); this.unput(yy_.yytext); return
 break;
-case 2:
-                    popTill(this, 'DISJ')
-                    this.popState()
-                    return 19
-                
+case 2:return 32
 break;
-case 3:this.begin('ALT'); this.unput(yy_.yytext); return  
+case 3:return 40
 break;
-case 4:
-                    popTill('ALT')
-                    return 8
-                
+case 4:return 40
 break;
-case 5:this.begin('TERM'); this.unput(yy_.yytext); return
+case 5:debugger
+                                popTill(this, 'DISJ')
+                                this.popState()
+                                return 19
+                            
 break;
-case 6:return 14
+case 6:this.begin('ALT'); this.unput(yy_.yytext); return  
 break;
-case 7:return 15
+case 7:return 32
 break;
-case 8:return 16
+case 8:return 40
 break;
-case 9:return 17
+case 9:return 40
 break;
-case 10:this.begin('DISJ'); return 18
+case 10:
+                                popTill('ALT')
+                                return 8
+                            
 break;
-case 11:return 20
+case 11:this.begin('TERM'); this.unput(yy_.yytext); return
 break;
-case 12:this.begin('ESCAPED_IN_ATOM'); return
+case 12:return 14
 break;
-case 13:this.begin('CLASS'); return 22
+case 13:return 15
 break;
-case 14:this.begin('DISJ'); this.unput(yy_.yytext[1]); return 25 /* note yy_.yytext[1] can be a `)` */
+case 14:return 16
 break;
-case 15:this.begin('DISJ'); return 26
+case 15:return 17
 break;
-case 16:return 27
+case 16:this.begin('DISJ'); return 18
 break;
-case 17:this.popState(); return 28 /* parse later in grammar */
+case 17:return 20
 break;
-case 18:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
+case 18:this.begin('ESCAPED_IN_ATOM'); return
 break;
-case 19:this.popState(); return 24
+case 19:this.begin('CLASS'); return 22
 break;
-case 20:this.begin('CLASS_ATOM'); this.unput(yy_.yytext); return
+case 20:this.begin('DISJ'); this.unput(yy_.yytext[1]); return 25 /* note yy_.yytext[1] can be a `)` */
 break;
-case 21:this.popState(); this.begin('ESCAPED_IN_CLASS'); return
+case 21:this.begin('DISJ'); return 26
 break;
-case 22:this.popState(); return 32
+case 22:return 27
 break;
-case 23:this.popState(); return 33 /* parse later in grammar */
+case 23:this.popState(); return 28 /* parse later in grammar */
 break;
-case 24:this.popState(); return 34
+case 24:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
 break;
-case 25:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
+case 25:this.popState(); return 24
 break;
-case 26:this.popState(); return 35 /* contrary to ecma, allow `[0-9_]` */
+case 26:this.begin('CLASS_ATOM'); this.unput(yy_.yytext); return
 break;
-case 27:this.popState(); return 36
+case 27:this.popState(); this.begin('ESCAPED_IN_CLASS'); return
 break;
-case 28:this.popState(); return 38
+case 28:this.popState(); return 32
 break;
-case 29:this.popState(); return 37
+case 29:this.popState(); return 33 /* parse later in grammar */
 break;
-case 30:this.popState(); return 39
+case 30:this.popState(); return 34
 break;
-case 31:this.popState(); return 40 /* an approx. ecma's defn is much more involved. */
+case 31:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
+break;
+case 32:this.popState(); return 35 /* contrary to ecma, allow `[0-9_]` */
+break;
+case 33:this.popState(); return 36
+break;
+case 34:this.popState(); return 38
+break;
+case 35:this.popState(); return 37
+break;
+case 36:this.popState(); return 39
+break;
+case 37:this.popState(); return 40 /* an approx. ecma's defn is much more involved. */
 break;
 }
 },
-rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[(][?][=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:[(][^?])/,/^(?:[(][?][:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:.)/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:.)/],
-conditions: {"ESCAPED_NONDECI":{"rules":[0,2,4,26,27,28,29,30,31],"inclusive":true},"ESCAPED_IN_CLASS":{"rules":[0,2,4,23,24,25],"inclusive":true},"CLASS_ATOM":{"rules":[0,2,4,21,22],"inclusive":true},"CLASS":{"rules":[0,2,4,19,20],"inclusive":true},"ESCAPED_IN_ATOM":{"rules":[0,2,4,17,18],"inclusive":true},"TERM":{"rules":[0,2,4,6,7,8,9,10,11,12,13,14,15,16],"inclusive":true},"ALT":{"rules":[0,2,4,5],"inclusive":true},"DISJ":{"rules":[0,2,3,4],"inclusive":true},"INITIAL":{"rules":[0,1,2,4],"inclusive":true}}
+rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[(][?][=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:[(][^?])/,/^(?:[(][?][:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:.)/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:.)/],
+conditions: {"ESCAPED_NONDECI":{"rules":[0,5,10,32,33,34,35,36,37],"inclusive":true},"ESCAPED_IN_CLASS":{"rules":[0,4,5,9,10,29,30,31],"inclusive":true},"CLASS_ATOM":{"rules":[0,2,5,7,10,27,28],"inclusive":true},"CLASS":{"rules":[0,5,10,25,26],"inclusive":true},"ESCAPED_IN_ATOM":{"rules":[0,3,5,8,10,23,24],"inclusive":true},"TERM":{"rules":[0,5,10,12,13,14,15,16,17,18,19,20,21,22],"inclusive":true},"ALT":{"rules":[0,5,10,11],"inclusive":true},"DISJ":{"rules":[0,5,6,10],"inclusive":true},"INITIAL":{"rules":[0,1,5,10],"inclusive":true}}
 });
 function popTill(lexer, state) {
     var st

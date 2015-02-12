@@ -142,7 +142,7 @@ var provide = {
             map[escaped] = {
                 type: 'Specific Char',
                 display: escaped,
-                meaning: 'Unnecessarily escaped'
+                meaning: undefined
             }
             return map
         }, {})
