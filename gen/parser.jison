@@ -36,8 +36,8 @@ Resrouces:
 <ALT>.          this.begin('TERM'); this.unput(yytext); return
 
 /* Quantifier */
-<TERM>[*+?]                         return 'ATOM_QUANT_SHORT'
-<TERM>[{][0-9]+(?:[,][0-9]*)?[}]    return 'ATOM_QUANT_NUM'
+<TERM>[*+?][?]?                         return 'ATOM_QUANT_SHORT'
+<TERM>[{][0-9]+(?:[,][0-9]*)?[}][?]?    return 'ATOM_QUANT_NUM'
 
 /* Assertion */
 <TERM>[$^]                  return 'ASSERTN_LB'
@@ -76,8 +76,8 @@ Resrouces:
 /* CharacterEscape and ChracterClassEscape */
 <ESCAPED_NONDECI>[c][0-9A-Z_a-z]        this.popState(); return 'ESC_DECI' /* contrary to ecma, major browsers allow `0-9_` */
 <ESCAPED_NONDECI>[fnrtv]                this.popState(); return 'ESC_CTRL'
-<ESCAPED_NONDECI>[x][0-9A-Fa-f]{4}      this.popState(); return 'ESC_HEX4'
-<ESCAPED_NONDECI>[u][0-9A-Fa-f]{2}      this.popState(); return 'ESC_HEX2'
+<ESCAPED_NONDECI>[x][0-9A-Fa-f]{2}      this.popState(); return 'ESC_HEX2'
+<ESCAPED_NONDECI>[u][0-9A-Fa-f]{4}      this.popState(); return 'ESC_HEX4'
 <ESCAPED_NONDECI>[dDsSwW]               this.popState(); return 'ESC_CLASS'
 <ESCAPED_NONDECI>.                      this.popState(); return 'ESC_ETC' /* an approx. ecma's defn is much more involved. */
 
@@ -148,7 +148,7 @@ Atom
         {$$ = b().anyChar()}
     | AtomEscape
     | CLASS_BEGIN ClassAtom_s CLASS_END
-        {$$ = b().charSet($2)}
+        {$$ = b().charSetCustom($2)}
     | ATOM_GROUP_CAPTR Disjunction CLOSE_PAREN
         {$$ = b().group(true, $2)}
     | ATOM_GROUP_NONCAPTR Disjunction CLOSE_PAREN
@@ -160,14 +160,13 @@ AtomEscape
     : ATOM_ESCAPE_DECIMALS
         {$$ = b().decimalsEscMaybeRefPlaceholder(@1, $1)}
     | CharacterEscapeOrChracterClassEscape
-        {$$ = b().specificCharEsc($1)}
     ;
 
 ClassAtom_s
     : /* empty */
         {$$ = []}
     | ClassAtom_s ClassAtom
-        /* add loc so b().charSet can use it */
+        /* add loc so b().charSetCustom can use it */
         {$$ = $1.concat( b().withLoc(@2).get($2) )}
     ;
 ClassAtom
@@ -182,16 +181,21 @@ ClassEscape
     | CLASS_ATOM_ESCAPE_BS
         {$$ = b().specificCharEsc($1, 'Backspace')}
     | CharacterEscapeOrChracterClassEscape
-        {$$ = b().specificCharEsc($1)}
     ;
 
 CharacterEscapeOrChracterClassEscape
     : ESC_DECI
+        {$$ = b().specificCharEsc($1)}
     | ESC_CTRL
+        {$$ = b().specificCharEsc($1)}
     | ESC_HEX4
+        {$$ = b().specificCharEsc($1)}
     | ESC_HEX2
+        {$$ = b().specificCharEsc($1)}
     | ESC_CLASS
+        {$$ = b().charSetPreDefn($1)}
     | ESC_ETC
+        {$$ = b().specificCharEsc($1, 'Unnecessarily escaped')}
     ;
 
 %%
@@ -245,22 +249,22 @@ function b() {
 
         quantifier: function(token) {
             // TODO validate min <= max
-            if (token.length === 1) {
+            if (token[0] !== '{') {
                 return {
-                    type: 'Quantifier',
-                    min: token === '+' ? 1 : 0,
-                    max: token === '?' ? 1 : Infinity
+                    min: token[0] === '+' ? 1 : 0,
+                    max: token[0] === '?' ? 1 : Infinity,
+                    greedy: token.length < 2
                 }
             }
-            var matched = token.match(/{(\d+)(?:(,)(\d*))?}/)
+            var matched = token.match(/{(\d+)(?:(,)(\d*))?}(\?)?/)
             return {
-                type: 'Quantifier',
                 min: Number(matched[1]),
                 max: matched[3]
                     ? Number(matched[3])
                     : matched[2]
                         ? Infinity
-                        : Number(matched[1])
+                        : Number(matched[1]),
+                greedy: ! matched[4]
             }
         },
         quantified: function(target, quantifier) {
@@ -329,7 +333,7 @@ function b() {
             }
         },
 
-        charSet: function(items) {
+        charSetCustom: function(items) {
             // TODO test: start with ^, ^-, -^, -
             // TODO validate (range begin < range end)
             var inclusive = true
@@ -361,8 +365,23 @@ function b() {
 
             return {
                 type: 'Set of Chars',
-                items: items,
+                possibilities: items,
                 inclusive: inclusive
+            }
+        },
+        charSetPreDefn: function(key) {
+            var map = {
+                d: 'Decimal: [0-9]',
+                D: 'Non-Decimal: [^0-9]',
+                s: 'Whitepace',
+                S: 'Non-Whitespace',
+                w: 'Word Char: [0-9A-Z_a-z]',
+                W: 'Non-Word Char: [^0-9A-Z_a-z]'
+            }
+            return {
+                type: 'Pre-defined Set of Chars',
+                display: '\\' + key,
+                meaning: map[key]
             }
         },
 
@@ -388,13 +407,7 @@ function b() {
                     t: 'Horizontal Tab',
                     v: 'Vertical Tab',
                     x: 'Hexadecimal Notation',
-                    u: 'Hexadecimal Notation',
-                    d: 'Decimal: [0-9]',
-                    D: 'Non-Decimal: [^0-9]',
-                    s: 'Whitepace',
-                    S: 'Non-Whitespace',
-                    w: 'Word Char: [0-9A-Z_a-z]',
-                    W: 'Non-Word Char: [^0-9A-Z_a-z]'
+                    u: 'Hexadecimal Notation'
                 }
                 return map[key[0]]
             }

@@ -19,7 +19,7 @@ _.each(strToExpected, function(expected, str){
     var actual = parser.parse(str)
     var success = _.isEqual(actual, expected, function(act, exp){
         delete act.hint // not comparing hints
-        delete act.location // lazy - not comparing locations
+        delete act.textLoc // lazy - not comparing locations
     })
     if (success) {
         console.info(success, str)

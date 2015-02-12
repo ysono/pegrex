@@ -117,10 +117,10 @@ var provide = {
     CharacterEscape: function() {
         var needEscape = {
             'f': 'Form Feed',
-            'cA': 'Control Character',
-            'cz': 'Control Character',
-            'c3': 'Control Character',
-            'c_': 'Control Character',
+            'cA': 'Control Char',
+            'cz': 'Control Char',
+            'c3': 'Control Char',
+            'c_': 'Control Char',
             'u3f9b': 'Hexadecimal Notation',
             'x3f': 'Hexadecimal Notation'
         }
@@ -141,7 +141,8 @@ var provide = {
             var escaped = '\\' + unescaped
             map[escaped] = {
                 type: 'Specific Char',
-                display: unescaped
+                display: escaped,
+                meaning: 'Unnecessarily escaped'
             }
             return map
         }, {})
@@ -153,12 +154,12 @@ var provide = {
             '\\d': {
                 type: 'Pre-defined Set of Chars',
                 display: '\\d',
-                meaning: 'Digit Char'
+                meaning: 'Decimal: [0-9]'
             },
             '\\S': {
                 type: 'Pre-defined Set of Chars',
                 display: '\\S',
-                meaning: 'Non Whitespace Char'
+                meaning: 'Non-Whitespace'
             }
         }
     }

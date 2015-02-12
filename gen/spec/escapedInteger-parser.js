@@ -20,10 +20,10 @@ function capturedSingleAnyChar(locBegin) {
             {
                 type: 'Any Char',
                 display: '.',
-                location: [locBegin+1,locBegin+2]
+                textLoc: [locBegin+1,locBegin+2]
             }
         ]),
-        location: [locBegin,locBegin+3]
+        textLoc: [locBegin,locBegin+3]
     }
 }
 
@@ -35,12 +35,12 @@ var specs = [
                 type: 'Specific Char',
                 display: '\\12',
                 meaning: 'Octal Notation',
-                location: [0,3]
+                textLoc: [0,3]
             },
             {
                 type: 'Specific Char',
                 display: '8',
-                location: [3,4]
+                textLoc: [3,4]
             }
         ]
     ], [
@@ -50,7 +50,7 @@ var specs = [
                 type: 'Specific Char',
                 display: '\\377',
                 meaning: 'Octal Notation',
-                location: [0,4]
+                textLoc: [0,4]
             }
         ]
     ], [
@@ -60,12 +60,12 @@ var specs = [
                 type: 'Specific Char',
                 display: '\\40',
                 meaning: 'Octal Notation',
-                location: [0,3]
+                textLoc: [0,3]
             },
             {
                 type: 'Specific Char',
                 display: '0',
-                location: [3,4]
+                textLoc: [3,4]
             }
         ]
     ], [
@@ -81,10 +81,10 @@ var specs = [
                         type: 'Specific Char',
                         display: '\\2',
                         meaning: 'Octal Notation',
-                        location: [7,9]
+                        textLoc: [7,9]
                     }
                 ],
-                location: [6,10]
+                textLoc: [6,10]
             }
         ]
     ], [
@@ -96,7 +96,7 @@ var specs = [
                 type: 'Reference',
                 number: 2,
                 isBack: true,
-                location: [6,8]
+                textLoc: [6,8]
             }
         ]
     ], [
@@ -107,7 +107,7 @@ var specs = [
                 type: 'Specific Char',
                 display: '\\0',
                 meaning: 'Octal Notation',
-                location: [3,5]
+                textLoc: [3,5]
             }
         ]
     ], [
@@ -117,13 +117,13 @@ var specs = [
                 type: 'Group',
                 isCapturing: true,
                 grouped: disjunction([]),
-                location: [0,2]
+                textLoc: [0,2]
             },
             {
                 type: 'Specific Char',
                 display: '\\0',
                 meaning: 'Octal Notation',
-                location: [2,4]
+                textLoc: [2,4]
             }
         ]
     ], [
@@ -134,7 +134,7 @@ var specs = [
                 type: 'Specific Char',
                 display: '\\2',
                 meaning: 'Octal Notation',
-                location: [3,5]
+                textLoc: [3,5]
             }
         ]
     ], [
@@ -146,7 +146,7 @@ var specs = [
                 type: 'Reference',
                 number: 2,
                 isBack: true,
-                location: [6,8]
+                textLoc: [6,8]
             }
         ]
     ], [
@@ -156,7 +156,7 @@ var specs = [
                 type: 'Assertion',
                 assertion: 'Line Boundary',
                 atBeginning: true,
-                location: [0,1]
+                textLoc: [0,1]
             },
             {
                 type: 'Group',
@@ -165,16 +165,16 @@ var specs = [
                     {
                         type: 'Specific Char',
                         display: 'q',
-                        location: [2,3]
+                        textLoc: [2,3]
                     }
                 ]),
-                location: [1,4]
+                textLoc: [1,4]
             },
             {
                 type: 'Reference',
                 number: 2,
                 isBack: false,
-                location: [4,6]
+                textLoc: [4,6]
             },
             {
                 type: 'Group',
@@ -183,16 +183,16 @@ var specs = [
                     {
                         type: 'Specific Char',
                         display: 'w',
-                        location: [7,8]
+                        textLoc: [7,8]
                     }
                 ]),
-                location: [6,9]
+                textLoc: [6,9]
             },
             {
                 type: 'Assertion',
                 assertion: 'Line Boundary',
                 atBeginning: false,
-                location: [9,10]
+                textLoc: [9,10]
             }
         ]
     ], [
@@ -204,7 +204,7 @@ var specs = [
                 type: 'Specific Char',
                 display: '\\02',
                 meaning: 'Octal Notation',
-                location: [6,9]
+                textLoc: [6,9]
             }
         ]
     ], [
@@ -218,15 +218,15 @@ var specs = [
                     min: 2,
                     max: 2,
                     greedy: true,
-                    location: [8,11]
+                    textLoc: [8,11]
                 },
                 target: {
                     type: 'Reference',
                     number: 1,
                     isBack: true,
-                    location: [6,8]
+                    textLoc: [6,8]
                 },
-                location: [6,11]
+                textLoc: [6,11]
             }
         ]
     ]
@@ -240,33 +240,34 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: 'a',
-                location: [0,1]
+                textLoc: [0,1]
             },
             {
                 type: 'Specific Char',
                 display: '\\123',
                 meaning: 'Octal Notation',
-                location: [1,5]
+                textLoc: [1,5]
             },
             {
                 type: 'Specific Char',
                 display: '4',
-                location: [5,6]
+                textLoc: [5,6]
             },
             {
                 type: 'Specific Char',
-                display: '9',
-                location: [6,8]
+                display: '\\9',
+                textLoc: [6,8],
+                meaning: 'Unnecessarily escaped'
             },
             {
                 type: 'Specific Char',
                 display: '8',
-                location: [8,9]
+                textLoc: [8,9]
             },
             {
                 type: 'Specific Char',
                 display: 'z',
-                location: [9,10]
+                textLoc: [9,10]
             }
         ]
     ], [
@@ -280,15 +281,15 @@ var specs = [
                         type: 'Specific Char',
                         display: '\\12',
                         meaning: 'Octal Notation',
-                        location: [1,4]
+                        textLoc: [1,4]
                     },
                     {
                         type: 'Specific Char',
                         display: '9',
-                        location: [4,5]
+                        textLoc: [4,5]
                     }
                 ],
-                location: [0,6]
+                textLoc: [0,6]
             }
         ]
     ],
@@ -303,20 +304,20 @@ var specs = [
                         type: 'Specific Char',
                         display: '\\40',
                         meaning: 'Octal Notation',
-                        location: [1,4]
+                        textLoc: [1,4]
                     },
                     {
                         type: 'Specific Char',
                         display: '0',
-                        location: [4,5]
+                        textLoc: [4,5]
                     }
                 ],
-                location: [0,6]
+                textLoc: [0,6]
             }
         ]
     ],
     [
-        /* tests location of quantified decimals */
+        /* tests textLoc of quantified decimals */
         /\12{3}/,
         [
             {
@@ -325,32 +326,32 @@ var specs = [
                     min: 3,
                     max: 3,
                     greedy: true,
-                    location: [3,6]
+                    textLoc: [3,6]
                 },
                 target: {
                     type: 'Specific Char',
                     display: '\\12',
                     meaning: 'Octal Notation',
-                    location: [0,3]
+                    textLoc: [0,3]
                 },
-                location: [0,6]
+                textLoc: [0,6]
             }
         ]
     ],
     [
-        /* tests location of quantified decimals */
+        /* tests textLoc of quantified decimals */
         /\1289{3,}?7/,
         [
             {
                 type: 'Specific Char',
                 display: '\\12',
                 meaning: 'Octal Notation',
-                location: [0,3]
+                textLoc: [0,3]
             },
             {
                 type: 'Specific Char',
                 display: '8',
-                location: [3,4]
+                textLoc: [3,4]
             },
             {
                 type: 'Quantified',
@@ -358,19 +359,19 @@ var specs = [
                     min: 3,
                     max: Infinity,
                     greedy: false,  
-                    location: [5,10]
+                    textLoc: [5,10]
                 },
                 target: {
                     type: 'Specific Char',
                     display: '9',
-                    location: [4,5]
+                    textLoc: [4,5]
                 },
-                location: [4,10]
+                textLoc: [4,10]
             },
             {
                 type: 'Specific Char',
                 display: '7',
-                location: [10,11]
+                textLoc: [10,11]
             }
         ]
     ]
@@ -388,7 +389,7 @@ function runOne(regex, terms) {
         delete act.hint // not comparing hints
         if (act.alternatives || act.terms) {
             // lazy - compare locations of terms and their children only
-            delete act.location
+            delete act.textLoc
         }
 
         if (typeof act === 'object'

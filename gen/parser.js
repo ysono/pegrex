@@ -122,7 +122,7 @@ case 16:
 this.$ = b().anyChar()
 break;
 case 18:
-this.$ = b().charSet($$[$0-1])
+this.$ = b().charSetCustom($$[$0-1])
 break;
 case 19:
 this.$ = b().group(true, $$[$0-1])
@@ -136,9 +136,6 @@ break;
 case 22:
 this.$ = b().decimalsEscMaybeRefPlaceholder(_$[$0], $$[$0])
 break;
-case 23: case 30:
-this.$ = b().specificCharEsc($$[$0])
-break;
 case 25:
 this.$ = $$[$0-1].concat( b().withLoc(_$[$0]).get($$[$0]) )
 break;
@@ -147,6 +144,15 @@ this.$ = b().decimalsEsc(_$[$0], $$[$0])
 break;
 case 29:
 this.$ = b().specificCharEsc($$[$0], 'Backspace')
+break;
+case 31: case 32: case 33: case 34:
+this.$ = b().specificCharEsc($$[$0])
+break;
+case 35:
+this.$ = b().charSetPreDefn($$[$0])
+break;
+case 36:
+this.$ = b().specificCharEsc($$[$0], 'Unnecessarily escaped')
 break;
 }
 },
@@ -347,22 +353,22 @@ function b() {
 
         quantifier: function(token) {
             // TODO validate min <= max
-            if (token.length === 1) {
+            if (token[0] !== '{') {
                 return {
-                    type: 'Quantifier',
-                    min: token === '+' ? 1 : 0,
-                    max: token === '?' ? 1 : Infinity
+                    min: token[0] === '+' ? 1 : 0,
+                    max: token[0] === '?' ? 1 : Infinity,
+                    greedy: token.length < 2
                 }
             }
-            var matched = token.match(/{(\d+)(?:(,)(\d*))?}/)
+            var matched = token.match(/{(\d+)(?:(,)(\d*))?}(\?)?/)
             return {
-                type: 'Quantifier',
                 min: Number(matched[1]),
                 max: matched[3]
                     ? Number(matched[3])
                     : matched[2]
                         ? Infinity
-                        : Number(matched[1])
+                        : Number(matched[1]),
+                greedy: ! matched[4]
             }
         },
         quantified: function(target, quantifier) {
@@ -431,7 +437,7 @@ function b() {
             }
         },
 
-        charSet: function(items) {
+        charSetCustom: function(items) {
             // TODO test: start with ^, ^-, -^, -
             // TODO validate (range begin < range end)
             var inclusive = true
@@ -463,8 +469,23 @@ function b() {
 
             return {
                 type: 'Set of Chars',
-                items: items,
+                possibilities: items,
                 inclusive: inclusive
+            }
+        },
+        charSetPreDefn: function(key) {
+            var map = {
+                d: 'Decimal: [0-9]',
+                D: 'Non-Decimal: [^0-9]',
+                s: 'Whitepace',
+                S: 'Non-Whitespace',
+                w: 'Word Char: [0-9A-Z_a-z]',
+                W: 'Non-Word Char: [^0-9A-Z_a-z]'
+            }
+            return {
+                type: 'Pre-defined Set of Chars',
+                display: '\\' + key,
+                meaning: map[key]
             }
         },
 
@@ -490,13 +511,7 @@ function b() {
                     t: 'Horizontal Tab',
                     v: 'Vertical Tab',
                     x: 'Hexadecimal Notation',
-                    u: 'Hexadecimal Notation',
-                    d: 'Decimal: [0-9]',
-                    D: 'Non-Decimal: [^0-9]',
-                    s: 'Whitepace',
-                    S: 'Non-Whitespace',
-                    w: 'Word Char: [0-9A-Z_a-z]',
-                    W: 'Non-Word Char: [^0-9A-Z_a-z]'
+                    u: 'Hexadecimal Notation'
                 }
                 return map[key[0]]
             }
@@ -1040,9 +1055,9 @@ case 26:this.popState(); return 35 /* contrary to ecma, major browsers allow `0-
 break;
 case 27:this.popState(); return 36
 break;
-case 28:this.popState(); return 37
+case 28:this.popState(); return 38
 break;
-case 29:this.popState(); return 38
+case 29:this.popState(); return 37
 break;
 case 30:this.popState(); return 39
 break;
@@ -1050,7 +1065,7 @@ case 31:this.popState(); return 40 /* an approx. ecma's defn is much more involv
 break;
 }
 },
-rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?])/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[(][?][=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[])/,/^(?:[(][^?])/,/^(?:[(][?][:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:.)/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{4})/,/^(?:[u][0-9A-Fa-f]{2})/,/^(?:[dDsSwW])/,/^(?:.)/],
+rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[(][?][=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[])/,/^(?:[(][^?])/,/^(?:[(][?][:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:.)/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:.)/],
 conditions: {"ESCAPED_NONDECI":{"rules":[0,2,4,26,27,28,29,30,31],"inclusive":true},"ESCAPED_IN_CLASS":{"rules":[0,2,4,23,24,25],"inclusive":true},"CLASS_ATOM":{"rules":[0,2,4,21,22],"inclusive":true},"CLASS":{"rules":[0,2,4,19,20],"inclusive":true},"ESCAPED_IN_ATOM":{"rules":[0,2,4,17,18],"inclusive":true},"TERM":{"rules":[0,2,4,6,7,8,9,10,11,12,13,14,15,16],"inclusive":true},"ALT":{"rules":[0,2,4,5],"inclusive":true},"DISJ":{"rules":[0,2,3,4],"inclusive":true},"INITIAL":{"rules":[0,1,2,4],"inclusive":true}}
 });
 function popTill(lexer, state) {
