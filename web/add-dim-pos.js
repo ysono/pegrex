@@ -343,7 +343,12 @@
             'Specific Char': oneChar
         } // end of var map
 
-        return map[data.type]()
+        var fn = map[data.type]
+        if (fn) {
+            return fn()
+        } else {
+            console.error('could not determine how to set ui data', data)
+        }
     }
     reactClasses.addDimPos = function(data) {
         var pad = {t:10,r:10,b:10,l:10}

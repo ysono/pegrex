@@ -27,7 +27,7 @@ For discrepancies noted below, a real-life example can be found in
 <CLASS_ATOM>[)]             return 'CLASS_ATOM_ETC'
 <ESCAPED_IN_ATOM>[)]        return 'ESC_ETC'
 <ESCAPED_IN_CLASS>[)]       return 'ESC_ETC'
-[)]                         %{debugger
+[)]                         %{
                                 popTill(this, 'DISJ')
                                 this.popState()
                                 return 'CLOSE_PAREN'
@@ -39,7 +39,7 @@ For discrepancies noted below, a real-life example can be found in
 <ESCAPED_IN_ATOM>[|]        return 'ESC_ETC'
 <ESCAPED_IN_CLASS>[|]       return 'ESC_ETC'
 [|]                         %{
-                                popTill('ALT')
+                                popTill(this, 'ALT')
                                 return 'ALT_DELIM'
                             %}
 <ALT>.          this.begin('TERM'); this.unput(yytext); return
@@ -117,7 +117,7 @@ Alternative_s
     : Alternative
         {$$ = [$1]}
     | Alternative_s ALT_DELIM Alternative
-        {$$ = $1.concat($2)}
+        {$$ = $1.concat($3)}
     ;
 Alternative
     : Term_s
@@ -385,14 +385,12 @@ function b() {
             }
             var possibilities = {
                 d: function() {
-                    debugger
                     return [makeRange('0', '9')]
                 },
                 s: function() {
                     return [builders.specificCharEsc('n')] // TODO
                 },
                 w: function() {
-                    debugger
                     return [
                         makeRange('0', '9'),
                         makeRange('A', 'Z'),

@@ -93,7 +93,7 @@ case 3:
 this.$ = [$$[$0]]
 break;
 case 4:
-this.$ = $$[$0-2].concat($$[$0-1])
+this.$ = $$[$0-2].concat($$[$0])
 break;
 case 5:
 this.$ = b().withLoc(_$[$0]).alternative($$[$0])
@@ -474,14 +474,12 @@ function b() {
             }
             var possibilities = {
                 d: function() {
-                    debugger
                     return [makeRange('0', '9')]
                 },
                 s: function() {
                     return [builders.specificCharEsc('n')] // TODO
                 },
                 w: function() {
-                    debugger
                     return [
                         makeRange('0', '9'),
                         makeRange('A', 'Z'),
@@ -1020,7 +1018,7 @@ case 3:return 40
 break;
 case 4:return 40
 break;
-case 5:debugger
+case 5:
                                 popTill(this, 'DISJ')
                                 this.popState()
                                 return 19
@@ -1035,7 +1033,7 @@ break;
 case 9:return 40
 break;
 case 10:
-                                popTill('ALT')
+                                popTill(this, 'ALT')
                                 return 8
                             
 break;
