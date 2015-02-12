@@ -59,7 +59,7 @@ For discrepancies noted below, a real-life example can be found in
 
 /* Atom */
 <TERM>[\.]                  return 'ATOM_CHAR_ANY'
-<TERM>[\\]                  this.begin('ESCAPED_IN_ATOM'); return
+<TERM>[\\]                  this.begin('ESCAPED_IN_ATOM'); return 'ESCAPE_PREFIX'
 <TERM>[\[][\^]?             this.begin('CLASS'); return 'CLASS_BEGIN'
 <TERM>[(]                   this.begin('DISJ'); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a `)` */
 <TERM_GROUP>[:]             this.popState(); this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
@@ -78,7 +78,7 @@ For discrepancies noted below, a real-life example can be found in
 <CLASS>.                    this.begin('CLASS_ATOM'); this.unput(yytext); return
 
 /* ClassAtom */
-<CLASS_ATOM>[\\]            this.popState(); this.begin('ESCAPED_IN_CLASS'); return
+<CLASS_ATOM>[\\]            this.popState(); this.begin('ESCAPED_IN_CLASS'); return 'ESCAPE_PREFIX'
 <CLASS_ATOM>.               this.popState(); return 'CLASS_ATOM_ETC'
 /* handle `^` and `-` later in grammar */
 
@@ -160,7 +160,8 @@ Assertion
 Atom
     : ATOM_CHAR_ANY
         {$$ = yy.b.anyChar()}
-    | AtomEscape
+    | ESCAPE_PREFIX AtomEscape
+        {$$ = yy.b.withLoc(@1,@2).get($2)}
     | CLASS_BEGIN ClassAtom_s CLASS_END
         {$$ = yy.b.charSet($2, $1.length === 1)}
     | ATOM_GROUP_CAPTR Disjunction CLOSE_PAREN
@@ -184,7 +185,8 @@ ClassAtom_s
         {$$ = $1.concat( yy.b.withLoc(@2).get($2) )}
     ;
 ClassAtom
-    : ClassEscape
+    : ESCAPE_PREFIX ClassEscape
+        {$$ = yy.b.withLoc(@1,@2).get($2)}
     | CLASS_ATOM_ETC
         {$$ = yy.b.specificChar($1)}
     ;
