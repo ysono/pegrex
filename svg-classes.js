@@ -100,6 +100,11 @@
             strokeW: 3,
             childProps: ['ui.arrows', 'possibilities']
         }),
+        'Range of Chars': createBoxedClass({
+            stroke: '#882',
+            strokeW: 2,
+            childProps: ['ui.fillers', 'range']
+        }),
         'Char': createBoxedClass({
             stroke: '#bbb',
             strokeW: 2,
@@ -125,39 +130,46 @@
                 )
             }
         }),
-        'arrow': React.createClass({
+        'path': React.createClass({
             render: function() {
                 // TODO test
-                /* in this.props.arrow: {
-                        pos: optional -- [n,n]
-                        d: required -- array of (strings or [n,n]), but last element must be [n,n]
+                /* in this.props.path: {
+                        d: required -- array of (strings or [n,n]).
+                            If using marker, last element must be [n,n], b/c it will be adjusted.
+                            All coords are absolute.
+                            Segments in d are connected by...
+                                * -> (nothing) -> string
+                                coord -> quadratic bezier -> coord
+                                string -> straight line -> coord
+                        pos: optional [n,n], default [0,0]
+                        isVertical: optional bool, default false
+                        usesMarker: optional bool, default true
                     }
-                    Segments in d are connected by...
-                        * -> (nothing) -> string
-                        coord -> quadratic bezier -> coord
-                        string -> straight line -> coord
-                    Last point in d is adjusted for marker
-                    All numbers in coords are absolute
                 */
-                var arrow = this.props.data
+                var path = this.props.data
 
-                var txform = ['translate(', (arrow.pos || [0,0]), ')'].join('')
+                var txform = ['translate(', (path.pos || [0,0]), ')'].join('')
 
-                // from defs>marker[markerWidth]
-                var markerLen = 12
-                var end = arrow.d.slice(-1)[0]
-                // always move the end to the left b/c all our arrows point to the right
-                end[0] -= markerLen
+                if (path.usesMarker !== false) {
+                    (function() {
+                        var markerLen = 12 // from defs>marker[markerWidth]
+                        var end = path.d.slice(-1)[0]
+                        if (! (end instanceof Array)) {
+                            console.error('could not add a marker', path)
+                        }
+                        end[path.isVertical ? 1 : 0] -= markerLen
+                    })()
+                }
 
-                var segms = arrow.d.reduce(function(segms, next, i) {
+                var segms = path.d.reduce(function(segms, next, i) {
                     var segm = (function() {
                         if (typeof next === 'string') {
                             // (coord or string or beginning of array) followed by string
                             return next
                         }
-                        if (arrow.d[i - 1] instanceof Array) {
+                        if (path.d[i - 1] instanceof Array) {
                             // coord followed by coord
-                            return window.utils.reflectedQuadra(arrow.d[i - 1], next)
+                            return window.utils.reflectedQuadra(path.d[i - 1], next, path.isVertical)
                         }
                         if (i) {
                             // string followed by coord

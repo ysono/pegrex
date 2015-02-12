@@ -133,7 +133,7 @@
                     {x: 40, y: 0}
                 )
                 ui.fillers.forEach(function(arrow) {
-                    arrow.type = 'arrow'
+                    arrow.type = 'path'
                     arrow.d = [
                         [0, interTermArrowY],
                         [arrow.dim[0], interTermArrowY]
@@ -141,7 +141,6 @@
                 })
                 return ui
             },
-
             'Quantified': function() {
                 var tUi = setUiByType(data.target)
                 var myUi = data.ui = {}
@@ -260,12 +259,11 @@
                     })()
                 }
                 myUi.arrows.forEach(function(arrow) {
-                    arrow.type = 'arrow'
+                    arrow.type = 'path'
                 })
 
                 return myUi
             },
-
             'Group': function() {
                 var pad = {h: 10, v: 10}
                 var cUi = setUiByType(data.grouped)
@@ -277,7 +275,6 @@
                     ]
                 }
             },
-
             'Set of Chars': function() {
                 var pad = {x: [30,30], y: [10,10]}
                 var ui = setUiOnCompoWithChildren(
@@ -299,14 +296,14 @@
                     var subUiYMid = subUi.pos[1] + subUi.dim[1] / 2
 
                     var left = {
-                        type: 'arrow',
+                        type: 'path',
                         d: [
                             leftArrowBegin,
                             [subUi.pos[0], subUiYMid]
                         ]
                     }
                     var right = {
-                        type: 'arrow',
+                        type: 'path',
                         d: [
                             [subUi.pos[0] + subUi.dim[0], subUiYMid],
                             rightArrowEnd()
@@ -314,6 +311,32 @@
                     }
                     return allArrows.concat(left, right)
                 }, [])
+                return ui
+            },
+            'Range of Chars': function() {
+                var ui = setUiOnCompoWithChildren(
+                    data,
+
+                    'range',
+                    {x: [10,10], y: [10,10]},
+                    0,
+                    'y',
+
+                    {x: 0, y: 15}
+                )
+                var rangeWs = data.range.map(function(sub) {
+                    return sub.ui.dim[0]
+                })
+                var linkW = Math.max.apply(Math, rangeWs)
+                // TODO do i need to set link.dim[0]?
+                var link = ui.fillers[0]
+                link.type = 'path'
+                link.d = [
+                    [linkW / 2, 0],
+                    [linkW / 2, link.dim[1]]
+                ]
+                link.isVertical = true
+                link.usesMarker = false
                 return ui
             },
             'Any Char': oneChar,

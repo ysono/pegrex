@@ -11,7 +11,7 @@
                     <Literal
                         pattern={this.props.pattern} flags={this.props.flags}
                         onChange={this.handleChange} />
-                    <Constructor
+                    <Ctor
                         pattern={this.props.pattern} flags={this.props.flags}
                         onChange={this.handleChange} />
                 </div>
@@ -45,7 +45,7 @@
             )
         }
     })
-    var Constructor = React.createClass({
+    var Ctor = React.createClass({
         /*
             In a simple conditions, we can let react loop back our updates.
             
