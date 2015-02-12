@@ -14,7 +14,6 @@ For discrepancies noted below, a real-life example can be found in
 %s TERM_GROUP
 %s ESCAPED_IN_ATOM
 %s CLASS
-%s CLASS_ATOM
 %s ESCAPED_IN_CLASS
 %s ESCAPED_NONDECI
 
@@ -25,7 +24,7 @@ For discrepancies noted below, a real-life example can be found in
 <INITIAL>.      this.begin('DISJ'); this.unput(yytext); return
 
 /* Disjunction */
-<CLASS_ATOM>[)]             return 'CLASS_ATOM_ETC'
+<CLASS>[)]                  return 'CLASS_ATOM_ETC'
 <ESCAPED_IN_ATOM>[)]        this.popState(); return 'ESC_ETC'
 <ESCAPED_IN_CLASS>[)]       this.popState(); return 'ESC_ETC'
 [)]                         %{
@@ -36,7 +35,7 @@ For discrepancies noted below, a real-life example can be found in
 <DISJ>.         this.begin('ALT'); this.unput(yytext); return  
 
 /* Alternative */
-<CLASS_ATOM>[|]             return 'CLASS_ATOM_ETC'
+<CLASS>[|]                  return 'CLASS_ATOM_ETC'
 <ESCAPED_IN_ATOM>[|]        this.popState(); return 'ESC_ETC'
 <ESCAPED_IN_CLASS>[|]       this.popState(); return 'ESC_ETC'
 [|]                         %{
@@ -75,11 +74,8 @@ For discrepancies noted below, a real-life example can be found in
 
 /* CharacterClass */
 <CLASS>[\]]                 this.popState(); return 'CLASS_END'
-<CLASS>.                    this.begin('CLASS_ATOM'); this.unput(yytext); return
-
-/* ClassAtom */
-<CLASS_ATOM>[\\]            this.popState(); this.begin('ESCAPED_IN_CLASS'); return 'ESCAPE_PREFIX'
-<CLASS_ATOM>.               this.popState(); return 'CLASS_ATOM_ETC'
+<CLASS>[\\]                 this.begin('ESCAPED_IN_CLASS'); return 'ESCAPE_PREFIX'
+<CLASS>.                    return 'CLASS_ATOM_ETC'
 /* handle `^` and `-` later in grammar */
 
 /* ClassEscape */

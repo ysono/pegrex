@@ -688,34 +688,32 @@ case 25:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); 
 break;
 case 26:this.popState(); return 25
 break;
-case 27:this.begin('CLASS_ATOM'); this.unput(yy_.yytext); return
+case 27:this.begin('ESCAPED_IN_CLASS'); return 21
 break;
-case 28:this.popState(); this.begin('ESCAPED_IN_CLASS'); return 21
+case 28:return 33
 break;
-case 29:this.popState(); return 33
+case 29:this.popState(); return 34 /* parse later in grammar */
 break;
-case 30:this.popState(); return 34 /* parse later in grammar */
+case 30:this.popState(); return 35
 break;
-case 31:this.popState(); return 35
+case 31:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
 break;
-case 32:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
+case 32:this.popState(); return 36 /* contrary to ecma, allow `[0-9_]` */
 break;
-case 33:this.popState(); return 36 /* contrary to ecma, allow `[0-9_]` */
+case 33:this.popState(); return 37
 break;
-case 34:this.popState(); return 37
+case 34:this.popState(); return 39
 break;
-case 35:this.popState(); return 39
+case 35:this.popState(); return 38
 break;
-case 36:this.popState(); return 38
+case 36:this.popState(); return 40
 break;
-case 37:this.popState(); return 40
-break;
-case 38:this.popState(); return 41 /* an approx. ecma's defn is much more involved. */
+case 37:this.popState(); return 41 /* an approx. ecma's defn is much more involved. */
 break;
 }
 },
-rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[(][?])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:[(])/,/^(?:[:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:.)/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:.)/],
-conditions: {"ESCAPED_NONDECI":{"rules":[0,5,10,33,34,35,36,37,38],"inclusive":true},"ESCAPED_IN_CLASS":{"rules":[0,4,5,9,10,30,31,32],"inclusive":true},"CLASS_ATOM":{"rules":[0,2,5,7,10,28,29],"inclusive":true},"CLASS":{"rules":[0,5,10,26,27],"inclusive":true},"ESCAPED_IN_ATOM":{"rules":[0,3,5,8,10,24,25],"inclusive":true},"TERM_GROUP":{"rules":[0,5,10,17,22],"inclusive":true},"TERM":{"rules":[0,5,10,12,13,14,15,16,18,19,20,21,23],"inclusive":true},"ALT":{"rules":[0,5,10,11],"inclusive":true},"DISJ":{"rules":[0,5,6,10],"inclusive":true},"INITIAL":{"rules":[0,1,5,10],"inclusive":true}}
+rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[(][?])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:[(])/,/^(?:[:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:.)/],
+conditions: {"ESCAPED_NONDECI":{"rules":[0,5,10,32,33,34,35,36,37],"inclusive":true},"ESCAPED_IN_CLASS":{"rules":[0,4,5,9,10,29,30,31],"inclusive":true},"CLASS":{"rules":[0,2,5,7,10,26,27,28],"inclusive":true},"ESCAPED_IN_ATOM":{"rules":[0,3,5,8,10,24,25],"inclusive":true},"TERM_GROUP":{"rules":[0,5,10,17,22],"inclusive":true},"TERM":{"rules":[0,5,10,12,13,14,15,16,18,19,20,21,23],"inclusive":true},"ALT":{"rules":[0,5,10,11],"inclusive":true},"DISJ":{"rules":[0,5,6,10],"inclusive":true},"INITIAL":{"rules":[0,1,5,10],"inclusive":true}}
 });
 function popTill(lexer, state) {
     var st
@@ -762,7 +760,6 @@ if (typeof module !== 'undefined' && require.main === module) {
                     // namely AtomEscape and ClassEscape
                     return o
                 }
-                if (o.textLoc) {debugger}
                 o.textLoc = [
                     begin.first_column,
                     (end || begin).last_column
