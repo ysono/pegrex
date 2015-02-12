@@ -413,11 +413,11 @@ function b() {
                 hint: hint
             }
         },
-        assertionLF: function(token, disj) {
+        assertionLF: function(flag, disj) {
             return {
                 type: 'Assertion',
                 assertion: 'Look-Forward',
-                isPositive: token[2] === '=',
+                isPositive: flag === '=',
                 grouped: disj
             }
         },
@@ -446,15 +446,16 @@ function b() {
             
             var i, item, replacement
             for (i = 1; i < items.length - 1; i++) {
-                item = items[1]
+                item = items[i]
                 if (item.type === 'Specific Char'
                         && item.display === '-') {
                     replacement = builders.charSetRange(
                         items[i - 1], items[i + 1])
                     items.splice(i - 1, 3, replacement)
 
-                    // point i to the replacement item
-                    i = i - 1
+                    // On the next loop, want i to point to 2 elms ahead of replacement.
+                    // replacement is now at (i - 1) -> 2 ahead is (i + 1)
+                    // compensate for i++ by subtr 1 -> don't move i
                 }
             }
 
@@ -1043,58 +1044,60 @@ case 12:return 14
 break;
 case 13:return 15
 break;
-case 14:return 16
+case 14:this.begin('TERM_GROUP'); return
 break;
-case 15:return 17
+case 15:return 16
 break;
-case 16:this.begin('DISJ'); return 18
+case 16:return 17
 break;
-case 17:return 20
+case 17:this.popState(); this.begin('DISJ'); return 18
 break;
-case 18:this.begin('ESCAPED_IN_ATOM'); return
+case 18:return 20
 break;
-case 19:this.begin('CLASS'); return 22
+case 19:this.begin('ESCAPED_IN_ATOM'); return
 break;
-case 20:this.begin('DISJ'); this.unput(yy_.yytext[1]); return 25 /* note yy_.yytext[1] can be a `)` */
+case 20:this.begin('CLASS'); return 22
 break;
-case 21:this.begin('DISJ'); return 26
+case 21:this.begin('DISJ'); return 25 /* note yy_.yytext[1] can be a `)` */
 break;
-case 22:return 27
+case 22:this.popState(); this.begin('DISJ'); return 26
 break;
-case 23:this.popState(); return 28 /* parse later in grammar */
+case 23:return 27
 break;
-case 24:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
+case 24:this.popState(); return 28 /* parse later in grammar */
 break;
-case 25:this.popState(); return 24
+case 25:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
 break;
-case 26:this.begin('CLASS_ATOM'); this.unput(yy_.yytext); return
+case 26:this.popState(); return 24
 break;
-case 27:this.popState(); this.begin('ESCAPED_IN_CLASS'); return
+case 27:this.begin('CLASS_ATOM'); this.unput(yy_.yytext); return
 break;
-case 28:this.popState(); return 32
+case 28:this.popState(); this.begin('ESCAPED_IN_CLASS'); return
 break;
-case 29:this.popState(); return 33 /* parse later in grammar */
+case 29:this.popState(); return 32
 break;
-case 30:this.popState(); return 34
+case 30:this.popState(); return 33 /* parse later in grammar */
 break;
-case 31:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
+case 31:this.popState(); return 34
 break;
-case 32:this.popState(); return 35 /* contrary to ecma, allow `[0-9_]` */
+case 32:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
 break;
-case 33:this.popState(); return 36
+case 33:this.popState(); return 35 /* contrary to ecma, allow `[0-9_]` */
 break;
-case 34:this.popState(); return 38
+case 34:this.popState(); return 36
 break;
-case 35:this.popState(); return 37
+case 35:this.popState(); return 38
 break;
-case 36:this.popState(); return 39
+case 36:this.popState(); return 37
 break;
-case 37:this.popState(); return 40 /* an approx. ecma's defn is much more involved. */
+case 37:this.popState(); return 39
+break;
+case 38:this.popState(); return 40 /* an approx. ecma's defn is much more involved. */
 break;
 }
 },
-rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[(][?][=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:[(][^?])/,/^(?:[(][?][:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:.)/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:.)/],
-conditions: {"ESCAPED_NONDECI":{"rules":[0,5,10,32,33,34,35,36,37],"inclusive":true},"ESCAPED_IN_CLASS":{"rules":[0,4,5,9,10,29,30,31],"inclusive":true},"CLASS_ATOM":{"rules":[0,2,5,7,10,27,28],"inclusive":true},"CLASS":{"rules":[0,5,10,25,26],"inclusive":true},"ESCAPED_IN_ATOM":{"rules":[0,3,5,8,10,23,24],"inclusive":true},"TERM":{"rules":[0,5,10,12,13,14,15,16,17,18,19,20,21,22],"inclusive":true},"ALT":{"rules":[0,5,10,11],"inclusive":true},"DISJ":{"rules":[0,5,6,10],"inclusive":true},"INITIAL":{"rules":[0,1,5,10],"inclusive":true}}
+rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[(][?])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:[(])/,/^(?:[:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:.)/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:.)/],
+conditions: {"ESCAPED_NONDECI":{"rules":[0,5,10,33,34,35,36,37,38],"inclusive":true},"ESCAPED_IN_CLASS":{"rules":[0,4,5,9,10,30,31,32],"inclusive":true},"CLASS_ATOM":{"rules":[0,2,5,7,10,28,29],"inclusive":true},"CLASS":{"rules":[0,5,10,26,27],"inclusive":true},"ESCAPED_IN_ATOM":{"rules":[0,3,5,8,10,24,25],"inclusive":true},"TERM_GROUP":{"rules":[0,5,10,17,22],"inclusive":true},"TERM":{"rules":[0,5,10,12,13,14,15,16,18,19,20,21,23],"inclusive":true},"ALT":{"rules":[0,5,10,11],"inclusive":true},"DISJ":{"rules":[0,5,6,10],"inclusive":true},"INITIAL":{"rules":[0,1,5,10],"inclusive":true}}
 });
 function popTill(lexer, state) {
     var st

@@ -11,6 +11,7 @@ For discrepancies noted below, a real-life example can be found in
 %s DISJ
 %s ALT
 %s TERM
+%s TERM_GROUP
 %s ESCAPED_IN_ATOM
 %s CLASS
 %s CLASS_ATOM
@@ -48,20 +49,24 @@ For discrepancies noted below, a real-life example can be found in
 <TERM>[*+?][?]?                         return 'ATOM_QUANT_SHORT'
 <TERM>[{][0-9]+(?:[,][0-9]*)?[}][?]?    return 'ATOM_QUANT_NUM'
 
+/* Assertion and Atom */
+<TERM>[(][?]                this.begin('TERM_GROUP'); return
+
 /* Assertion */
 <TERM>[$^]                  return 'ASSERTN_LB'
 <TERM>[\\][bB]              return 'ASSERTN_WB'
-<TERM>[(][?][=!]            this.begin('DISJ'); return 'ASSERTN_LF_BEGIN'
+<TERM_GROUP>[=!]            this.popState(); this.begin('DISJ'); return 'ASSERTN_LF_BEGIN'
 
 /* Atom */
 <TERM>[\.]                  return 'ATOM_CHAR_ANY'
 <TERM>[\\]                  this.begin('ESCAPED_IN_ATOM'); return
 <TERM>[\[][\^]?             this.begin('CLASS'); return 'CLASS_BEGIN'
-<TERM>[(][^?]               this.begin('DISJ'); this.unput(yytext[1]); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a `)` */
-<TERM>[(][?][:]             this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
+<TERM>[(]                   this.begin('DISJ'); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a `)` */
+<TERM_GROUP>[:]             this.popState(); this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
 
 /* PatternCharacter */
-/* contrary to ecma, allow `]` and `}` */
+/* ecma forbids ^ $ \ . * + ? ( ) [ ] { } | */
+/* but allow `]` and `}`. no additional filtering necessary thanks for other higher priority rules for state <TERM>. */
 <TERM>.                     return 'ATOM_ETC'
 
 /* AtomEscape */
@@ -324,11 +329,11 @@ function b() {
                 hint: hint
             }
         },
-        assertionLF: function(token, disj) {
+        assertionLF: function(flag, disj) {
             return {
                 type: 'Assertion',
                 assertion: 'Look-Forward',
-                isPositive: token[2] === '=',
+                isPositive: flag === '=',
                 grouped: disj
             }
         },
@@ -357,15 +362,16 @@ function b() {
             
             var i, item, replacement
             for (i = 1; i < items.length - 1; i++) {
-                item = items[1]
+                item = items[i]
                 if (item.type === 'Specific Char'
                         && item.display === '-') {
                     replacement = builders.charSetRange(
                         items[i - 1], items[i + 1])
                     items.splice(i - 1, 3, replacement)
 
-                    // point i to the replacement item
-                    i = i - 1
+                    // On the next loop, want i to point to 2 elms ahead of replacement.
+                    // replacement is now at (i - 1) -> 2 ahead is (i + 1)
+                    // compensate for i++ by subtr 1 -> don't move i
                 }
             }
 
