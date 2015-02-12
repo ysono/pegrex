@@ -26,8 +26,8 @@ For discrepancies noted below, a real-life example can be found in
 
 /* Disjunction */
 <CLASS_ATOM>[)]             return 'CLASS_ATOM_ETC'
-<ESCAPED_IN_ATOM>[)]        return 'ESC_ETC'
-<ESCAPED_IN_CLASS>[)]       return 'ESC_ETC'
+<ESCAPED_IN_ATOM>[)]        this.popState(); return 'ESC_ETC'
+<ESCAPED_IN_CLASS>[)]       this.popState(); return 'ESC_ETC'
 [)]                         %{
                                 popTill(this, 'DISJ')
                                 this.popState()
@@ -37,8 +37,8 @@ For discrepancies noted below, a real-life example can be found in
 
 /* Alternative */
 <CLASS_ATOM>[|]             return 'CLASS_ATOM_ETC'
-<ESCAPED_IN_ATOM>[|]        return 'ESC_ETC'
-<ESCAPED_IN_CLASS>[|]       return 'ESC_ETC'
+<ESCAPED_IN_ATOM>[|]        this.popState(); return 'ESC_ETC'
+<ESCAPED_IN_CLASS>[|]       this.popState(); return 'ESC_ETC'
 [|]                         %{
                                 popTill(this, 'ALT')
                                 return 'ALT_DELIM'

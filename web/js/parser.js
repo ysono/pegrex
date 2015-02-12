@@ -630,9 +630,9 @@ case 1:this.begin('DISJ'); this.unput(yy_.yytext); return
 break;
 case 2:return 32
 break;
-case 3:return 40
+case 3:this.popState(); return 40
 break;
-case 4:return 40
+case 4:this.popState(); return 40
 break;
 case 5:
                                 popTill(this, 'DISJ')
@@ -644,9 +644,9 @@ case 6:this.begin('ALT'); this.unput(yy_.yytext); return
 break;
 case 7:return 32
 break;
-case 8:return 40
+case 8:this.popState(); return 40
 break;
-case 9:return 40
+case 9:this.popState(); return 40
 break;
 case 10:
                                 popTill(this, 'ALT')
