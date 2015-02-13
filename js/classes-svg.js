@@ -64,13 +64,12 @@
                     // component hasn't mounted.
                     return
                 }
-
                 var patternSel = this.props.patternSel
                 var textLoc = this.props.data.textLoc
 
                 var amSelected = patternSel && textLoc
-                    && patternSel[0] === textLoc[0]
-                    && patternSel[1] === textLoc[1]
+                    && patternSel[0] <= textLoc[0]
+                    && patternSel[1] >= textLoc[1]
                 var box = this.refs.box.getDOMNode()
                 if (amSelected) {
                     // `filter` attr is not supported by react, so hack.

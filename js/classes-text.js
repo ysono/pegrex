@@ -33,8 +33,10 @@
             this.props.onChange(parts)
         },
         handleSelect: function(e) {
-            var input = e.target
-            this.props.onSelect([input.selectionStart, input.selectionEnd])
+            var patternSel = e.type === 'blur'
+                ? null
+                : [e.target.selectionStart, e.target.selectionEnd]
+            this.props.onSelect(patternSel)
         },
         render: function() {
             if (this.props.patternSel) {
@@ -48,7 +50,7 @@
                         <input ref="pattern" type="text" className="pattern"
                             placeholder={'(?:)'}
                             value={this.props.pattern} onChange={this.handleChange}
-                            onSelect={this.handleSelect} />
+                            onSelect={this.handleSelect} onBlur={this.handleSelect} />
                         <span className="infix">/</span>
                         <input ref="flags" type="text" className="flags"
                             value={this.props.flags} onChange={this.handleChange} />
