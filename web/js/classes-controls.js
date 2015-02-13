@@ -34,7 +34,8 @@
         getInitialState: function() {
             var parts = hashUtil.parse() || {
                 pattern: '',
-                flags: ''
+                flags: '',
+                patternSel: null
             }
             parts.tree = this.textsToTree(parts)
             return parts
@@ -75,16 +76,25 @@
             this.setState(state)
         },
 
+
+        handleSurfaceChange: function(x) {
+            this.setState({
+                patternSel: x.data.textLoc
+            })
+        },
+
         render: function() {
             return (
                 <div className="controls">
                     <reactClasses.Texts
                         pattern={this.state.pattern}
                         flags={this.state.flags}
+                        sel={this.state.patternSel}
                         onChange={this.handleTextsChange} />
                     <reactClasses.Surface
                         tree={this.state.tree}
-                        flags={this.state.flags} />
+                        flags={this.state.flags}
+                        onEvents={this.handleSurfaceChange} />
                 </div>
             )
         }

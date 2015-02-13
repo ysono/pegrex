@@ -8,7 +8,7 @@
                 if (o instanceof Array) {
                     // The concept of location is valid with one token only.
                     // Not an error if token can be an array or an obj
-                    // namely AtomEscape and ClassEscape
+                    // namely ClassEscape
                     return o
                 }
                 o.textLoc = [

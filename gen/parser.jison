@@ -32,7 +32,7 @@ For discrepancies noted below, a real-life example can be found in
                                 this.popState()
                                 return 'CLOSE_PAREN'
                             %}
-<DISJ>.         this.begin('ALT'); this.unput(yytext); return  
+<DISJ>.                     this.begin('ALT'); this.unput(yytext); return  
 
 /* Alternative */
 <CLASS>[|]                  return 'CLASS_ATOM_ETC'
@@ -42,7 +42,7 @@ For discrepancies noted below, a real-life example can be found in
                                 popTill(this, 'ALT')
                                 return 'ALT_DELIM'
                             %}
-<ALT>.          this.begin('TERM'); this.unput(yytext); return
+<ALT>.                      this.begin('TERM'); this.unput(yytext); return
 
 /* Quantifier */
 <TERM>[*+?][?]?                         return 'ATOM_QUANT_SHORT'

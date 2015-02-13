@@ -1,6 +1,6 @@
 ;(function(reactClasses) {
     'use strict'
-    
+
     var Texts = React.createClass({
         handleChange: function(parts) {
             this.props.onChange(parts)
@@ -10,6 +10,7 @@
                 <div className="texts-parent">
                     <Literal
                         pattern={this.props.pattern} flags={this.props.flags}
+                        sel={this.props.sel}
                         onChange={this.handleChange} />
                     <Ctor
                         pattern={this.props.pattern} flags={this.props.flags}
@@ -19,6 +20,9 @@
         }
     })
 
+    function sel(input, range) {
+        input.setSelectionRange.apply(input, range)
+    }
     function getRefVals(refs) {
         return Object.keys(refs).reduce(function(map, refName) {
             map[refName] = refs[refName].getDOMNode().value
@@ -31,6 +35,9 @@
             this.props.onChange(parts)
         },
         render: function() {
+            if (this.props.sel) {
+                sel(this.refs.pattern.getDOMNode(), this.props.sel)
+            }
             return (
                 <fieldset>
                     <legend>Literal</legend>
