@@ -2,25 +2,23 @@
     'use strict'
 
     var Texts = React.createClass({
-        handleChange: function(parts) {
-            this.props.onChange(parts)
-        },
         render: function() {
             return (
                 <div className="texts-parent">
                     <Literal
                         pattern={this.props.pattern} flags={this.props.flags}
                         patternSel={this.props.patternSel}
-                        onChange={this.handleChange} />
+                        onChange={this.props.onChange} onSelect={this.props.onSelect} />
                     <Ctor
                         pattern={this.props.pattern} flags={this.props.flags}
-                        onChange={this.handleChange} />
+                        onChange={this.props.onChange} />
                 </div>
             )
         }
     })
 
     function sel(input, range) {
+        input.focus() // ff requires it
         input.setSelectionRange.apply(input, range)
     }
     function getRefVals(refs) {
@@ -34,6 +32,10 @@
             var parts = getRefVals(this.refs)
             this.props.onChange(parts)
         },
+        handleSelect: function(e) {
+            var input = e.target
+            this.props.onSelect([input.selectionStart, input.selectionEnd])
+        },
         render: function() {
             if (this.props.patternSel) {
                 sel(this.refs.pattern.getDOMNode(), this.props.patternSel)
@@ -45,7 +47,8 @@
                         <span className="prefix">/</span>
                         <input ref="pattern" type="text" className="pattern"
                             placeholder={'(?:)'}
-                            value={this.props.pattern} onChange={this.handleChange} />
+                            value={this.props.pattern} onChange={this.handleChange}
+                            onSelect={this.handleSelect} />
                         <span className="infix">/</span>
                         <input ref="flags" type="text" className="flags"
                             value={this.props.flags} onChange={this.handleChange} />
