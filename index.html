@@ -24,14 +24,14 @@
             height: 100%;
         }
         .texts-parent {
-            height: 6em;
+            margin: 20px 30px;
+            border: solid 1px;
+            text-align: center;
         }
         .surface-parent {
-            position: absolute;
-            top: 6em;
-            bottom: 0;
             width: 100%;
             overflow: auto;
+            text-align: center;
         }
 
 
@@ -39,11 +39,7 @@
             border: none;
         }
         .texts-parent>fieldset>legend {
-            float: left;
-            width: 8em;
-            font-size: 1em;
-            font-family: sans-serif;
-            vertial-align: middle;
+            display: none;
         }
         .texts-parent>fieldset :not(legend) {
             font-size: 1.2em;
@@ -53,6 +49,15 @@
             display: inline-block;
             width: 8em;
             text-align: right;
+        }
+        .texts-parent>fieldset .infix {
+            display: inline-block;
+            width: 1.5em;
+            text-align: center;
+        }
+        .texts-parent>fieldset .suffix {
+            display: inline-block;
+            width: 1em;
         }
 
         .texts-parent .pattern {

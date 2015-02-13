@@ -46,9 +46,10 @@
                         <input ref="pattern" type="text" className="pattern"
                             placeholder={'(?:)'}
                             value={this.props.pattern} onChange={this.handleChange} />
-                        <span>/</span>
+                        <span className="infix">/</span>
                         <input ref="flags" type="text" className="flags"
                             value={this.props.flags} onChange={this.handleChange} />
+                        <span className="suffix"></span>
                     </span>
                 </fieldset>
             )
@@ -155,10 +156,10 @@
                         <span className="prefix">new RegExp('</span>
                         <input ref="pattern" type="text" className="pattern"
                             value={escParts.pattern} onChange={this.handleChange} />
-                        <span>',</span>
+                        <span className="infix">',</span>
                         <input ref="flags" type="text" className="flags"
                             value={escParts.flags} onChange={this.handleChange} />
-                        <span>)</span>
+                        <span className="suffix">)</span>
                     </span>
                 </fieldset>
             )
