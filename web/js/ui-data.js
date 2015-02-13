@@ -1,13 +1,14 @@
 ;(function(reactClasses) {
     'use strict'
 
-    /* standardize the y of arrows between terms.
-        A oneChar term is the smallest in height as well as likely most frequently seen.
-        Its height is always 32; div this in half.
+    /*
+        standardize the y of arrows between terms.
+        A withTextsOnly item with one line of text is the smallest in height as well as likely most frequently seen.
+        Its height is 16; div this in half.
     */
-    var interTermArrowY = 16
+    var interTermArrowY = 8
 
-    /* withChildren:
+    /*
         requires setUiByType
         1) call setUiByType on all children -> now they each have dim
         2) gather all dims of children -> set pos of children, and dim/pos of fillers
@@ -82,6 +83,7 @@
 
     function withTextsOnly(data, textProps) {
         return function() {
+            var pad = {h: 3, v: 1}
             var lnH = 16 // 1em
             var charW = lnH / 2
             var texts = textProps.map(function(prop) {
@@ -92,13 +94,16 @@
             })
             var myW = charW * Math.max.apply(Math, textLens)
             return data.ui = {
-                dim: [myW, lnH * texts.length],
+                dim: [
+                    pad.h * 2 + myW,
+                    pad.v * 2 + lnH * texts.length
+                ],
                 rows: texts.map(function(text, i) {
                     return {
                         text: text,
                         pos: [
-                            myW / 2,
-                            lnH * (i + 3/4) // TODO why 3/4?
+                            pad.h + myW / 2,
+                            pad.v + lnH * (i + 3/4) // TODO why 3/4?
                         ],
                         anchor: 'middle'
                     }
@@ -107,17 +112,15 @@
         }
     }
 
-    /* setUiByType:
+    /*
         Sets and returns data.ui.dim
         Does not set data.ui.pos
         If data contains children, recursively sets their .ui.dim and .ui.pos.
     */
     function setUiByType(data) {
-        
-
         var map = {
             'Disjunction': function() {
-                var pad = {x: [10,10], y: [10,10]}
+                var pad = {x: [0,0], y: [0,0]}
                 var ui = withChildren(
                     data,
 
@@ -142,7 +145,7 @@
 
                     'terms',
                     {x: [10,10], y: [10,10]},
-                    5,
+                    2,
                     'x',
 
                     {x: 40, y: 0}
@@ -385,4 +388,8 @@
             pad.l + dUi.pos[1] + dUi.dim[1] + pad.r
         ]
     }
+
+    /* now some static data */
+    reactClasses.markerLen = 8
+
 })(window.reactClasses = window.reactClasses || {})

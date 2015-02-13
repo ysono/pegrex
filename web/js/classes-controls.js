@@ -70,7 +70,8 @@
             var state = {
                 pattern: parts.pattern,
                 flags: parts.flags,
-                tree: this.textsToTree(parts)
+                tree: this.textsToTree(parts),
+                patternSel: null
             }
             hashUtil.update(state)
             this.setState(state)
