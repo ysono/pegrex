@@ -139,17 +139,6 @@
             }
         }),
 
-        'hr': React.createClass(extend({
-            render: function() {
-                var hr = this.props.data
-                var y = hr.pos[1] + hr.dim[1] / 2
-                return (
-                    <line x1={hr.pos[0]} y1={y}
-                        x2={hr.pos[0] + hr.dim[0]} y2={y}
-                        stroke="#ddd" strokeWidth="1" />
-                )
-            }
-        })),
         'path': React.createClass(extend({
             render: function() {
                 // TODO test
@@ -164,6 +153,7 @@
                         pos: optional [n,n], default [0,0]
                         isVertical: optional bool, default false
                         usesMarker: optional bool, default true
+                        markerColor: optional
                     }
                 */
                 var data = this.props.data
@@ -209,9 +199,11 @@
 
                 var markerEnd = usesMarker ? 'url(#marker-tri)' : ''
 
+                var stroke = data.markerColor || reactClasses.markerColor
+
                 return (
                     <g transform={txform}>
-                        <path d={pathStr} markerEnd={markerEnd} stroke={reactClasses.markerColor} fill="none" />
+                        <path d={pathStr} markerEnd={markerEnd} stroke={stroke} fill="none" />
                     </g>
                 )
             }

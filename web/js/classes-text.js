@@ -39,15 +39,17 @@
                 sel(this.refs.pattern.getDOMNode(), this.props.sel)
             }
             return (
-                <fieldset>
+                <fieldset className="literal">
                     <legend>Literal</legend>
-                    <span>/</span>
-                    <input ref="pattern" type="text"
-                        placeholder={'(?:)'}
-                        value={this.props.pattern} onChange={this.handleChange} />
-                    <span>/</span>
-                    <input ref="flags" type="text"
-                        value={this.props.flags} onChange={this.handleChange} />
+                    <span>
+                        <span className="prefix">/</span>
+                        <input ref="pattern" type="text" className="pattern"
+                            placeholder={'(?:)'}
+                            value={this.props.pattern} onChange={this.handleChange} />
+                        <span>/</span>
+                        <input ref="flags" type="text" className="flags"
+                            value={this.props.flags} onChange={this.handleChange} />
+                    </span>
                 </fieldset>
             )
         }
@@ -147,15 +149,17 @@
                 escParts = this.getEscapedParts(this.props)
             }
             return (
-                <fieldset>
+                <fieldset className="ctor">
                     <legend>Constructor</legend>
-                    <span>new RegExp(</span>
-                    <input ref="pattern" type="text"
-                        value={escParts.pattern} onChange={this.handleChange} />
-                    <span>,</span>
-                    <input ref="flags" type="text"
-                        value={escParts.flags} onChange={this.handleChange} />
-                    <span>)</span>
+                    <span>
+                        <span className="prefix">new RegExp('</span>
+                        <input ref="pattern" type="text" className="pattern"
+                            value={escParts.pattern} onChange={this.handleChange} />
+                        <span>',</span>
+                        <input ref="flags" type="text" className="flags"
+                            value={escParts.flags} onChange={this.handleChange} />
+                        <span>)</span>
+                    </span>
                 </fieldset>
             )
         }
