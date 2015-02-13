@@ -148,7 +148,7 @@
                     2,
                     'x',
 
-                    {x: 40, y: 0}
+                    {x: 25, y: 0}
                 )
                 ui.fillers.forEach(function(arrow) {
                     arrow.type = 'path'
@@ -163,9 +163,8 @@
                 var tUi = setUiByType(data.target)
                 var myUi = data.ui = {}
 
-                var pad = {h: 40, v: 10}
-                var arrowEdgeY = interTermArrowY
-                var intraMargin = 10 // between top/btm edge of target and the arrow that doesn't go thru it
+                var pad = {h: 30, v: interTermArrowY}
+                var intraMargin = pad.v // between top/btm edge of target and the arrow that doesn't go thru it
 
                 var arrowMidTopY, /* y where top arrow runs in the middle */
                     arrowMidBtmY, /* ditto bottom */
@@ -224,13 +223,15 @@
                         function arc(clockwise, dx,dy) {
                             return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
                         }
-                        var jointLeftX = pad.h / 3
-                        var jointRightX = myUi.dim[0] - jointLeftX
+                        var jointLeftX
+                        var jointRightX
 
-                        var detourArrow
+                        var arrowBtm
                         if (data.quantifier.min === 0 && data.quantifier.max === 1) {
                             // left edge -> down -> right -> up -> right edge
-                            detourArrow = (function() {
+                            jointLeftX = pad.h / 3 * 2
+                            jointRightX = myUi.dim[0] - jointLeftX
+                            arrowBtm = (function() {
                                 var startOfPath = [jointLeftX - r, arrowMidTopY]
                                 var path = [
                                     'L', startOfPath,
@@ -253,7 +254,9 @@
                             })()
                         } else {
                             // right of target -> down -> left -> up -> left of target
-                            detourArrow = (function() {
+                            jointLeftX = pad.h / 3
+                            jointRightX = myUi.dim[0] - jointLeftX
+                            arrowBtm = (function() {
                                 var path = [
                                     'M', tUi.pos[0] + tUi.dim[0], arrowMidTopY,
                                     'L', jointRightX - r, arrowMidTopY,
@@ -273,7 +276,8 @@
                                 }
                             })()
                         }
-                        myUi.arrows.push(detourArrow)
+                        arrowBtm.usesMarker = false
+                        myUi.arrows.push(arrowBtm)
                     })()
                 }
                 myUi.arrows.forEach(function(arrow) {
@@ -358,8 +362,8 @@
                 link.usesMarker = false
                 return ui
             },
-            'Any Char': withTextsOnly(data, ['type'/*, 'display'*/]),
-            'Specific Char': withTextsOnly(data, [/*'type', */'display']),
+            'Any Char': withTextsOnly(data, ['type']),
+            'Specific Char': withTextsOnly(data, ['display']),
             'Reference': withTextsOnly(data, ['type', 'number']),
             'Assertion': withTextsOnly(data, ['type', 'assertion'])
         } // end of var map
@@ -390,6 +394,7 @@
     }
 
     /* now some static data */
-    reactClasses.markerLen = 8
+    reactClasses.markerLen = 7
+    reactClasses.markerColor = '#888'
 
 })(window.reactClasses = window.reactClasses || {})
