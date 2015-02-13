@@ -219,7 +219,7 @@
                 // detour arrow at the bottom
                 if (needArrowBtm) {
                     ;(function() {
-                        var r = 10
+                        var r = 8
                         function arc(clockwise, dx,dy) {
                             return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
                         }
@@ -288,13 +288,13 @@
             },
             'Group': function() {
                 // TODO show/link number
-                var pad = {h: 10, v: 10}
+                var pad = {h: 10, v: 0} // even with 0 gaps can exist from disj and alt.
                 var cUi = setUiByType(data.grouped)
                 cUi.pos = [pad.h, pad.v]
                 return data.ui = {
                     dim: [
-                        cUi.dim[0] + pad.h * 2,
-                        cUi.dim[1] + pad.v * 2
+                        pad.h * 2 + cUi.dim[0],
+                        pad.v * 2 + cUi.dim[1]
                     ]
                 }
             },
@@ -310,26 +310,24 @@
                 )
 
                 var leftArrowBegin = [0, interTermArrowY]
-                var rightArrowEnd = function() {
-                    // return a fresh copy b/c it's modified later to adjust for marker
-                    return [ui.dim[0], interTermArrowY]
-                }
+                var rightArrowEnd = [ui.dim[0], interTermArrowY]
                 ui.arrows = data.possibilities.reduce(function(allArrows, possib) {
                     var subUi = possib.ui
-                    var subUiYMid = subUi.pos[1] + subUi.dim[1] / 2
+                    var subEdgeArrowY = subUi.pos[1] + interTermArrowY
 
                     var left = {
                         type: 'path',
                         d: [
                             leftArrowBegin,
-                            [subUi.pos[0], subUiYMid]
+                            [subUi.pos[0], subEdgeArrowY]
                         ]
                     }
                     var right = {
                         type: 'path',
                         d: [
-                            [subUi.pos[0] + subUi.dim[0], subUiYMid],
-                            rightArrowEnd()
+                            [subUi.pos[0] + subUi.dim[0], subEdgeArrowY],
+                            [ui.dim[0] - pad.x[1], subEdgeArrowY],
+                            rightArrowEnd
                         ]
                     }
                     return allArrows.concat(left, right)
