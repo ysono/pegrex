@@ -27,9 +27,9 @@
 
             var markerStr = '\
                 <marker id="marker-tri" \
-                    viewBox="0 0 10 10" refX="0" refY="5" markerWidth="12" markerHeight="12" orient="auto" fill="orange"> \
+                    viewBox="0 0 10 10" refX="0" refY="5" markerWidth="{}" markerHeight="{}" orient="auto" fill="orange"> \
                     <path d="M 0 0 L 10 5 L 0 10 z" /> \
-                </marker>'
+                </marker>'.replace(/\{\}/g, reactClasses.markerLen)
             return (
                 <div className="surface-parent">
                     <svg width={svgDim[0]} height={svgDim[1]}>
@@ -77,7 +77,7 @@
 
                 // additional nodes will go on top of everything else
                 var moreChildElms = staticParams.moreChildElms
-                    ? staticParams.moreChildElms(data)
+                    ? staticParams.moreChildElms.call(this, data)
                     : null
 
                 return (
@@ -92,13 +92,9 @@
     }
     var typeToClass = {
         'Disjunction': createBoxedClass({
-            stroke: 'red',
-            strokeW: 6,
             childProps: ['ui.fillers', 'alternatives']
         }),
         'Alternative': createBoxedClass({
-            stroke: 'green',
-            strokeW: 4,
             childProps: ['ui.fillers', 'terms']
         }),
         'Quantified': createBoxedClass({
@@ -125,10 +121,11 @@
             stroke: '#bbb',
             strokeW: 2,
             moreChildElms: function(data) {
+                var self = this
                 return data.ui.rows.map(function(row, i) {
                     return (
                         <text x={row.pos[0]} y={row.pos[1]} textAnchor={row.anchor}
-                            fontFamily="monospace" key={i}>
+                            fontFamily="monospace" key={i} onClick={self.handleEvents}>
                             {row.text}
                         </text>
                     )
@@ -170,7 +167,6 @@
 
                 if (data.usesMarker !== false) {
                     (function() {
-                        var markerLen = 12 // from defs>marker[markerWidth]
                         var end = segms.slice(-1)[0]
                         if (! (end instanceof Array)) {
                             console.warn('could not adjust path for marker. make sure last item is a coord.', data)
@@ -179,7 +175,7 @@
                         segms = segms.slice() // clone so marker adjustment does not survive refresh
                         end = end.slice()
                         segms.splice(-1, 1, end)
-                        end[data.isVertical ? 1 : 0] -= markerLen
+                        end[data.isVertical ? 1 : 0] -= reactClasses.markerLen
                     })()
                 }
 
