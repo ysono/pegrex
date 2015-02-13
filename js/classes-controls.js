@@ -76,6 +76,11 @@
             hashUtil.update(state)
             this.setState(state)
         },
+        handleTextsSelect: function(patternSel) {
+            this.setState({
+                patternSel: patternSel
+            })
+        },
 
 
         handleSurfaceChange: function(x) {
@@ -91,7 +96,8 @@
                         pattern={this.state.pattern}
                         flags={this.state.flags}
                         patternSel={this.state.patternSel}
-                        onChange={this.handleTextsChange} />
+                        onChange={this.handleTextsChange}
+                        onSelect={this.handleTextsSelect} />
                     <reactClasses.Surface
                         tree={this.state.tree}
                         flags={this.state.flags}

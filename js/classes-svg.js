@@ -34,7 +34,7 @@
                 </marker>'
                     .replace(/\{0\}/g, reactClasses.markerLen)
                     .replace(/\{1\}/g, reactClasses.markerColor)
-            var boxshadow = '\
+            var dropshadow = '\
                 <filter id="dropshadow" height="180%" width="180%"> \
                     <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> \
                     <feOffset dx="2" dy="2" result="offsetblur"/> \
@@ -49,7 +49,7 @@
             return (
                 <div className="surface-parent">
                     <svg width={svgDim[0]} height={svgDim[1]}>
-                        <defs dangerouslySetInnerHTML={{__html: marker + boxshadow}}></defs>
+                        <defs dangerouslySetInnerHTML={{__html: marker + dropshadow}}></defs>
                         {childNode}
                     </svg>
                 </div>
