@@ -2,28 +2,33 @@
     'use strict'
 
     /*
-        standardize the y of arrows between terms.
+        Standardize the y of arrows between terms.
         A withTextsOnly item with one line of text is the smallest in height as well as likely most frequently seen.
         Its height is 16; div this in half.
     */
     var interTermArrowY = 8
 
     /*
-        requires setUiByType
-        1) call setUiByType on all children -> now they each have dim
-        2) gather all dims of children -> set pos of children, and dim/pos of fillers
-        3) based on dim/pos of the farthest child -> set parentData's dim
+        Conceptually,
+        1) Call setUiByType on all children -->
+            now children each have dim
+        2) Gather all dims of children -->
+            children each have pos
+            parent's fillers have pos and dim
+        3) Based on dim/pos of the farthest child --> set parent's dim. parent's pos is not set.
+
+        Fillers are optional.
+        Fillers depend on post-processing to add `type` and other necessary data
     */
     function withChildren(
         parentData,
-
-        childrenProp, /* parentData[childrenProp] contains an array of children */
+        children,
         pad, /* {x: [n,n], y: [n,n]} -- where [n,n] are start and end paddings in that direction */
-        intraMargin, /* spacing between a child and a filler */
-        dirPara, /* 'x' or 'y' */
+        intraMargin, /* spacing between children and filters */
+        dirPara, /* 'x' or 'y'. direction of expansion. */
 
-        /* below is required if fillers are used between children */
-        fillerDim /* {x: n, y: n} -- dimension of filler. the orthogonal dim can be 0 as a placeholder. */
+        fillerDim /* {x: n, y: n} -- optional, needed iff using fillers. width and height of filler.
+            fillerDim[dirPara] is required, but the orthogonal dim can be 0. */
         ) {
 
         var dirOrtho = dirPara === 'x' ? 'y' : 'x'
@@ -32,22 +37,24 @@
             var i = dir === 'x' ? 0 : 1
             return coord[i]
         }
-        function toCoord(para, ortho) {
+        function toCoord(valPara, valOrtho) {
             if (dirPara === 'x') {
-                return [para, ortho]
+                return [valPara, valOrtho]
             } else {
-                return [ortho, para]
+                return [valOrtho, valPara]
             }
         }
 
-        // this pair of vars indicate the farthest point being occupied by children or filler
+        // this pair of vars indicate the farthest point being occupied by the last children
         var maxPara = pad[dirPara][0] - intraMargin
         var maxOrtho = 0
 
-        var fillers = []
-        parentData[childrenProp].forEach(function(child, i) {
+        var parentUi = parentData.ui = {}
+        var fillers = parentUi.fillers = []
+
+        children.forEach(function(child, i) {
             if (fillerDim && i) {
-                (function() {
+                ;(function() {
                     var fillerPosPara = maxPara + intraMargin
                     var fillerPosOrtho = pad[dirOrtho][0]
 
@@ -62,23 +69,27 @@
                 })()
             }
 
-            var cUi = setUiByType(child)
-            var cPosPara = maxPara + intraMargin
-            var cPosOrtho = pad[dirOrtho][0]
+            var childUi = setUiByType(child)
+            var childPosPara = maxPara + intraMargin
+            var childPosOrtho = pad[dirOrtho][0]
 
-            cUi.pos = toCoord(cPosPara, cPosOrtho)
+            childUi.pos = toCoord(childPosPara, childPosOrtho)
 
-            maxPara = cPosPara + readCoord(cUi.dim, dirPara)
-            maxOrtho = Math.max(maxOrtho, cPosOrtho + readCoord(cUi.dim, dirOrtho))
+            maxPara = childPosPara + readCoord(childUi.dim, dirPara)
+            maxOrtho = Math.max(maxOrtho, childPosOrtho + readCoord(childUi.dim, dirOrtho))
         })
 
-        return parentData.ui = {
-            dim: toCoord(
+        parentUi.dim = children.length
+            ? toCoord(
                 maxPara + pad[dirPara][1],
                 maxOrtho + pad[dirOrtho][1]
-            ),
-            fillers: fillerDim ? fillers : undefined
-        }
+            )
+            : toCoord(
+                pad[dirPara][0] + pad[dirPara][1],
+                pad[dirOrtho][0] + pad[dirOrtho][1]
+            )
+
+        return parentUi
     }
 
     function withTextsOnly(data, textProps) {
@@ -112,6 +123,41 @@
         }
     }
 
+    function addArrows(parentData, children, pad) {
+        var parentUi = parentData.ui
+        // arrows are always in the horizontal direction.
+        var leftBegin = [0, interTermArrowY]
+        var rightEnd = [parentUi.dim[0], interTermArrowY]
+        parentUi.arrows = children.length
+            ? children.reduce(function(allArrows, child) {
+                var childUi = child.ui
+                var childEdgeContactY = childUi.pos[1] + interTermArrowY
+                allArrows.push({
+                    type: 'path',
+                    d: [
+                        leftBegin,
+                        [childUi.pos[0], childEdgeContactY]
+                    ]
+                },
+                {
+                    type: 'path',
+                    d: [
+                        [childUi.pos[0] + childUi.dim[0], childEdgeContactY],
+                        [parentUi.dim[0] - pad.x[1], childEdgeContactY], // drag out horizontally to the right
+                        rightEnd
+                    ]
+                })
+                return allArrows
+            }, [])
+            : [{
+                type: 'path',
+                d: [
+                    leftBegin,
+                    rightEnd
+                ]
+            }]
+    }
+
     /*
         Sets and returns data.ui.dim
         Does not set data.ui.pos
@@ -120,18 +166,22 @@
     function setUiByType(data) {
         var map = {
             'Disjunction': function() {
-                var pad = {x: [0,0], y: [0,0]}
+                var pad = {x: [30,30], y: [10,10]}
                 var hrH = 30
+
+                // deleting some of parser output here!!
+                data.alternatives = data.alternatives.filter(function(alt) {
+                    return alt.terms.length
+                })
                 var ui = withChildren(
                     data,
-
-                    'alternatives',
+                    data.alternatives,
                     pad,
                     5,
                     'y',
-
                     {x: 0, y: hrH}
                 )
+
                 // set hr width as maximal width of alternatives
                 var hrW = ui.dim[0] - pad.x[0] - pad.x[1]
                 ui.fillers.forEach(function(hr) {
@@ -143,17 +193,18 @@
                     hr.usesMarker = false
                     hr.markerColor = '#ddd'
                 })
+
+                addArrows(data, data.alternatives, pad)
+
                 return ui
             },
             'Alternative': function() {
                 var ui = withChildren(
                     data,
-
-                    'terms',
+                    data.terms,
                     {x: [0,0], y: [0,0]},
                     2,
                     'x',
-
                     {x: 25, y: 0}
                 )
                 ui.fillers.forEach(function(arrow) {
@@ -193,7 +244,7 @@
                     // term is at the bottom
                     arrowMidTopY = interTermArrowY
                     targetY = arrowMidTopY + intraMargin
-                    arrowMidBtmY = targetY + tUi.dim[1] / 2
+                    arrowMidBtmY = targetY + interTermArrowY
                     myH = targetY + tUi.dim[1] + pad.v
 
                     if (! data.quantifier.max) {
@@ -294,7 +345,7 @@
             },
             'Group': function() {
                 // TODO show/link number
-                var pad = {h: 10, v: 10} // even with 0 gaps can exist from disj and alt.
+                var pad = {h: 0, v: 0} // even with 0 gaps can exist from disj and alt.
                 var cUi = setUiByType(data.grouped)
                 cUi.pos = [pad.h, pad.v]
                 return data.ui = {
@@ -308,47 +359,21 @@
                 var pad = {x: [30,30], y: [10,10]}
                 var ui = withChildren(
                     data,
-
-                    'possibilities',
+                    data.possibilities,
                     pad,
                     10,
                     'y'
                 )
-
-                var leftArrowBegin = [0, interTermArrowY]
-                var rightArrowEnd = [ui.dim[0], interTermArrowY]
-                ui.arrows = data.possibilities.reduce(function(allArrows, possib) {
-                    var subUi = possib.ui
-                    var subEdgeArrowY = subUi.pos[1] + interTermArrowY
-
-                    var left = {
-                        type: 'path',
-                        d: [
-                            leftArrowBegin,
-                            [subUi.pos[0], subEdgeArrowY]
-                        ]
-                    }
-                    var right = {
-                        type: 'path',
-                        d: [
-                            [subUi.pos[0] + subUi.dim[0], subEdgeArrowY],
-                            [ui.dim[0] - pad.x[1], subEdgeArrowY],
-                            rightArrowEnd
-                        ]
-                    }
-                    return allArrows.concat(left, right)
-                }, [])
+                addArrows(data, data.possibilities, pad)
                 return ui
             },
             'Range of Chars': function() {
                 var ui = withChildren(
                     data,
-
-                    'range',
+                    data.range,
                     {x: [10,10], y: [10,10]},
                     0,
                     'y',
-
                     {x: 0, y: 15}
                 )
                 var rangeWs = data.range.map(function(sub) {
