@@ -3,12 +3,13 @@
 
     function extend(proto) {
         proto.handleEvents = function(e) {
-            var payload = e.pegrexPayload ? e
+            var payload = e.pegrexPayload
+                ? e // pass-thru
                 : {
                     pegrexPayload: true,
                     data: this.props.data,
                     e: e
-                }
+                } // `this` originated the event
             this.props.onEvents(payload)
         }
         return proto
@@ -17,25 +18,38 @@
     var Surface = React.createClass(extend({
         render: function() {
             var tree = this.props.tree
+            var patternSel = this.props.patternSel
 
             var svgDim = [0,0]
             var childNode
             if (tree) {
                 svgDim = tree.ui.svgDim
-                childNode = createInstance(this.handleEvents, tree)
+                childNode = createInstance(this.handleEvents, tree, patternSel)
             }
 
-            var markerStr = '\
+            var marker = '\
                 <marker id="marker-tri" \
                     viewBox="0 0 10 10" refX="0" refY="5" markerWidth="{0}" markerHeight="{0}" orient="auto" fill="{1}"> \
                     <path d="M 0 0 L 10 5 L 0 10 z" /> \
                 </marker>'
                     .replace(/\{0\}/g, reactClasses.markerLen)
                     .replace(/\{1\}/g, reactClasses.markerColor)
+            var boxshadow = '\
+                <filter id="dropshadow" height="180%" width="180%"> \
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> \
+                    <feOffset dx="2" dy="2" result="offsetblur"/> \
+                    <feFlood flood-color="red"/> \
+                    <feComposite in2="offsetblur" operator="in"/> \
+                    <feMerge> \
+                        <feMergeNode/> \
+                        <feMergeNode in="SourceGraphic"/> \
+                    </feMerge> \
+                </filter>'
+
             return (
                 <div className="surface-parent">
                     <svg width={svgDim[0]} height={svgDim[1]}>
-                        <defs dangerouslySetInnerHTML={{__html: markerStr}}></defs>
+                        <defs dangerouslySetInnerHTML={{__html: marker + boxshadow}}></defs>
                         {childNode}
                     </svg>
                 </div>
@@ -45,9 +59,30 @@
 
     function createBoxedClass(staticParams) {
         return React.createClass(extend({
+            checkSelected: function() {
+                if (! this.refs.box) {
+                    // component hasn't mounted.
+                    return
+                }
+
+                var patternSel = this.props.patternSel
+                var textLoc = this.props.data.textLoc
+
+                var amSelected = patternSel && textLoc
+                    && patternSel[0] === textLoc[0]
+                    && patternSel[1] === textLoc[1]
+                var box = this.refs.box.getDOMNode()
+                if (amSelected) {
+                    // `filter` attr is not supported by react, so hack.
+                    box.setAttribute('filter', "url(#dropshadow)")
+                } else {
+                    box.removeAttribute('filter')
+                }
+            },
             render: function() {
-                var self = this
+                var handleEvents = this.handleEvents
                 var data = this.props.data
+                var patternSel = this.props.patternSel
 
                 var txform = ['translate(', data.ui.pos, ')'].join('')
 
@@ -56,7 +91,8 @@
                             stroke={staticParams.stroke}
                             strokeWidth={staticParams.strokeW}
                             fill={staticParams.fill || 'white'}
-                            onClick={this.handleEvents} />
+                            onClick={this.handleEvents} className="clickable"
+                            ref="box" />
                 )
 
                 // list childProps in the increasing order of z index.
@@ -72,7 +108,7 @@
                             }, data)
                         var childList = ([].concat(childVal))
                             .map(function(childData, i) {
-                                return createInstance(self.handleEvents, childData, i)
+                                return createInstance(handleEvents, childData, patternSel, i)
                             })
                         return childList
                     })
@@ -81,6 +117,8 @@
                 var moreChildElms = staticParams.moreChildElms
                     ? staticParams.moreChildElms.call(this, data)
                     : null
+
+                this.checkSelected()
 
                 return (
                     <g transform={txform}>
@@ -127,11 +165,12 @@
             stroke: '#09d',
             strokeW: 2,
             moreChildElms: function(data) {
-                var self = this
+                var handleEvents = this.handleEvents
                 return data.ui.rows.map(function(row, i) {
                     return (
                         <text x={row.pos[0]} y={row.pos[1]} textAnchor={row.anchor}
-                            fontFamily="monospace" key={i} onClick={self.handleEvents}>
+                            fontFamily="monospace" key={i} onClick={handleEvents}
+                            className="clickable">
                             {row.text}
                         </text>
                     )
@@ -209,7 +248,7 @@
             }
         }))
     }
-    function createInstance(handleEvents, data, key) {
+    function createInstance(handleEvents, data, patternSel, key) {
         var aliases = {
             'Any Char': 'TextsOnly',
             'Specific Char': 'TextsOnly',
@@ -224,6 +263,7 @@
         var instance = React.createElement(clazz, {
             onEvents: handleEvents,
             data: data,
+            patternSel: patternSel,
             key: key
         })
         return instance

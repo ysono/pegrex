@@ -10,7 +10,7 @@
                 <div className="texts-parent">
                     <Literal
                         pattern={this.props.pattern} flags={this.props.flags}
-                        sel={this.props.sel}
+                        patternSel={this.props.patternSel}
                         onChange={this.handleChange} />
                     <Ctor
                         pattern={this.props.pattern} flags={this.props.flags}
@@ -35,8 +35,8 @@
             this.props.onChange(parts)
         },
         render: function() {
-            if (this.props.sel) {
-                sel(this.refs.pattern.getDOMNode(), this.props.sel)
+            if (this.props.patternSel) {
+                sel(this.refs.pattern.getDOMNode(), this.props.patternSel)
             }
             return (
                 <fieldset className="literal">

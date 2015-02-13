@@ -90,11 +90,12 @@
                     <reactClasses.Texts
                         pattern={this.state.pattern}
                         flags={this.state.flags}
-                        sel={this.state.patternSel}
+                        patternSel={this.state.patternSel}
                         onChange={this.handleTextsChange} />
                     <reactClasses.Surface
                         tree={this.state.tree}
                         flags={this.state.flags}
+                        patternSel={this.state.patternSel}
                         onEvents={this.handleSurfaceChange} />
                 </div>
             )
