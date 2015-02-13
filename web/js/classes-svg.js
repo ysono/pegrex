@@ -94,9 +94,13 @@
     }
     var typeToClass = {
         'Disjunction': createBoxedClass({
+            stroke: 'none',
+            fill: 'none',
             childProps: ['ui.fillers', 'alternatives']
         }),
         'Alternative': createBoxedClass({
+            stroke: 'none',
+            fill: 'none',
             childProps: ['ui.fillers', 'terms']
         }),
         'Quantified': createBoxedClass({
