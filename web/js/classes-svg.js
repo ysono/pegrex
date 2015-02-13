@@ -27,9 +27,11 @@
 
             var markerStr = '\
                 <marker id="marker-tri" \
-                    viewBox="0 0 10 10" refX="0" refY="5" markerWidth="{}" markerHeight="{}" orient="auto" fill="orange"> \
+                    viewBox="0 0 10 10" refX="0" refY="5" markerWidth="{0}" markerHeight="{0}" orient="auto" fill="{1}"> \
                     <path d="M 0 0 L 10 5 L 0 10 z" /> \
-                </marker>'.replace(/\{\}/g, reactClasses.markerLen)
+                </marker>'
+                    .replace(/\{0\}/g, reactClasses.markerLen)
+                    .replace(/\{1\}/g, reactClasses.markerColor)
             return (
                 <div className="surface-parent">
                     <svg width={svgDim[0]} height={svgDim[1]}>
@@ -98,27 +100,27 @@
             childProps: ['ui.fillers', 'terms']
         }),
         'Quantified': createBoxedClass({
-            stroke: 'red',
+            stroke: '#7a0',
             strokeW: 3,
             childProps: ['ui.arrows', 'target']
         }),
         'Group': createBoxedClass({
-            stroke: 'blue',
+            stroke: '#fb5',
             strokeW: 3,
             childProps: ['grouped']
         }),
         'Set of Chars': createBoxedClass({
-            stroke: 'purple',
+            stroke: '#b7a',
             strokeW: 3,
             childProps: ['ui.arrows', 'possibilities']
         }),
         'Range of Chars': createBoxedClass({
-            stroke: '#882',
+            stroke: '#f77',
             strokeW: 2,
             childProps: ['ui.fillers', 'range']
         }),
         'TextsOnly': createBoxedClass({
-            stroke: '#bbb',
+            stroke: '#09d',
             strokeW: 2,
             moreChildElms: function(data) {
                 var self = this
@@ -162,10 +164,11 @@
                 */
                 var data = this.props.data
                 var segms = data.d
+                var usesMarker = data.usesMarker !== false
 
                 var txform = ['translate(', (data.pos || [0,0]), ')'].join('')
 
-                if (data.usesMarker !== false) {
+                if (usesMarker) {
                     (function() {
                         var end = segms.slice(-1)[0]
                         if (! (end instanceof Array)) {
@@ -200,9 +203,11 @@
                 }, [])
                 var pathStr = connected.join(' ')
 
+                var markerEnd = usesMarker ? 'url(#marker-tri)' : ''
+
                 return (
                     <g transform={txform}>
-                        <path d={pathStr} markerEnd="url(#marker-tri)" stroke="orange" fill="none" />
+                        <path d={pathStr} markerEnd={markerEnd} stroke={reactClasses.markerColor} fill="none" />
                     </g>
                 )
             }
