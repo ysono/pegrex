@@ -1,7 +1,20 @@
 ;(function(reactClasses) {
     'use strict'
 
-    var Surface = React.createClass({
+    function extend(proto) {
+        proto.handleEvents = function(e) {
+            var payload = e.pegrexPayload ? e
+                : {
+                    pegrexPayload: true,
+                    data: this.props.data,
+                    e: e
+                }
+            this.props.onEvents(payload)
+        }
+        return proto
+    }
+
+    var Surface = React.createClass(extend({
         render: function() {
             var tree = this.props.tree
 
@@ -9,7 +22,7 @@
             var childNode
             if (tree) {
                 svgDim = tree.ui.svgDim
-                childNode = createInstance(tree)
+                childNode = createInstance(this.handleEvents, tree)
             }
 
             var markerStr = '\
@@ -26,11 +39,12 @@
                 </div>
             )
         }
-    })
+    }))
 
     function createBoxedClass(staticParams) {
-        return React.createClass({
+        return React.createClass(extend({
             render: function() {
+                var self = this
                 var data = this.props.data
 
                 var txform = ['translate(', data.ui.pos, ')'].join('')
@@ -39,7 +53,8 @@
                     <rect width={data.ui.dim[0]} height={data.ui.dim[1]}
                             stroke={staticParams.stroke}
                             strokeWidth={staticParams.strokeW}
-                            fill={staticParams.fill || 'white'} />
+                            fill={staticParams.fill || 'white'}
+                            onClick={this.handleEvents} />
                 )
 
                 // list childProps in the increasing order of z index.
@@ -55,7 +70,7 @@
                             }, data)
                         var childList = ([].concat(childVal))
                             .map(function(childData, i) {
-                                return createInstance(childData, i)
+                                return createInstance(self.handleEvents, childData, i)
                             })
                         return childList
                     })
@@ -71,7 +86,7 @@
                     </g>
                 )
             }
-        })
+        }))
     }
     var typeToClass = {
         'Disjunction': createBoxedClass({
@@ -108,16 +123,18 @@
             stroke: '#bbb',
             strokeW: 2,
             moreChildElms: function(data) {
-                return data.ui.rows.map(function(row) {
+                return data.ui.rows.map(function(row, i) {
                     return (
                         <text x={row.pos[0]} y={row.pos[1]} textAnchor={row.anchor}
-                            fontFamily="monospace">{row.text}</text>
+                            fontFamily="monospace" key={i}>
+                            {row.text}
+                        </text>
                     )
                 })
             }
         }),
 
-        'hr': React.createClass({
+        'hr': React.createClass(extend({
             render: function() {
                 var hr = this.props.data
                 var y = hr.pos[1] + hr.dim[1] / 2
@@ -127,8 +144,8 @@
                         stroke="#ddd" strokeWidth="1" />
                 )
             }
-        }),
-        'path': React.createClass({
+        })),
+        'path': React.createClass(extend({
             render: function() {
                 // TODO test
                 /* in this.props.path: {
@@ -144,51 +161,56 @@
                         usesMarker: optional bool, default true
                     }
                 */
-                var path = this.props.data
+                var data = this.props.data
+                var segms = data.d
 
-                var txform = ['translate(', (path.pos || [0,0]), ')'].join('')
+                var txform = ['translate(', (data.pos || [0,0]), ')'].join('')
 
-                if (path.usesMarker !== false) {
+                if (data.usesMarker !== false) {
                     (function() {
                         var markerLen = 12 // from defs>marker[markerWidth]
-                        var end = path.d.slice(-1)[0]
+                        var end = segms.slice(-1)[0]
                         if (! (end instanceof Array)) {
-                            console.error('could not add a marker', path)
+                            console.warn('could not adjust path for marker. make sure last item is a coord.', data)
+                            return
                         }
-                        end[path.isVertical ? 1 : 0] -= markerLen
+                        segms = segms.slice() // clone so marker adjustment does not survive refresh
+                        end = end.slice()
+                        segms.splice(-1, 1, end)
+                        end[data.isVertical ? 1 : 0] -= markerLen
                     })()
                 }
 
-                var segms = path.d.reduce(function(segms, next, i) {
-                    var segm = (function() {
-                        if (typeof next === 'string') {
+                var connected = segms.reduce(function(connected, segm, i) {
+                    var next = (function() {
+                        if (typeof segm === 'string') {
                             // (coord or string or beginning of array) followed by string
-                            return next
+                            return segm
                         }
-                        if (path.d[i - 1] instanceof Array) {
+                        if (segms[i - 1] instanceof Array) {
                             // coord followed by coord
-                            return reactClasses.utils.reflectedQuadra(path.d[i - 1], next, path.isVertical)
+                            return reactClasses.utils.reflectedQuadra(segms[i - 1], segm, data.isVertical)
                         }
                         if (i) {
                             // string followed by coord
-                            return ['L', next]
+                            return ['L', segm]
                         }
                         // beginning of array followed by coord
-                        return ['M', next]
+                        return ['M', segm]
                     })()
-                    return segms.concat(segm)
+                    return connected.concat(next)
                 }, [])
-                var d = segms.join(' ')
+                var pathStr = connected.join(' ')
 
                 return (
                     <g transform={txform}>
-                        <path d={d} markerEnd="url(#marker-tri)" stroke="orange" fill="none" />
+                        <path d={pathStr} markerEnd="url(#marker-tri)" stroke="orange" fill="none" />
                     </g>
                 )
             }
-        })
+        }))
     }
-    function createInstance(data, key) {
+    function createInstance(handleEvents, data, key) {
         var aliases = {
             'Any Char': 'TextsOnly',
             'Specific Char': 'TextsOnly',
@@ -201,6 +223,7 @@
             console.error('could not find the react type for data', data)
         }
         var instance = React.createElement(clazz, {
+            onEvents: handleEvents,
             data: data,
             key: key
         })

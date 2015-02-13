@@ -355,8 +355,8 @@
                 link.usesMarker = false
                 return ui
             },
-            'Any Char': withTextsOnly(data, ['type', 'display']),
-            'Specific Char': withTextsOnly(data, ['type', 'display']),
+            'Any Char': withTextsOnly(data, ['type'/*, 'display'*/]),
+            'Specific Char': withTextsOnly(data, [/*'type', */'display']),
             'Reference': withTextsOnly(data, ['type', 'number']),
             'Assertion': withTextsOnly(data, ['type', 'assertion'])
         } // end of var map
