@@ -121,6 +121,7 @@
         var map = {
             'Disjunction': function() {
                 var pad = {x: [0,0], y: [0,0]}
+                var hrH = 30
                 var ui = withChildren(
                     data,
 
@@ -129,13 +130,18 @@
                     5,
                     'y',
 
-                    {x: 0, y: 30}
+                    {x: 0, y: hrH}
                 )
                 // set hr width as maximal width of alternatives
                 var hrW = ui.dim[0] - pad.x[0] - pad.x[1]
                 ui.fillers.forEach(function(hr) {
-                    hr.type = 'hr'
-                    hr.dim[0] = hrW
+                    hr.type = 'path'
+                    hr.d = [
+                        [0, hrH / 2],
+                        [hrW, hrH / 2]
+                    ]
+                    hr.usesMarker = false
+                    hr.markerColor = '#ddd'
                 })
                 return ui
             },
@@ -144,7 +150,7 @@
                     data,
 
                     'terms',
-                    {x: [10,10], y: [10,10]},
+                    {x: [0,0], y: [0,0]},
                     2,
                     'x',
 
@@ -288,7 +294,7 @@
             },
             'Group': function() {
                 // TODO show/link number
-                var pad = {h: 10, v: 0} // even with 0 gaps can exist from disj and alt.
+                var pad = {h: 10, v: 10} // even with 0 gaps can exist from disj and alt.
                 var cUi = setUiByType(data.grouped)
                 cUi.pos = [pad.h, pad.v]
                 return data.ui = {
@@ -393,6 +399,6 @@
 
     /* now some static data */
     reactClasses.markerLen = 7
-    reactClasses.markerColor = '#888'
+    reactClasses.markerColor = '#8a8a8a'
 
 })(window.reactClasses = window.reactClasses || {})
