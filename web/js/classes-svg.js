@@ -57,6 +57,13 @@
         }
     }))
 
+    // TODO css
+    /*
+        staticParams ~= {
+            childProp: optional
+            moreChildElms: optional
+        }
+    */
     function createBoxedClass(staticParams) {
         return React.createClass(extend({
             checkSelected: function() {
@@ -94,17 +101,13 @@
                             ref="box" />
                 )
 
-                // list childProps in the increasing order of z index.
                 // val is array of arrays
-                var childElms = (staticParams.childProps || [])
-                    .map(function(childProp) {
-                        var childVal = childProp.split('.')
-                            .filter(function(propName) {
-                                return propName
-                            })
-                            .reduce(function(o, propName) {
-                                return o[propName]
-                            }, data)
+                var childElms =
+                    // in the increasing order of z-index ...
+                    (data.ui.fillers || [])
+                    .concat(data.ui.arrows || [])
+                    .concat(data[staticParams.childProp] || [])
+                    .map(function(childVal) {
                         var childList = ([].concat(childVal))
                             .map(function(childData, i) {
                                 return createInstance(handleEvents, childData, patternSel, i)
@@ -133,32 +136,32 @@
         'Disjunction': createBoxedClass({
             stroke: 'none',
             fill: 'none',
-            childProps: ['ui.fillers', 'alternatives']
+            childProp: 'alternatives'
         }),
         'Alternative': createBoxedClass({
             stroke: 'none',
             fill: 'none',
-            childProps: ['ui.fillers', 'terms']
+            childProp: 'terms'
         }),
         'Quantified': createBoxedClass({
             stroke: '#7a0',
             strokeW: 3,
-            childProps: ['ui.arrows', 'target']
+            childProp: 'target'
         }),
         'Group': createBoxedClass({
             stroke: '#fb5',
             strokeW: 3,
-            childProps: ['grouped']
+            childProp: 'grouped'
         }),
         'Set of Chars': createBoxedClass({
             stroke: '#b7a',
             strokeW: 3,
-            childProps: ['ui.arrows', 'possibilities']
+            childProp: 'possibilities'
         }),
         'Range of Chars': createBoxedClass({
             stroke: '#f77',
             strokeW: 2,
-            childProps: ['ui.fillers', 'range']
+            childProp: 'range'
         }),
         'TextsOnly': createBoxedClass({
             stroke: '#09d',
