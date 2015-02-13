@@ -82,7 +82,9 @@
 
                 return (
                     <g transform={txform}>
-                        {[boxElm].concat(childElms).concat(moreChildElms)}
+                        {boxElm}
+                        {childElms}
+                        {moreChildElms}
                     </g>
                 )
             }
