@@ -1,12 +1,16 @@
 ;(function(reactClasses) {
     'use strict'
 
+    /* static data */
     /*
         Standardize the y of arrows between terms.
         A withTextsOnly item with one line of text is the smallest in height as well as likely most frequently seen.
         Its height is 16; div this in half.
     */
     var interTermArrowY = 8
+    reactClasses.markerLen = 7
+    reactClasses.markerColor = '#8a8a8a'
+    var fillForNegative = '#ccc'
 
     /*
         Conceptually,
@@ -92,8 +96,10 @@
         return parentUi
     }
 
-    function withTextsOnly(data, textProps, isNegative) {
+    function withTextsOnly(textProps, data, proto) {
         return function() {
+            var ui = data.ui = proto()
+
             var pad = {h: 3, v: 1}
             var lnH = 16 // 1em
             var charW = lnH / 2
@@ -104,23 +110,22 @@
                 return t.length
             })
             var myW = charW * Math.max.apply(Math, textLens)
-            return data.ui = {
-                dim: [
-                    pad.h * 2 + myW,
-                    pad.v * 2 + lnH * texts.length
-                ],
-                rows: texts.map(function(text, i) {
-                    return {
-                        text: text,
-                        pos: [
-                            pad.h + myW / 2,
-                            pad.v + lnH * (i + 3/4) // TODO why 3/4?
-                        ],
-                        anchor: 'middle'
-                    }
-                }),
-                isNegative: isNegative ? isNegative() : false
-            }
+            
+            ui.dim = [
+                pad.h * 2 + myW,
+                pad.v * 2 + lnH * texts.length
+            ]
+            ui.rows = texts.map(function(text, i) {
+                return {
+                    text: text,
+                    pos: [
+                        pad.h + myW / 2,
+                        pad.v + lnH * (i + 3/4) // TODO why 3/4?
+                    ],
+                    anchor: 'middle'
+                }
+            })
+            return ui
         }
     }
 
@@ -164,9 +169,11 @@
     }
 
     /*
-        Sets and returns data.ui.dim
+        Sets data.ui.dim
         Does not set data.ui.pos
-        If data contains children, recursively sets their .ui.dim and .ui.pos (see `withChildren`)
+        If data contains children, recursively sets their .ui.dim and .ui.pos (using fn `withChildren`)
+        Returns data.ui, for convenience -- all parents have to post-process what this fn returns
+            to, at minimum, add pos.
     */
     function setUiByType(data) {
         var map = {
@@ -179,6 +186,9 @@
                     0,
                     'x'
                 )
+                ui.stroke = 'none'
+                ui.fill = 'none'
+
                 // make the left terminus have higher z-index than disj
                 data.roots.push(data.roots.shift())
 
@@ -230,6 +240,8 @@
                     'y',
                     {x: 0, y: hrH}
                 )
+                ui.stroke = 'none'
+                ui.fill = 'none'
 
                 // set hr width as maximal width of alternatives
                 var hrW = ui.dim[0] - pad.x[0] - pad.x[1]
@@ -256,6 +268,8 @@
                     'x',
                     {x: 25, y: 0}
                 )
+                ui.stroke = 'none'
+                ui.fill = 'none'
                 ui.fillers.forEach(function(arrow) {
                     arrow.type = 'path'
                     arrow.d = [
@@ -267,7 +281,9 @@
             },
             'Quantified': function() {
                 var tUi = setUiByType(data.target)
-                var myUi = data.ui = {}
+                var myUi = data.ui = {
+                    stroke: '#7a0'
+                }
 
                 var pad = {h: 30, v: interTermArrowY}
                 var intraMargin = pad.v // between top/btm edge of target and the arrow that doesn't go thru it
@@ -401,7 +417,8 @@
                     dim: [
                         pad.h * 2 + cUi.dim[0],
                         pad.v * 2 + cUi.dim[1]
-                    ]
+                    ],
+                    stroke: '#fb5'
                 }
             },
             'Set of Chars': function() {
@@ -413,9 +430,9 @@
                     10,
                     'y'
                 )
-                addArrowsBetweenNeighbors(data, data.possibilities, pad)
+                ui.stroke = '#b7a'
 
-                ui.isNegative = ! data.inclusive
+                addArrowsBetweenNeighbors(data, data.possibilities, pad)
                 
                 return ui
             },
@@ -428,6 +445,7 @@
                     'y',
                     {x: 0, y: 15}
                 )
+                ui.stroke = '#f77'
 
                 var rangeWs = data.range.map(function(sub) {
                     return sub.ui.dim[0]
@@ -443,19 +461,31 @@
                 link.isVertical = true
                 link.usesMarker = false
 
-                ui.isNegative = ! data.inclusive
-
                 return ui
             },
-            'Any Char': withTextsOnly(data, ['type']),
-            'Specific Char': withTextsOnly(data, ['display'], function() {
-                return data.inclusive === false
+            'Any Char': withTextsOnly(['type'],data, function() {
+                return {
+                    stroke: '#09d'
+                }
             }),
-            'Reference': withTextsOnly(data, ['type', 'number'], function() {
-                return ! data.isBack
+            'Specific Char': withTextsOnly(['display'], data, function() {
+                return {
+                    stroke: '#09d',
+                    fill: data.inclusive === false ? fillForNegative : null
+                }
             }),
-            'Assertion': withTextsOnly(data, ['type', 'assertion'], function() {
-                return ['Non-Word Boundary', 'Negative Look-Forward'].indexOf(data.assertion) >= 0
+            'Reference': withTextsOnly(['type', 'number'], data, function() {
+                return {
+                    stroke: '#09d',
+                    fill: data.isBack ? null : fillForNegative
+                }
+            }),
+            'Assertion': withTextsOnly(['type', 'assertion'], data, function() {
+                var isNegative = ['Non-Word Boundary', 'Negative Look-Forward'].indexOf(data.assertion) >= 0
+                return {
+                    stroke: '#09d',
+                    fill: isNegative ? fillForNegative : null
+                }
             })
         } // end of var map
 
@@ -470,8 +500,9 @@
     /*
         Recursively sets `ui` prop to the data obj and its children.
         Does not modify any other prop.
-        `ui` will contain at minimum `pos` and `dim` props,
-            and it can contain other info for drawing other things inside the compo.
+        `ui` will contain minimum `pos` and `dim` props
+            as well as other info compatible with the corresonding react class
+            e.g. see fn `createBoxedClass`, a proxy to React.createClass
     */
     reactClasses.addUiData = function(data) {
         var pad = {t:10,r:10,b:10,l:10}
@@ -483,9 +514,5 @@
             pad.l + dUi.pos[1] + dUi.dim[1] + pad.r
         ]
     }
-
-    /* now some static data */
-    reactClasses.markerLen = 7
-    reactClasses.markerColor = '#8a8a8a'
 
 })(window.reactClasses = window.reactClasses || {})

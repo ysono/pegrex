@@ -58,28 +58,30 @@
     }))
 
     /*
-        staticParams ~= {
-            childProp: optional
-            moreChildElms: optional
-        }
-        render fn reads following props from a single unit (`this.props.data`) within parsed tree
-            [staticParams.childProp]
-            .ui
-                .pos
-                .dim
-                .isNegative
+        Following vals are read. All are optional unless noted.
+        In the increasing order of z-index ...
+            // for rect
+            data.ui
+                .pos // required
+                .dim // required
+                .fill // default 'white' so it can hide arrows underneath
+                .stroke
+                .strokeW // default 3. if zero, use stroke='none'
+
+            // for other children
+            data.ui
                 .fillers
                 .arrows
-        TODO move these to css
-        staticParams
-            .fill
-            .stroke
-            .strokeW
-            
+
+            // for children
+            data[staticParams.childProp]
+
+            // for more elements
+            staticParams.moreChildElms
     */
     function createBoxedClass(staticParams) {
         return React.createClass(extend({
-            checkSelected: function() {
+            hiliteSelected: function() {
                 if (! this.refs.box) {
                     // component hasn't mounted.
                     return
@@ -105,13 +107,11 @@
 
                 var txform = ['translate(', data.ui.pos, ')'].join('')
 
-                var boxFill = data.ui.isNegative ? '#ccc'
-                    : staticParams.fill || 'white'
                 var boxElm = (
                     <rect width={data.ui.dim[0]} height={data.ui.dim[1]}
-                            stroke={staticParams.stroke}
-                            strokeWidth={staticParams.strokeW}
-                            fill={boxFill}
+                            stroke={data.ui.stroke}
+                            strokeWidth={data.ui.strokeW || 3}
+                            fill={data.ui.fill || 'white'}
                             onClick={handleEvents} className="clickable"
                             ref="box" />
                 )
@@ -135,7 +135,7 @@
                     ? staticParams.moreChildElms.call(this, data)
                     : null
 
-                this.checkSelected()
+                this.hiliteSelected()
 
                 return (
                     <g transform={txform}>
@@ -149,8 +149,6 @@
     }
     var typeToClass = {
         'Pattern': createBoxedClass({
-            stroke: 'none',
-            fill: 'none',
             childProp: 'roots'
         }),
         'Terminus': React.createClass({
@@ -167,38 +165,24 @@
             }
         }),
         'Disjunction': createBoxedClass({
-            stroke: 'none',
-            fill: 'none',
             childProp: 'alternatives'
         }),
         'Alternative': createBoxedClass({
-            stroke: 'none',
-            fill: 'none',
             childProp: 'terms'
         }),
         'Quantified': createBoxedClass({
-            stroke: '#7a0',
-            strokeW: 3,
             childProp: 'target'
         }),
         'Group': createBoxedClass({
-            stroke: '#fb5',
-            strokeW: 3,
             childProp: 'grouped'
         }),
         'Set of Chars': createBoxedClass({
-            stroke: '#b7a',
-            strokeW: 3,
             childProp: 'possibilities'
         }),
         'Range of Chars': createBoxedClass({
-            stroke: '#f77',
-            strokeW: 2,
             childProp: 'range'
         }),
         'TextsOnly': createBoxedClass({
-            stroke: '#09d',
-            strokeW: 2,
             moreChildElms: function(data) {
                 var handleEvents = this.handleEvents
                 return data.ui.rows.map(function(row, i) {
@@ -227,7 +211,7 @@
                         pos: optional [n,n], default [0,0]
                         isVertical: optional bool, default false
                         usesMarker: optional bool, default true
-                        markerColor: optional
+                        markerColor: optional, defautl reactClasses.markerColor
                     }
                 */
                 var data = this.props.data
