@@ -267,6 +267,9 @@
             }
         },
         specificChar: function(display) {
+            display = {
+                ' ': 'Space Char'
+            }[display] || display
             return {
                 type: 'Specific Char',
                 display: display
