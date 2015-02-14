@@ -945,7 +945,7 @@ if (typeof module !== 'undefined' && require.main === module) {
                     })
                 },
                 'Set of Chars': function(inclusive, s) {
-                    // subset is a predefined set.
+                    // nested set is a predefined set.
                     var flipped = inclusive === s.inclusive
                     s.inclusive = flipped
                     s.possibilities.forEach(function(p) {

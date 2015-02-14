@@ -1,5 +1,5 @@
-;(function(reactClasses) {
-    reactClasses.utils = {
+;(function(surfaceData) {
+    surfaceData.utils = {
         reflectedQuadra: function(from, to, isVertical) {
             var vector = [
                 to[0] - from[0],
@@ -24,4 +24,4 @@
             return ['Q', quadraCtrlPt, midPt, 'T', to].join(' ')
         }
     }
-})(window.reactClasses = window.reactClasses || {})
+})(window.surfaceData = window.surfaceData || {})

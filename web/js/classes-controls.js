@@ -54,7 +54,7 @@
             var tree
             try {
                 tree = parser.parse(parts.pattern)
-                reactClasses.addUiData(tree)
+                surfaceData.addUiData(tree)
                 return tree
             } catch(e) {
                 // don't propagate b/c still want text states updated

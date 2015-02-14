@@ -15,48 +15,6 @@
         return proto
     }
 
-    var Surface = React.createClass(extendClassProto({
-        render: function() {
-            var tree = this.props.tree
-            var patternSel = this.props.patternSel
-
-            var svgDim = [0,0]
-            var childNode
-            if (tree) {
-                svgDim = tree.ui.svgDim
-                childNode = createInstance(this.handleEvents, tree, patternSel)
-            }
-
-            var marker = '\
-                <marker id="marker-tri" \
-                    viewBox="0 0 10 10" refX="0" refY="5" markerWidth="{0}" markerHeight="{0}" orient="auto" fill="{1}"> \
-                    <path d="M 0 0 L 10 5 L 0 10 z" /> \
-                </marker>'
-                    .replace(/\{0\}/g, reactClasses.markerLen)
-                    .replace(/\{1\}/g, reactClasses.markerColor)
-            var dropshadow = '\
-                <filter id="dropshadow" height="180%" width="180%"> \
-                    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> \
-                    <feOffset dx="2" dy="2" result="offsetblur"/> \
-                    <feFlood flood-color="red"/> \
-                    <feComposite in2="offsetblur" operator="in"/> \
-                    <feMerge> \
-                        <feMergeNode/> \
-                        <feMergeNode in="SourceGraphic"/> \
-                    </feMerge> \
-                </filter>'
-
-            return (
-                <div className="surface-parent">
-                    <svg width={svgDim[0]} height={svgDim[1]}>
-                        <defs dangerouslySetInnerHTML={{__html: marker + dropshadow}}></defs>
-                        {childNode}
-                    </svg>
-                </div>
-            )
-        }
-    }))
-
     /*
         render fn reads following vals. All are optional unless noted.
         In the increasing order of z-index ...
@@ -116,7 +74,7 @@
                         ref="box" />
             )
 
-            var childProp = reactClasses.typeToChildProp[data.type]
+            var childProp = surfaceData.typeToChildProp[data.type]
             var childElms =
                 (data.ui.fillers || [])
                 .concat(data.ui.arrows || [])
@@ -173,13 +131,13 @@
                             If using marker, last element must be [n,n], b/c it will be adjusted.
                             All coords are absolute.
                             Segments in d are connected by...
-                                * -> (nothing) -> string
-                                coord -> quadratic bezier -> coord
-                                string -> straight line -> coord
+                                nothing between (* -> string)
+                                quadratic bezier between (coord -> coord)
+                                straight line between (string -> coord)
                         pos: optional [n,n], default [0,0]
                         isVertical: optional bool, default false
                         usesMarker: optional bool, default true
-                        markerColor: optional, default reactClasses.markerColor
+                        markerColor: optional, default surfaceData.markerColor
                     }
                 */
                 var data = this.props.data
@@ -198,7 +156,7 @@
                         segms = segms.slice() // clone so marker adjustment does not survive refresh
                         end = end.slice()
                         segms.splice(-1, 1, end)
-                        end[data.isVertical ? 1 : 0] -= reactClasses.markerLen
+                        end[data.isVertical ? 1 : 0] -= surfaceData.markerLen
                     })()
                 }
 
@@ -210,7 +168,7 @@
                         }
                         if (segms[i - 1] instanceof Array) {
                             // coord followed by coord
-                            return reactClasses.utils.reflectedQuadra(segms[i - 1], segm, data.isVertical)
+                            return surfaceData.utils.reflectedQuadra(segms[i - 1], segm, data.isVertical)
                         }
                         if (i) {
                             // string followed by coord
@@ -225,7 +183,7 @@
 
                 var markerEnd = usesMarker ? 'url(#marker-tri)' : ''
 
-                var stroke = data.markerColor || reactClasses.markerColor
+                var stroke = data.markerColor || surfaceData.markerColor
 
                 return (
                     <g transform={txform}>
@@ -246,5 +204,46 @@
         return instance
     }
 
-    reactClasses.Surface = Surface
+    reactClasses.Surface = React.createClass(extendClassProto({
+        render: function() {
+            var tree = this.props.tree
+            var patternSel = this.props.patternSel
+
+            var svgDim = [0,0]
+            var childNode
+            if (tree) {
+                svgDim = tree.ui.svgDim
+                childNode = createInstance(this.handleEvents, tree, patternSel)
+            }
+
+            var marker = '\
+                <marker id="marker-tri" \
+                    viewBox="0 0 10 10" refX="0" refY="5" markerWidth="{0}" markerHeight="{0}" orient="auto" fill="{1}"> \
+                    <path d="M 0 0 L 10 5 L 0 10 z" /> \
+                </marker>'
+                    .replace(/\{0\}/g, surfaceData.markerLen)
+                    .replace(/\{1\}/g, surfaceData.markerColor)
+            var dropshadow = '\
+                <filter id="dropshadow" height="180%" width="180%"> \
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> \
+                    <feOffset dx="2" dy="2" result="offsetblur"/> \
+                    <feFlood flood-color="red"/> \
+                    <feComposite in2="offsetblur" operator="in"/> \
+                    <feMerge> \
+                        <feMergeNode/> \
+                        <feMergeNode in="SourceGraphic"/> \
+                    </feMerge> \
+                </filter>'
+
+            return (
+                <div className="surface-parent">
+                    <svg width={svgDim[0]} height={svgDim[1]}>
+                        <defs dangerouslySetInnerHTML={{__html: marker + dropshadow}}></defs>
+                        {childNode}
+                    </svg>
+                </div>
+            )
+        }
+    }))
+
 })(window.reactClasses = window.reactClasses || {})
