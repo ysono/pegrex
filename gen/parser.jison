@@ -11,7 +11,7 @@ For discrepancies noted below, a real-life example can be found in
 %s DISJ
 %s ALT
 %s TERM
-%s TERM_GROUP
+%s TERM_GROUP_NONCAPTR
 %s ESCAPED_IN_ATOM
 %s CLASS
 %s ESCAPED_IN_CLASS
@@ -49,19 +49,19 @@ For discrepancies noted below, a real-life example can be found in
 <TERM>[{][0-9]+(?:[,][0-9]*)?[}][?]?    return 'ATOM_QUANT_NUM'
 
 /* Assertion and Atom */
-<TERM>[(][?]                this.begin('TERM_GROUP'); return
+<TERM>[(][?]                this.begin('TERM_GROUP_NONCAPTR'); return 'ATOM_GROUP_NONCAPTR_BEGIN'
 
 /* Assertion */
 <TERM>[$^]                  return 'ASSERTN_LB'
 <TERM>[\\][bB]              return 'ASSERTN_WB'
-<TERM_GROUP>[=!]            this.popState(); this.begin('DISJ'); return 'ASSERTN_LF_BEGIN'
+<TERM_GROUP_NONCAPTR>[=!]   this.popState(); this.begin('DISJ'); return 'ASSERTN_LF_BEGIN'
 
 /* Atom */
 <TERM>[\.]                  return 'ATOM_CHAR_ANY'
 <TERM>[\\]                  this.begin('ESCAPED_IN_ATOM'); return 'ESCAPE_PREFIX'
 <TERM>[\[][\^]?             this.begin('CLASS'); return 'CLASS_BEGIN'
 <TERM>[(]                   this.begin('DISJ'); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a `)` */
-<TERM_GROUP>[:]             this.popState(); this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
+<TERM_GROUP_NONCAPTR>[:]    this.popState(); this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
 
 /* PatternCharacter */
 /* ecma forbids ^ $ \ . * + ? ( ) [ ] { } | */
@@ -149,8 +149,8 @@ Assertion
         {$$ = yy.b.withLoc(@1).assertionLB($1)}
     | ASSERTN_WB
         {$$ = yy.b.withLoc(@1).assertionWB($1)}
-    | ASSERTN_LF_BEGIN Disjunction CLOSE_PAREN
-        {$$ = yy.b.withLoc(@1,@3).assertionLF($1, $2)}
+    | ATOM_GROUP_NONCAPTR_BEGIN ASSERTN_LF_BEGIN Disjunction CLOSE_PAREN
+        {$$ = yy.b.withLoc(@1,@4).assertionLF($2, $3)}
     ;
 
 Atom
@@ -162,7 +162,7 @@ Atom
         {$$ = yy.b.charSet($2, $1.length === 1)}
     | ATOM_GROUP_CAPTR Disjunction CLOSE_PAREN
         {$$ = yy.b.group(true, $2)}
-    | ATOM_GROUP_NONCAPTR Disjunction CLOSE_PAREN
+    | ATOM_GROUP_NONCAPTR_BEGIN ATOM_GROUP_NONCAPTR Disjunction CLOSE_PAREN
         {$$ = yy.b.group(false, $2)}
     | ATOM_ETC
         {$$ = yy.b.specificChar($1)}

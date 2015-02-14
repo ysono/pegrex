@@ -156,7 +156,7 @@ var provide = {
             var escaped = '\\' + unescaped
             map[escaped] = {
                 type: 'Specific Char',
-                display: escaped,
+                display: unescaped,
                 meaning: undefined
             }
             return map

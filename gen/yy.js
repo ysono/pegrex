@@ -238,8 +238,8 @@
                 display: display
             }
         },
-        specificCharEsc: function(key) {
-            var meaning = {
+        specificCharEsc: function(key, meaning) {
+            meaning = meaning || {
                 b: 'Backspace',
                 c: 'Control Char',
                 f: 'Form Feed',
@@ -252,7 +252,7 @@
             }[key[0]]
             return {
                 type: 'Specific Char',
-                display: '\\' + key,
+                display: (meaning ? '\\' : '') + key,
                 meaning: meaning
             }
         },
@@ -323,7 +323,8 @@
                 ? decimals.length - evalled.length + 1
                 : 1
             var item0 = builders.specificCharEsc(
-                    decimals.slice(0, item0Len) )
+                    decimals.slice(0, item0Len),
+                    hasOctal ? 'Octal Notation' : null)
             item0.textLoc = [
                 loc0 - 1, // -1 for the `\`
                 loc0 + item0Len

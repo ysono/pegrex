@@ -49,7 +49,7 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\12',
-                meaning: undefined,
+                meaning: 'Octal Notation',
                 textLoc: [0,3]
             },
             {
@@ -64,7 +64,7 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\377',
-                meaning: undefined,
+                meaning: 'Octal Notation',
                 textLoc: [0,4]
             }
         ]
@@ -74,7 +74,7 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\40',
-                meaning: undefined,
+                meaning: 'Octal Notation',
                 textLoc: [0,3]
             },
             {
@@ -95,7 +95,7 @@ var specs = [
                     {
                         type: 'Specific Char',
                         display: '\\2',
-                        meaning: undefined,
+                        meaning: 'Octal Notation',
                         textLoc: [7,9]
                     }
                 ],
@@ -122,7 +122,7 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\0',
-                meaning: undefined,
+                meaning: 'Octal Notation',
                 textLoc: [3,5]
             }
         ]
@@ -138,7 +138,7 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\0',
-                meaning: undefined,
+                meaning: 'Octal Notation',
                 textLoc: [2,4]
             }
         ]
@@ -149,7 +149,7 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\2',
-                meaning: undefined,
+                meaning: 'Octal Notation',
                 textLoc: [3,5]
             }
         ]
@@ -217,7 +217,7 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\02',
-                meaning: undefined,
+                meaning: 'Octal Notation',
                 textLoc: [6,9]
             }
         ]
@@ -259,7 +259,7 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\123',
-                meaning: undefined,
+                meaning: 'Octal Notation',
                 textLoc: [1,5]
             },
             {
@@ -269,7 +269,7 @@ var specs = [
             },
             {
                 type: 'Specific Char',
-                display: '\\9',
+                display: '9',
                 textLoc: [6,8],
                 meaning: undefined
             },
@@ -294,7 +294,7 @@ var specs = [
                     {
                         type: 'Specific Char',
                         display: '\\12',
-                        meaning: undefined,
+                        meaning: 'Octal Notation',
                         textLoc: [1,4]
                     },
                     {
@@ -318,7 +318,7 @@ var specs = [
                     {
                         type: 'Specific Char',
                         display: '\\40',
-                        meaning: undefined,
+                        meaning: 'Octal Notation',
                         textLoc: [1,4]
                     },
                     {
@@ -347,7 +347,7 @@ var specs = [
                 target: {
                     type: 'Specific Char',
                     display: '\\12',
-                    meaning: undefined,
+                    meaning: 'Octal Notation',
                     textLoc: [0,3]
                 },
                 textLoc: [0,6]
@@ -361,7 +361,7 @@ var specs = [
             {
                 type: 'Specific Char',
                 display: '\\12',
-                meaning: undefined,
+                meaning: 'Octal Notation',
                 textLoc: [0,3]
             },
             {
