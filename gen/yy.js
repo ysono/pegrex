@@ -378,7 +378,7 @@
                 )
             return items
         }
-    }
+    } // end of var builders
     parser.yy.b = builders
     parser.yy.parseError = function(msg, hash) {
         throw {
@@ -411,15 +411,17 @@
                     }
                 }
             })
-
-            // reset these values that make parser stateful
-            terms_s.length = 0
-            numCapturedGroups = 0
         }
         return function() {
-            var parsed = orig.apply(this, arguments)
-            postParse()
-            return parsed
+            try {
+                var parsed = orig.apply(this, arguments)
+                postParse()
+                return parsed
+            } finally {
+                // reset these values that make parser stateful
+                terms_s.length = 0
+                numCapturedGroups = 0
+            }
         }
     })(parser.parse)
 
