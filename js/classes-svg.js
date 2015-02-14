@@ -133,6 +133,24 @@
         }))
     }
     var typeToClass = {
+        'Pattern': createBoxedClass({
+            stroke: 'none',
+            fill: 'none',
+            childProp: 'roots'
+        }),
+        'Terminus': React.createClass({
+            render: function() {
+                var ui = this.props.data.ui
+
+                var txform = ['translate(', ui.pos, ')'].join('')
+
+                return (
+                    <g transform={txform}>
+                        <circle cx={ui.cx} cy={ui.cy} r={ui.r} />
+                    </g>
+                )
+            }
+        }),
         'Disjunction': createBoxedClass({
             stroke: 'none',
             fill: 'none',

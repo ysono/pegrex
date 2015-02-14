@@ -123,7 +123,7 @@
         }
     }
 
-    function addArrows(parentData, children, pad) {
+    function addArrowsBetweenNeighbors(parentData, children, pad) {
         var parentUi = parentData.ui
         // arrows are always in the horizontal direction.
         var leftBegin = [0, interTermArrowY]
@@ -137,7 +137,8 @@
                     d: [
                         leftBegin,
                         [childUi.pos[0], childEdgeContactY]
-                    ]
+                    ],
+                    fromLeft: true
                 },
                 {
                     type: 'path',
@@ -145,7 +146,8 @@
                         [childUi.pos[0] + childUi.dim[0], childEdgeContactY],
                         [parentUi.dim[0] - pad.x[1], childEdgeContactY], // drag out horizontally to the right
                         rightEnd
-                    ]
+                    ],
+                    toRight: true
                 })
                 return allArrows
             }, [])
@@ -154,17 +156,41 @@
                 d: [
                     leftBegin,
                     rightEnd
-                ]
+                ],
+                fromLeft: true,
+                toRight: true
             }]
     }
 
     /*
         Sets and returns data.ui.dim
         Does not set data.ui.pos
-        If data contains children, recursively sets their .ui.dim and .ui.pos.
+        If data contains children, recursively sets their .ui.dim and .ui.pos (see `withChildren`)
     */
     function setUiByType(data) {
         var map = {
+            'Pattern': function() {
+                var pad = {x: [3,3], y: [3,3]}
+                var ui = withChildren(
+                    data,
+                    data.roots,
+                    pad,
+                    0,
+                    'x'
+                )
+                // make the left terminus have higher z-index than disj
+                data.roots.push(data.roots.shift())
+                return ui
+            },
+            'Terminus': function() {
+                var r = 6
+                return data.ui = {
+                    dim: [0,0],
+                    cx: 0,
+                    cy: interTermArrowY,
+                    r: r
+                }
+            },
             'Disjunction': function() {
                 var pad = {x: [30,30], y: [10,10]}
                 var hrH = 30
@@ -194,7 +220,15 @@
                     hr.markerColor = '#ddd'
                 })
 
-                addArrows(data, data.alternatives, pad)
+                addArrowsBetweenNeighbors(data, data.alternatives, pad)
+                if (data.isRoot) {
+                    data.ui.arrows.forEach(function(arrow) {
+                        if (arrow.toRight) {
+                            // remove markers from right-hand side lines that funnel into the terminus
+                            arrow.usesMarker = false
+                        }
+                    })
+                }
 
                 return ui
             },
@@ -364,7 +398,7 @@
                     10,
                     'y'
                 )
-                addArrows(data, data.possibilities, pad)
+                addArrowsBetweenNeighbors(data, data.possibilities, pad)
                 return ui
             },
             'Range of Chars': function() {
