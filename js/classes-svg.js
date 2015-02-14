@@ -57,12 +57,25 @@
         }
     }))
 
-    // TODO css
     /*
         staticParams ~= {
             childProp: optional
             moreChildElms: optional
         }
+        render fn reads following props from a single unit (`this.props.data`) within parsed tree
+            [staticParams.childProp]
+            .ui
+                .pos
+                .dim
+                .isNegative
+                .fillers
+                .arrows
+        TODO move these to css
+        staticParams
+            .fill
+            .stroke
+            .strokeW
+            
     */
     function createBoxedClass(staticParams) {
         return React.createClass(extend({
@@ -92,12 +105,14 @@
 
                 var txform = ['translate(', data.ui.pos, ')'].join('')
 
+                var boxFill = data.ui.isNegative ? '#ccc'
+                    : staticParams.fill || 'white'
                 var boxElm = (
                     <rect width={data.ui.dim[0]} height={data.ui.dim[1]}
                             stroke={staticParams.stroke}
                             strokeWidth={staticParams.strokeW}
-                            fill={staticParams.fill || 'white'}
-                            onClick={this.handleEvents} className="clickable"
+                            fill={boxFill}
+                            onClick={handleEvents} className="clickable"
                             ref="box" />
                 )
 
@@ -189,8 +204,8 @@
                 return data.ui.rows.map(function(row, i) {
                     return (
                         <text x={row.pos[0]} y={row.pos[1]} textAnchor={row.anchor}
-                            fontFamily="monospace" key={i} onClick={handleEvents}
-                            className="clickable">
+                            fontFamily="monospace" key={i}
+                            onClick={handleEvents} className="clickable">
                             {row.text}
                         </text>
                     )

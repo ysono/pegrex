@@ -9,6 +9,7 @@
                         pattern={this.props.pattern} flags={this.props.flags}
                         patternSel={this.props.patternSel}
                         onChange={this.props.onChange} onSelect={this.props.onSelect} />
+                    <hr />
                     <Ctor
                         pattern={this.props.pattern} flags={this.props.flags}
                         onChange={this.props.onChange} />
@@ -33,9 +34,20 @@
             this.props.onChange(parts)
         },
         handleSelect: function(e) {
+            // note: chrome doesn't remember which direction a mouse selected -> always 'none'
+            //     also, 1. select fwd using keyboard 2. select to home (shift+home or cmd+shift+left) --> wrong
+
+            // info: if blur was for clicking on svg, blur fires before re-focus, so it works
+
+            /* need to handle blur b/c otherwise
+                chrome doesn't let you escape focus
+                ff keeps selection on blur
+                ie11 just kinda freezes and dies?
+            */
+            var elm = e.target
             var patternSel = e.type === 'blur'
                 ? null
-                : [e.target.selectionStart, e.target.selectionEnd]
+                : [elm.selectionStart, elm.selectionEnd, elm.selectionDirection]
             this.props.onSelect(patternSel)
         },
         render: function() {
@@ -161,10 +173,10 @@
                         <span className="prefix">new RegExp('</span>
                         <input ref="pattern" type="text" className="pattern"
                             value={escParts.pattern} onChange={this.handleChange} />
-                        <span className="infix">',</span>
+                        <span className="infix">','</span>
                         <input ref="flags" type="text" className="flags"
                             value={escParts.flags} onChange={this.handleChange} />
-                        <span className="suffix">)</span>
+                        <span className="suffix">')</span>
                     </span>
                 </fieldset>
             )
