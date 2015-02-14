@@ -27,6 +27,23 @@
             augmented.get = assign
             return augmented
         },
+
+        pattern: function(disj) {
+            function terminus() {
+                return {
+                    type: 'Terminus'
+                }
+            }
+            disj.isRoot = true
+            return {
+                type: 'Pattern',
+                roots: [
+                    terminus(),
+                    disj,
+                    terminus()
+                ]
+            }
+        },
         disjunction: function(alts) {
             return {
                 type: 'Disjunction',

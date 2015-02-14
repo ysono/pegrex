@@ -1,6 +1,21 @@
 var _ = require('lodash')
 var parser = require('../parser')
 
+function pattern(disj) {
+    disj.isRoot = true
+    return {
+        type: 'Pattern',
+        roots: [
+            {
+                type: 'Terminus'
+            },
+            disj,
+            {
+                type: 'Terminus'
+            }
+        ]
+    }
+}
 function disjunction(terms) {
     return {
         type: 'Disjunction',
@@ -384,7 +399,7 @@ function runOne(regex, terms) {
     }
 
     var src = regex.source
-    var exp = disjunction(terms)
+    var exp = pattern(disjunction(terms))
     var act = parser.parse(src)
     var success = _.isEqual(act, exp, function(act, exp){
         if (act) {

@@ -108,7 +108,7 @@ function popTill(lexer, state) {
 
 Pattern
     : Disjunction EOF
-        {return $1}
+        {return yy.b.pattern($1)}
     ;
 Disjunction
     : Alternative_s

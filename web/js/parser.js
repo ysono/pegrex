@@ -84,7 +84,7 @@ performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* actio
 var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
-return $$[$0-1]
+return yy.b.pattern($$[$0-1])
 break;
 case 2:
 this.$ = yy.b.withLoc(_$[$0]).disjunction($$[$0])
@@ -775,6 +775,23 @@ if (typeof module !== 'undefined' && require.main === module) {
             }, {})
             augmented.get = assign
             return augmented
+        },
+
+        pattern: function(disj) {
+            function terminus() {
+                return {
+                    type: 'Terminus'
+                }
+            }
+            disj.isRoot = true
+            return {
+                type: 'Pattern',
+                roots: [
+                    terminus(),
+                    disj,
+                    terminus()
+                ]
+            }
         },
         disjunction: function(alts) {
             return {

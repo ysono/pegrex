@@ -41,7 +41,22 @@ function interlace(singles) {
 
 var provide = {
     Pattern: function() {
-        return provide.Disjunction()
+        return _.reduce(provide.Disjunction(), function(map, disj, str) {
+            disj.isRoot = true
+            map[str] = {
+                type: 'Pattern',
+                roots: [
+                    {
+                        type: 'Terminus'
+                    },
+                    disj,
+                    {
+                        type: 'Terminus'
+                    }
+                ]
+            }
+            return map
+        }, {})
     },
     Disjunction: function() {
         return _.reduce(provide.Alternatives(), function(map, exp, str) {
