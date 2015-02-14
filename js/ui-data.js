@@ -1,4 +1,4 @@
-;(function(reactClasses) {
+;(function(surfaceData) {
     'use strict'
 
     /* static data */
@@ -9,11 +9,11 @@
     */
     var interTermArrowY = 8
     
-    reactClasses.markerLen = 7
-    reactClasses.markerColor = '#8a8a8a'
+    surfaceData.markerLen = 7
+    surfaceData.markerColor = '#8a8a8a'
     var fillForNegative = '#ccc'
 
-    reactClasses.typeToChildProp = {
+    surfaceData.typeToChildProp = {
         'Pattern': 'roots',
         'Disjunction': 'alternatives',
         'Alternative': 'terms',
@@ -21,7 +21,7 @@
         'Grouped Assertion': 'grouped',
         'Group': 'grouped',
         'Set of Chars': 'possibilities',
-        'Range of Colors': 'range'
+        'Range of Chars': 'range'
     }
 
     /*
@@ -432,6 +432,7 @@
                         pad.y[0] + cUi.dim[1] + pad.y[1]
                     ],
                     stroke: '#09d',
+                    fill: /^Pos/.test(data.assertion) ? null : fillForNegative,
                     textRows: [
                     ]
                 }
@@ -466,6 +467,7 @@
                     'y'
                 )
                 ui.stroke = '#b7a'
+                ui.fill = data.inclusive ? null : fillForNegative
 
                 addArrowsBetweenNeighbors(data, data.possibilities, pad)
                 
@@ -481,6 +483,7 @@
                     {x: 0, y: 15}
                 )
                 ui.stroke = '#f77'
+                ui.fill = data.inclusive ? null : fillForNegative
 
                 var rangeWs = data.range.map(function(sub) {
                     return sub.ui.dim[0]
@@ -500,7 +503,8 @@
             },
             'Any Char': withTextsOnly(['type'],data, function() {
                 return {
-                    stroke: '#09d'
+                    stroke: '#09d',
+                    fill: data.inclusive === false ? fillForNegative : null
                 }
             }),
             'Specific Char': withTextsOnly(['display'], data, function() {
@@ -532,7 +536,7 @@
             as well as other info compatible with the corresonding react class
             e.g. see fn `createBoxedClass`, a proxy to React.createClass
     */
-    reactClasses.addUiData = function(data) {
+    surfaceData.addUiData = function(data) {
         var pad = {t:10,r:10,b:10,l:10}
 
         var dUi = setUiByType(data)
@@ -543,4 +547,4 @@
         ]
     }
 
-})(window.reactClasses = window.reactClasses || {})
+})(window.surfaceData = window.surfaceData || {})
