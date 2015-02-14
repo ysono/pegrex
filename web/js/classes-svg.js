@@ -1,7 +1,7 @@
 ;(function(reactClasses) {
     'use strict'
 
-    function extend(proto) {
+    function extendClassProto(proto) {
         proto.handleEvents = function(e) {
             var payload = e.pegrexPayload
                 ? e // pass-thru
@@ -15,7 +15,7 @@
         return proto
     }
 
-    var Surface = React.createClass(extend({
+    var Surface = React.createClass(extendClassProto({
         render: function() {
             var tree = this.props.tree
             var patternSel = this.props.patternSel
@@ -58,7 +58,7 @@
     }))
 
     /*
-        Following vals are read. All are optional unless noted.
+        render fn reads following vals. All are optional unless noted.
         In the increasing order of z-index ...
             // for rect
             data.ui
@@ -68,89 +68,90 @@
                 .stroke
                 .strokeW // default 3. if zero, use stroke='none'
 
-            // for other children
+            // for decorative children
             data.ui
-                .fillers
-                .arrows
+                .fillers -> nests using createInstance based on filler.type
+                .arrows -> nests using createInstance based on arrow.type
 
-            // for children
-            data[staticParams.childProp]
+            // for syntactically significant children
+            data.type
 
-            // for more elements
-            staticParams.moreChildElms
+            // for texts
+            data.ui
+                .textRows
     */
-    function createBoxedClass(staticParams) {
-        return React.createClass(extend({
-            hiliteSelected: function() {
-                if (! this.refs.box) {
-                    // component hasn't mounted.
-                    return
-                }
-                var patternSel = this.props.patternSel
-                var textLoc = this.props.data.textLoc
-
-                var amSelected = patternSel && textLoc
-                    && patternSel[0] <= textLoc[0]
-                    && patternSel[1] >= textLoc[1]
-                var box = this.refs.box.getDOMNode()
-                if (amSelected) {
-                    // `filter` attr is not supported by react, so hack.
-                    box.setAttribute('filter', "url(#dropshadow)")
-                } else {
-                    box.removeAttribute('filter')
-                }
-            },
-            render: function() {
-                var handleEvents = this.handleEvents
-                var data = this.props.data
-                var patternSel = this.props.patternSel
-
-                var txform = ['translate(', data.ui.pos, ')'].join('')
-
-                var boxElm = (
-                    <rect width={data.ui.dim[0]} height={data.ui.dim[1]}
-                            stroke={data.ui.stroke}
-                            strokeWidth={data.ui.strokeW || 3}
-                            fill={data.ui.fill || 'white'}
-                            onClick={handleEvents} className="clickable"
-                            ref="box" />
-                )
-
-                // val is array of arrays
-                var childElms =
-                    // in the increasing order of z-index ...
-                    (data.ui.fillers || [])
-                    .concat(data.ui.arrows || [])
-                    .concat(data[staticParams.childProp] || [])
-                    .map(function(childVal) {
-                        var childList = ([].concat(childVal))
-                            .map(function(childData, i) {
-                                return createInstance(handleEvents, childData, patternSel, i)
-                            })
-                        return childList
-                    })
-
-                // additional nodes will go on top of everything else
-                var moreChildElms = staticParams.moreChildElms
-                    ? staticParams.moreChildElms.call(this, data)
-                    : null
-
-                this.hiliteSelected()
-
-                return (
-                    <g transform={txform}>
-                        {boxElm}
-                        {childElms}
-                        {moreChildElms}
-                    </g>
-                )
+    var boxedClass = React.createClass(extendClassProto({
+        hiliteSelected: function() {
+            if (! this.refs.box) {
+                // component hasn't mounted.
+                return
             }
-        }))
-    }
+            var patternSel = this.props.patternSel
+            var textLoc = this.props.data.textLoc
+
+            var amSelected = patternSel && textLoc
+                && patternSel[0] <= textLoc[0]
+                && patternSel[1] >= textLoc[1]
+            var box = this.refs.box.getDOMNode()
+            if (amSelected) {
+                // `filter` attr is not supported by react, so hack.
+                box.setAttribute('filter', "url(#dropshadow)")
+            } else {
+                box.removeAttribute('filter')
+            }
+        },
+        render: function() {
+            var handleEvents = this.handleEvents
+            var data = this.props.data
+            var patternSel = this.props.patternSel
+
+            var txform = ['translate(', data.ui.pos, ')'].join('')
+
+            var boxElm = (
+                <rect width={data.ui.dim[0]} height={data.ui.dim[1]}
+                        stroke={data.ui.stroke}
+                        strokeWidth={data.ui.strokeW || 3}
+                        fill={data.ui.fill || 'white'}
+                        onClick={handleEvents} className="clickable"
+                        ref="box" />
+            )
+
+            var childProp = reactClasses.typeToChildProp[data.type]
+            var childElms =
+                (data.ui.fillers || [])
+                .concat(data.ui.arrows || [])
+                .concat(childProp ? data[childProp] : [])
+                .map(function(childVal) {
+                    var childList = ([].concat(childVal))
+                        .map(function(childData, i) {
+                            return createInstance(handleEvents, childData, patternSel, i)
+                        })
+                    return childList
+                })
+
+            var textElms = (data.ui.textRows || [])
+                .map(function(row, i) {
+                    return (
+                        <text x={row.pos[0]} y={row.pos[1]} textAnchor={row.anchor}
+                            fontFamily="monospace" key={i}
+                            onClick={handleEvents} className="clickable">
+                            {row.text}
+                        </text>
+                    )
+                })
+
+            this.hiliteSelected()
+
+            return (
+                <g transform={txform}>
+                    {boxElm}
+                    {childElms}
+                    {textElms}
+                </g>
+            )
+        }
+    }))
     var typeToClass = {
-        'Pattern': createBoxedClass({
-            childProp: 'roots'
-        }),
         'Terminus': React.createClass({
             render: function() {
                 var ui = this.props.data.ui
@@ -164,40 +165,7 @@
                 )
             }
         }),
-        'Disjunction': createBoxedClass({
-            childProp: 'alternatives'
-        }),
-        'Alternative': createBoxedClass({
-            childProp: 'terms'
-        }),
-        'Quantified': createBoxedClass({
-            childProp: 'target'
-        }),
-        'Group': createBoxedClass({
-            childProp: 'grouped'
-        }),
-        'Set of Chars': createBoxedClass({
-            childProp: 'possibilities'
-        }),
-        'Range of Chars': createBoxedClass({
-            childProp: 'range'
-        }),
-        'TextsOnly': createBoxedClass({
-            moreChildElms: function(data) {
-                var handleEvents = this.handleEvents
-                return data.ui.rows.map(function(row, i) {
-                    return (
-                        <text x={row.pos[0]} y={row.pos[1]} textAnchor={row.anchor}
-                            fontFamily="monospace" key={i}
-                            onClick={handleEvents} className="clickable">
-                            {row.text}
-                        </text>
-                    )
-                })
-            }
-        }),
-
-        'path': React.createClass(extend({
+        'path': React.createClass({
             render: function() {
                 // TODO test
                 /* in this.props.path: {
@@ -211,7 +179,7 @@
                         pos: optional [n,n], default [0,0]
                         isVertical: optional bool, default false
                         usesMarker: optional bool, default true
-                        markerColor: optional, defautl reactClasses.markerColor
+                        markerColor: optional, default reactClasses.markerColor
                     }
                 */
                 var data = this.props.data
@@ -265,20 +233,10 @@
                     </g>
                 )
             }
-        }))
+        })
     }
     function createInstance(handleEvents, data, patternSel, key) {
-        var aliases = {
-            'Any Char': 'TextsOnly',
-            'Specific Char': 'TextsOnly',
-            'Reference': 'TextsOnly',
-            'Assertion': 'TextsOnly'
-        }
-        var clazz = typeToClass[data.type]
-            || typeToClass[aliases[data.type]]
-        if (! clazz) {
-            console.error('could not find the react type for data', data)
-        }
+        var clazz = typeToClass[data.type] || boxedClass
         var instance = React.createElement(clazz, {
             onEvents: handleEvents,
             data: data,

@@ -8,9 +8,21 @@
         Its height is 16; div this in half.
     */
     var interTermArrowY = 8
+    
     reactClasses.markerLen = 7
     reactClasses.markerColor = '#8a8a8a'
     var fillForNegative = '#ccc'
+
+    reactClasses.typeToChildProp = {
+        'Pattern': 'roots',
+        'Disjunction': 'alternatives',
+        'Alternative': 'terms',
+        'Quantified': 'target',
+        'Grouped Assertion': 'grouped',
+        'Group': 'grouped',
+        'Set of Chars': 'possibilities',
+        'Range of Colors': 'range'
+    }
 
     /*
         Conceptually,
@@ -115,7 +127,7 @@
                 pad.h * 2 + myW,
                 pad.v * 2 + lnH * texts.length
             ]
-            ui.rows = texts.map(function(text, i) {
+            ui.textRows = texts.map(function(text, i) {
                 return {
                     text: text,
                     pos: [
@@ -408,9 +420,32 @@
 
                 return myUi
             },
+
+            'Grouped Assertion': function() {
+                var pad = {x: [10,10], y: [30,10]}
+                var cUi = setUiByType(data.grouped)
+                cUi.pos = [pad.x[0], pad.y[0]]
+                cUi.stroke = '#111'
+                return data.ui = {
+                    dim: [
+                        pad.x[0] + cUi.dim[0] + pad.x[1],
+                        pad.y[0] + cUi.dim[1] + pad.y[1]
+                    ],
+                    stroke: '#09d',
+                    textRows: [
+                    ]
+                }
+            },
+            'Assertion': withTextsOnly(['assertion'], data, function() {
+                return {
+                    stroke: '#09d',
+                    fill: 'Non-Word Boundary' === data.assertion ? fillForNegative : null
+                }
+            }),
+
             'Group': function() {
                 // TODO show/link number
-                var pad = {h: 0, v: 0} // even with 0 gaps can exist from disj and alt.
+                var pad = {h: 0, v: 0}
                 var cUi = setUiByType(data.grouped)
                 cUi.pos = [pad.h, pad.v]
                 return data.ui = {
@@ -478,13 +513,6 @@
                 return {
                     stroke: '#09d',
                     fill: data.isBack ? null : fillForNegative
-                }
-            }),
-            'Assertion': withTextsOnly(['type', 'assertion'], data, function() {
-                var isNegative = ['Non-Word Boundary', 'Negative Look-Forward'].indexOf(data.assertion) >= 0
-                return {
-                    stroke: '#09d',
-                    fill: isNegative ? fillForNegative : null
                 }
             })
         } // end of var map

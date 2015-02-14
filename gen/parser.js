@@ -884,7 +884,7 @@ if (typeof module !== 'undefined' && require.main === module) {
         },
         assertionLF: function(flag, disj) {
             return {
-                type: 'Assertion',
+                type: 'Grouped Assertion',
                 assertion: (flag === '=' ? 'Positive' : 'Negative')
                     + ' Look-Forward',
                 grouped: disj
