@@ -92,7 +92,7 @@
         return parentUi
     }
 
-    function withTextsOnly(data, textProps) {
+    function withTextsOnly(data, textProps, isNegative) {
         return function() {
             var pad = {h: 3, v: 1}
             var lnH = 16 // 1em
@@ -118,7 +118,8 @@
                         ],
                         anchor: 'middle'
                     }
-                })
+                }),
+                isNegative: isNegative ? isNegative() : false
             }
         }
     }
@@ -447,19 +448,15 @@
                 return ui
             },
             'Any Char': withTextsOnly(data, ['type']),
-            'Specific Char': function() {
-                var ui = withTextsOnly(data, ['display'])()
-                ui.isNegative = data.inclusive === false
-                return ui
-            },
-            'Reference': withTextsOnly(data, ['type', 'number']),
-            'Assertion': function() {
-                var ui = withTextsOnly(data, ['type', 'assertion'])()
-                if (['Non-Word Boundary', 'Negative Look-Forward'].indexOf(data.assertion) >= 0) {
-                    ui.isNegative = true
-                }
-                return ui
-            }
+            'Specific Char': withTextsOnly(data, ['display'], function() {
+                return data.inclusive === false
+            }),
+            'Reference': withTextsOnly(data, ['type', 'number'], function() {
+                return ! data.isBack
+            }),
+            'Assertion': withTextsOnly(data, ['type', 'assertion'], function() {
+                return ['Non-Word Boundary', 'Negative Look-Forward'].indexOf(data.assertion) >= 0
+            })
         } // end of var map
 
         var fn = map[data.type]
