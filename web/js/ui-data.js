@@ -125,7 +125,7 @@
 
     function addArrowsBetweenNeighbors(parentData, children, pad) {
         var parentUi = parentData.ui
-        // arrows are always in the horizontal direction.
+        // arrows between neighbors are always in the horizontal direction.
         var leftBegin = [0, interTermArrowY]
         var rightEnd = [parentUi.dim[0], interTermArrowY]
         parentUi.arrows = children.length
@@ -135,7 +135,7 @@
                 allArrows.push({
                     type: 'path',
                     d: [
-                        leftBegin,
+                        leftBegin.slice(),
                         [childUi.pos[0], childEdgeContactY]
                     ],
                     fromLeft: true
@@ -145,7 +145,7 @@
                     d: [
                         [childUi.pos[0] + childUi.dim[0], childEdgeContactY],
                         [parentUi.dim[0] - pad.x[1], childEdgeContactY], // drag out horizontally to the right
-                        rightEnd
+                        rightEnd.slice()
                     ],
                     toRight: true
                 })
@@ -170,7 +170,7 @@
     function setUiByType(data) {
         var map = {
             'Pattern': function() {
-                var pad = {x: [3,3], y: [3,3]}
+                var pad = {x: [0,0], y: [0,0]}
                 var ui = withChildren(
                     data,
                     data.roots,
@@ -180,6 +180,28 @@
                 )
                 // make the left terminus have higher z-index than disj
                 data.roots.push(data.roots.shift())
+
+                // flatten arrows between root disj and its neighbors which are termini.
+                // adjustment is (top pad of disj) + (top pad of alt)
+                var adjustment = 10
+                data.roots.forEach(function(root) {
+                    if (root.type === 'Terminus') {
+                        root.ui.pos[1] += adjustment
+                    } else {
+                        // disj
+                        root.ui.arrows.forEach(function(arrow) {
+                            if (arrow.fromLeft) {
+                                arrow.d[0][1] += adjustment
+                            }
+                            if (arrow.toRight) {
+                                arrow.d.slice(-1)[0][1] += adjustment
+                                // remove markers from arrows that funnel into the right-hand side terminus
+                                arrow.usesMarker = false
+                            }
+                        })
+                    }
+                })
+
                 return ui
             },
             'Terminus': function() {
@@ -221,14 +243,6 @@
                 })
 
                 addArrowsBetweenNeighbors(data, data.alternatives, pad)
-                if (data.isRoot) {
-                    data.ui.arrows.forEach(function(arrow) {
-                        if (arrow.toRight) {
-                            // remove markers from right-hand side lines that funnel into the terminus
-                            arrow.usesMarker = false
-                        }
-                    })
-                }
 
                 return ui
             },
@@ -399,6 +413,9 @@
                     'y'
                 )
                 addArrowsBetweenNeighbors(data, data.possibilities, pad)
+
+                ui.isNegative = ! data.inclusive
+                
                 return ui
             },
             'Range of Chars': function() {
@@ -410,6 +427,7 @@
                     'y',
                     {x: 0, y: 15}
                 )
+
                 var rangeWs = data.range.map(function(sub) {
                     return sub.ui.dim[0]
                 })
@@ -423,12 +441,25 @@
                 ]
                 link.isVertical = true
                 link.usesMarker = false
+
+                ui.isNegative = ! data.inclusive
+
                 return ui
             },
             'Any Char': withTextsOnly(data, ['type']),
-            'Specific Char': withTextsOnly(data, ['display']),
+            'Specific Char': function() {
+                var ui = withTextsOnly(data, ['display'])()
+                ui.isNegative = data.inclusive === false
+                return ui
+            },
             'Reference': withTextsOnly(data, ['type', 'number']),
-            'Assertion': withTextsOnly(data, ['type', 'assertion'])
+            'Assertion': function() {
+                var ui = withTextsOnly(data, ['type', 'assertion'])()
+                if (['Non-Word Boundary', 'Negative Look-Forward'].indexOf(data.assertion) >= 0) {
+                    ui.isNegative = true
+                }
+                return ui
+            }
         } // end of var map
 
         var fn = map[data.type]

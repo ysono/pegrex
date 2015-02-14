@@ -2,7 +2,6 @@ var _ = require('lodash')
 var parser = require('../parser')
 
 function pattern(disj) {
-    disj.isRoot = true
     return {
         type: 'Pattern',
         roots: [
@@ -34,7 +33,6 @@ function capturedSingleAnyChar(groupNum, locBegin) {
         grouped: disjunction([
             {
                 type: 'Any Char',
-                display: '.',
                 textLoc: [locBegin+1,locBegin+2]
             }
         ]),
@@ -94,6 +92,7 @@ var specs = [
                 possibilities: [
                     {
                         type: 'Specific Char',
+                        inclusive: true,
                         display: '\\2',
                         meaning: 'Octal Notation',
                         textLoc: [7,9]
@@ -170,7 +169,7 @@ var specs = [
         [
             {
                 type: 'Assertion',
-                assertion: 'After Line Boundary',
+                assertion: 'Start of Line',
                 textLoc: [0,1]
             },
             {
@@ -205,7 +204,7 @@ var specs = [
             },
             {
                 type: 'Assertion',
-                assertion: 'Before Line Boundary',
+                assertion: 'End of Line',
                 textLoc: [9,10]
             }
         ]
@@ -293,12 +292,14 @@ var specs = [
                 possibilities: [
                     {
                         type: 'Specific Char',
+                        inclusive: true,
                         display: '\\12',
                         meaning: 'Octal Notation',
                         textLoc: [1,4]
                     },
                     {
                         type: 'Specific Char',
+                        inclusive: true,
                         display: '9',
                         textLoc: [4,5]
                     }
@@ -317,12 +318,14 @@ var specs = [
                 possibilities: [
                     {
                         type: 'Specific Char',
+                        inclusive: true,
                         display: '\\40',
                         meaning: 'Octal Notation',
                         textLoc: [1,4]
                     },
                     {
                         type: 'Specific Char',
+                        inclusive: true,
                         display: '0',
                         textLoc: [4,5]
                     }

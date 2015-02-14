@@ -42,7 +42,6 @@ function interlace(singles) {
 var provide = {
     Pattern: function() {
         return _.reduce(provide.Disjunction(), function(map, disj, str) {
-            disj.isRoot = true
             map[str] = {
                 type: 'Pattern',
                 roots: [
@@ -90,8 +89,7 @@ var provide = {
             provide.PatternCharacter(),
             {
                 '.':  {
-                    type: 'Any Char',
-                    display: '.'
+                    type: 'Any Char'
                 }
             },
             provide.AtomEscape()
@@ -168,22 +166,25 @@ var provide = {
         return {
             '\\d': {
                 type: 'Set of Chars',
+                inclusive: true,
                 possibilities: [
                     {
                         type: 'Range of Chars',
+                        inclusive: true,
                         range: [
                             {
                                 type: 'Specific Char',
+                                inclusive: true,
                                 display: '0'
                             },
                             {
                                 type: 'Specific Char',
+                                inclusive: true,
                                 display: '9'
                             }
                         ]
                     }
                 ],
-                inclusive: true,
                 predefined: {
                     display: '\\d',
                     meaning: 'Decimal'
@@ -191,52 +192,62 @@ var provide = {
             },
             '\\W': {
                 type: 'Set of Chars',
+                inclusive: false,
                 possibilities: [
                     {
                         type: 'Range of Chars',
+                        inclusive: false,
                         range: [
                             {
                                 type: 'Specific Char',
+                                inclusive: false,
                                 display: '0'
                             },
                             {
                                 type: 'Specific Char',
+                                inclusive: false,
                                 display: '9'
                             }
                         ]
                     },
                     {
                         type: 'Range of Chars',
+                        inclusive: false,
                         range: [
                             {
                                 type: 'Specific Char',
+                                inclusive: false,
                                 display: 'A'
                             },
                             {
                                 type: 'Specific Char',
+                                inclusive: false,
                                 display: 'Z'
                             }
                         ]
                     },
                     {
                         type: 'Specific Char',
+                        inclusive: false,
                         display: '_'
                     },
                     {
                         type: 'Range of Chars',
+                        inclusive: false,
                         range: [
                             {
                                 type: 'Specific Char',
+                                inclusive: false,
                                 display: 'a'
                             },
                             {
                                 type: 'Specific Char',
+                                inclusive: false,
                                 display: 'z'
                             }
                         ]
                     }
                 ],  
-                inclusive: false,
                 predefined: {
                     display: '\\W',
                     meaning: 'Non-Word Char'

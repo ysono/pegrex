@@ -159,11 +159,11 @@ Atom
     | ESCAPE_PREFIX AtomEscape
         {$$ = yy.b.withLoc(@1,@2).get($2)}
     | CLASS_BEGIN ClassAtom_s CLASS_END
-        {$$ = yy.b.charSet($2, $1.length === 1)}
+        {$$ = yy.b.charSet($1.length === 1, $2)}
     | ATOM_GROUP_CAPTR Disjunction CLOSE_PAREN
         {$$ = yy.b.group(true, $2)}
     | ATOM_GROUP_NONCAPTR_BEGIN ATOM_GROUP_NONCAPTR Disjunction CLOSE_PAREN
-        {$$ = yy.b.group(false, $2)}
+        {$$ = yy.b.withLoc(@1,@4).group(false, $3)}
     | ATOM_ETC
         {$$ = yy.b.specificChar($1)}
     ;

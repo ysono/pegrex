@@ -35,7 +35,7 @@ html, body {
 }
 .texts-parent>fieldset .infix {
     display: inline-block;
-    width: 1.5em;
+    width: 2em;
     text-align: center;
 }
 .texts-parent>fieldset .suffix {
@@ -44,7 +44,7 @@ html, body {
 }
 
 .texts-parent .pattern {
-    width: 36em;
+    width: 60%;
 }
 .texts-parent .flags {
     width: 3em;

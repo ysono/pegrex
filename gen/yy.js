@@ -34,7 +34,6 @@
                     type: 'Terminus'
                 }
             }
-            disj.isRoot = true
             return {
                 type: 'Pattern',
                 roots: [
@@ -96,35 +95,38 @@
 
         assertionLB: function(token) {
             var atBeg = token === '^'
-            var prepo = atBeg ? 'After' : 'Before'
-            var hint = (function() {
-                var char0 = atBeg ? 'beginning of string' : 'end of string'
-                var charlist = [char0].concat([
-                    'newline (\\n)',
-                    'carriage return (\\r)',
-                    'line separator',
-                    'paragraph separator'
-                ])
-                return [
-                    'Matches the zero-length string ',
-                    prepo.toLowerCase(),
-                    ' a new line char, i.e. one of [',
-                    String(charlist),
-                    ']'
-                ].join('')
-            })()
+            var sepChars = [
+                'New Line (\\n)',
+                'Carriage Return (\\r)',
+                'Line Separator (\\u2028)',
+                'Paragraph Separator (\\u2029)'
+            ]
+            var hint = [
+                'Asserts that immediately',
+                atBeg ? 'left' : 'right',
+                'of this position is a line separation.',
+                'Matches the zero-length string between the line separation and the char',
+                atBeg ? 'after' : 'before',
+                'it.',
+                'A line separation is represented by one of these chars:',
+                sepChars,
+            ].join(' ') + '.'
             return {
                 type: 'Assertion',
-                assertion: prepo + ' Line Boundary',
+                assertion: (atBeg ? 'Start' : 'End') + ' of Line',
                 hint: hint
             }
         },
         assertionWB: function(token) {
             var atWb = token[1] === 'b'
-            var hint = atWb
-                ? '(a word char (\\w)) and (a non-word char (\\W) or the beginning or the end of a line")'
-                : 'a word char (\\w) and a word char (\\w)'
-            hint = 'Matches the zero-length string between ' + hint
+            var wc = '(a word char (\\w))'
+            var nwc = '(a non-word char (\\W) or the start (^) or the end ($) of a line)'
+            var hint = [
+                'Matches the zero-length string between',
+                wc,
+                'and',
+                atWb ? wc : nwc
+            ].join(' ') + '.'
             return {
                 type: 'Assertion',
                 assertion: (atWb ? '' : 'Non-') + 'Word Boundary',
@@ -158,16 +160,21 @@
                     : undefined
             }
         },
-        charSet: function(items, inclusive, predefined) {
-            // TODO test: start with ^, ^-, -^, -
+        charSet: function(inclusive, items, predefined) {
+
+            // TODO test: start with ^, ^-, -^, -, [\d-x]
             
-            var i, item, replacement
+            // convert some of 'Specific Char's to 'Range of Chars'.
+            // more readable to do it here than in lex.
+            var i, item, prevItem, replacement
             for (i = 1; i < items.length - 1; i++) {
                 item = items[i]
-                if (item.type === 'Specific Char'
-                        && item.display === '-') {
+                prevItem = items[i - 1]
+                if (item.type === 'Specific Char' && item.display === '-'
+                    && prevItem.type === 'Specific Char') {
                     replacement = builders.charSetRange(
-                        items[i - 1], items[i + 1])
+                        prevItem,
+                        items[i + 1])
                     items.splice(i - 1, 3, replacement)
 
                     // On the next loop, want i to point to 2 elms ahead of replacement.
@@ -176,19 +183,47 @@
                 }
             }
 
+            // predefined can contain {specific char, char range}
+            // custom can contain {specific char, char range, predefined char set}
+            var toggleInclusive = {
+                'Specific Char': function(inclusive, sc) {
+                    sc.inclusive = inclusive
+                },
+                'Range of Chars': function(inclusive, r) {
+                    r.inclusive = inclusive
+                    r.range.forEach(function(sc) {
+                        toggleInclusive[sc.type](inclusive, sc)
+                    })
+                },
+                'Set of Chars': function(inclusive, s) {
+                    // subset is a predefined set.
+                    var flipped = inclusive === s.inclusive
+                    s.inclusive = flipped
+                    s.possibilities.forEach(function(p) {
+                        toggleInclusive[p.type](flipped, p)
+                    })
+                }
+            }
+            items.forEach(function(item) {
+                toggleInclusive[item.type](inclusive, item)
+            })
+
             return {
                 type: 'Set of Chars',
-                possibilities: items,
                 inclusive: inclusive,
+                possibilities: items,
                 predefined: predefined
             }
         },
         charSetPreDefn: function(key) {
+            var inclusive = key >= 'a'
+
             function makeRange(fromChar, toChar) {
-                return builders.charSetRange(
+                var range = builders.charSetRange(
                     builders.specificChar(fromChar),
                     builders.specificChar(toChar)
                 )
+                return range
             }
             var possibilities = {
                 d: function() {
@@ -217,8 +252,8 @@
             }[key]
 
             return builders.charSet(
+                inclusive,
                 possibilities,
-                key >= 'a',
                 {
                     display: '\\' + key,
                     meaning: meaning
@@ -228,8 +263,7 @@
 
         anyChar: function() {
             return {
-                type: 'Any Char',
-                display: '.'
+                type: 'Any Char'
             }
         },
         specificChar: function(display) {
@@ -346,6 +380,12 @@
         }
     }
     parser.yy.b = builders
+    parser.yy.parseError = function(msg, hash) {
+        throw {
+            loc: [hash.loc.first_column, hash.loc.last_column],
+            msg: msg
+        }
+    }
 
     parser.parse = (function(orig) {
         function postParse() {
@@ -382,4 +422,5 @@
             return parsed
         }
     })(parser.parse)
+
 })()
