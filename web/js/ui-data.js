@@ -122,36 +122,61 @@
         return parentUi
     }
 
-    function withTextsOnly(textProps, data, proto) {
-        return function() {
-            var ui = data.ui = proto()
-
-            var pad = {h: 3, v: 1}
-            var lnH = 16 // 1em
-            var charW = lnH / 2
-            var texts = textProps.map(function(prop) {
-                return String(data[prop])
-            })
-            var textLens = texts.map(function(t) {
-                return t.length
-            })
-            var myW = charW * Math.max.apply(Math, textLens)
-            
-            ui.dim = [
-                pad.h * 2 + myW,
-                pad.v * 2 + lnH * texts.length
+    /*
+        Returns spacial data for a bunch of texts to be shown
+            in rows, center-aligned, given pos of their top-left corner.
+        This is not assigned to any `data.ui`.
+        Returns {
+            dim: [n,n] -- purely the space the texts occupy. this fn does not have a concept of padding.
+            textRows: [
+                {
+                    // contains info ready to be processed by react class
+                }
             ]
-            ui.textRows = texts.map(function(text, i) {
+        }
+    */
+    function getTextRows(texts, pos) {
+        var lnH = 16 // 1rem
+        var charW = lnH / 2
+
+        var textLens = texts.map(function(t) {
+            return t.length
+        })
+        var myW = charW * Math.max.apply(Math, textLens)
+
+        return {
+            dim: [
+                myW,
+                lnH * texts.length
+            ],
+            textRows: texts.map(function(text, i) {
                 return {
                     text: text,
                     pos: [
-                        pad.h + myW / 2,
-                        pad.v + lnH * (i + 3/4) // TODO why 3/4?
+                        pos[0] + myW / 2,
+                        pos[1] + lnH * (i + 3/4) // why does 3/4 work?
                     ],
                     anchor: 'middle'
                 }
             })
-            return ui
+        }
+    }
+    function withTexts(textProps, data) {
+        var ui = data.ui = data.ui || {}
+
+        var pad = {h: 3, v: 1}
+        var pos = [pad.h, pad.v]
+        var texts = textProps.map(function(prop) {
+            return String(data[prop])
+        })
+
+        var textInfo = getTextRows(texts, pos)
+        return data.ui = {
+            dim: [
+                pad.h * 2 + textInfo.dim[0],
+                pad.v * 2 + textInfo.dim[1]
+            ],
+            textRows: textInfo.textRows
         }
     }
 
@@ -402,27 +427,39 @@
             },
 
             'Grouped Assertion': function() {
-                var pad = {x: [10,10], y: [30,10]}
+                var textPad = {h: 3, v: 1}
+                var groupedPad = {h: 10, v: 10}
+                var intraMargin = 5
+
+                var textInfo = getTextRows([data.assertion],
+                    [textPad.h, textPad.v])
+
                 var cUi = setUiByType(data.grouped)
-                cUi.pos = [pad.x[0], pad.y[0]]
-                cUi.stroke = '#888'
+                cUi.stroke = '#888' // otherwise normally disj has stroke 'none'
+                cUi.pos = [
+                    groupedPad.h,
+                    textPad.v + textInfo.dim[1] + intraMargin
+                ]
+
                 return data.ui = {
                     dim: [
-                        pad.x[0] + cUi.dim[0] + pad.x[1],
-                        pad.y[0] + cUi.dim[1] + pad.y[1]
+                        Math.max(
+                            textPad.h * 2 + textInfo.dim[0],
+                            groupedPad.h * 2 + cUi.dim[0]
+                        ),
+                        cUi.pos[1] + cUi.dim[1] + groupedPad.v
                     ],
+                    textRows: textInfo.textRows,
                     stroke: '#09d',
-                    fill: /^Pos/.test(data.assertion) ? null : fillForNegative,
-                    textRows: [
-                    ]
+                    fill: /^Pos/.test(data.assertion) ? null : fillForNegative
                 }
             },
-            'Assertion': withTextsOnly(['assertion'], data, function() {
-                return {
-                    stroke: '#09d',
-                    fill: 'Non-Word Boundary' === data.assertion ? fillForNegative : null
-                }
-            }),
+            'Assertion': function() {
+                var ui = withTexts(['assertion'], data)
+                ui.stroke = '#09d'
+                ui.fill = 'Non-Word Boundary' === data.assertion ? fillForNegative : null
+                return ui
+            },
 
             'Group': function() {
                 // TODO show/link number
@@ -479,24 +516,24 @@
 
                 return ui
             },
-            'Any Char': withTextsOnly(['type'],data, function() {
-                return {
-                    stroke: '#09d',
-                    fill: data.inclusive === false ? fillForNegative : null
-                }
-            }),
-            'Specific Char': withTextsOnly(['display'], data, function() {
-                return {
-                    stroke: '#09d',
-                    fill: data.inclusive === false ? fillForNegative : null
-                }
-            }),
-            'Reference': withTextsOnly(['type', 'number'], data, function() {
-                return {
-                    stroke: '#09d',
-                    fill: data.isBack ? null : fillForNegative
-                }
-            })
+            'Any Char': function() {
+                var ui = withTexts(['type'], data)
+                ui.stroke = '#09d'
+                ui.fill = data.inclusive === false ? fillForNegative : null
+                return ui
+            },
+            'Specific Char': function() {
+                var ui = withTexts(['display'], data)
+                ui.stroke = '#09d'
+                ui.fill = data.inclusive === false ? fillForNegative : null
+                return ui
+            },
+            'Reference': function() {
+                var ui = withTexts(['type', 'number'], data)
+                ui.stroke = '#09d'
+                ui.fill = data.isBack ? null : fillForNegative
+                return ui
+            }
         } // end of var map
 
         var fn = map[data.type]

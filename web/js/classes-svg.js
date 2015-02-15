@@ -28,8 +28,8 @@
 
             // for decorative children
             data.ui
-                .fillers -> nests using createInstance based on filler.type
-                .neighborArrows -> nests using createInstance based on arrow.type
+                .fillers
+                .neighborArrows
 
             // for syntactically significant children
             uses surfaceData.getChildVal(data)
