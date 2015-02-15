@@ -361,14 +361,14 @@
                     }
                 }
 
-                if (btmArrowStyle === 'loop') {
+                if (! data.quantifier.min && btmArrowStyle === 'loop') {
+                    // if term is at the bottom and bottom arrow is looping,
                     // b/c arrows in term would be pointing the wrong way, remove them
                     ;(function(child) {
                         var disj
                         if (child.type === 'Set of Chars') {
                             tUi.neighborArrows.length = 0
                         } else if (child.type === 'Group') {
-                            debugger
                             disj = surfaceData.getChildVal(child)
                             disj.ui.neighborArrows.length = 0
                         }
