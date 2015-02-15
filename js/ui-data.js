@@ -151,6 +151,7 @@
             ],
             textRows: texts.map(function(text, i) {
                 return {
+                    type: 'text',
                     text: text,
                     pos: [
                         pos[0] + myW / 2,
