@@ -59,7 +59,7 @@
             } catch(e) {
                 // don't propagate b/c still want text states updated
                 // TODO highlight text location
-                console.error('parsing failed', e)
+                console.error('parsing failed', e.stack, e)
             }
         },
         handleTextsChange: function(parts) {

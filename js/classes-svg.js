@@ -167,7 +167,7 @@
                 var txform = ['translate(', (data.pos || [0,0]), ')'].join('')
 
                 if (usesMarkerEnd) {
-                    (function() {
+                    ;(function() {
                         var end = segms.slice(-1)[0]
                         if (! (end instanceof Array)) {
                             console.warn('could not adjust path for marker. make sure last item is a coord.', data)
