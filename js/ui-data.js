@@ -9,7 +9,7 @@
         'Pattern': 'roots',
         'Disjunction': 'alternatives',
         'Alternative': 'terms',
-        'Quantified': 'target',
+        'Quantified': ['target', 'quantifier'],
         'Grouped Assertion': 'grouped',
         'Group': 'grouped',
         'Set of Chars': 'possibilities',
@@ -17,7 +17,15 @@
     }
     surfaceData.getChildVal = function(data) {
         var prop = typeToChildProp[data.type]
-        return prop && data[prop]
+        if (typeof prop === 'string') {
+            return data[prop]
+        }
+        if (prop instanceof Array) {
+            return prop.map(function(prop) {
+                return data[prop]
+            })
+        }
+        // else return undefined
     }
 
     /*
@@ -122,36 +130,41 @@
         return parentUi
     }
 
-    function getTextBlock(texts) {
+    /*
+        Convenience method for creating a text block.
+        Returns ui obj that is ready to be used by react classes.
+        However, unlike `setUiWith*` methods, this fn does not attach the ui obj to any data.
+            Receiver of the ui obj will have to attach it (aside from setting pos as you always have to).
+        Optional textLoc makes the rendered textBlock selectable.
+    */
+    function getTextBlock(contents, textLoc) {
         var lnH = 16 // 1rem
         var charW = lnH / 2
 
-        var textLens = texts.map(function(t) {
-            return t.length
+        var textLens = contents.map(function(t) {
+            return String(t).length
         })
         var myW = charW * Math.max.apply(Math, textLens)
         var midX = myW / 2
 
         return {
             type: 'textBlock',
-            dim: [myW, lnH * texts.length],
-            rows: texts.map(function(text, i) {
+            dim: [myW, lnH * contents.length],
+            rows: contents.map(function(content, i) {
                 return {
-                    text: text,
+                    text: content,
                     anchorPos: [
                         midX,
                         lnH * (i + 3/4) // why does 3/4 work?
                     ],
                     anchor: 'middle'
                 }
-            })
+            }),
+            textLoc: textLoc
         }
     }
-    function setUiWithTextsOnly(textProps, data) {
-        var texts = textProps.map(function(prop) {
-            return String(data[prop])
-        })
-        var textBlock = getTextBlock(texts)
+    function setUiWithTextsOnly(contents, data) {
+        var textBlock = getTextBlock(contents, data.textLoc)
 
         var pad = {h: 3, v: 1}
         textBlock.pos = [pad.h, pad.v]
@@ -306,19 +319,35 @@
                 })
                 return ui
             },
+
+            'Quantifier': function() {
+                var texts = [
+                    'min: ' + data.min,
+                    'max: ' + (data.max === Infinity ? '\u221e' : data.max),
+                ]
+                if (data.max > 1) {
+                    texts.push(data.greedy ? 'Greedy' : 'Lazy')
+                }
+                var ui = setUiWithTextsOnly(texts, data)
+                ui.fill = 'white'
+                ui.stroke = '#111'
+                ui.strokeW = 1
+                return ui
+            },
             'Quantified': function() {
                 var tUi = setUiByType(data.target)
                 var myUi = data.ui = {
                     stroke: '#7a0'
                 }
 
-                var pad = {h: 40, v: 10}
+                var pad = {h: 30, v: 10}
                 var intraMargin = pad.v // gap between edges of target and arrows that run parallel to them outside them
 
+                // determine target's and neighborArrows' pos, based on target dim.
                 var arrowMidTopY, /* y where top arrow runs in the middle */
                     arrowMidBtmY, /* ditto bottom */
                     targetY,
-                    myH
+                    maxChildY
                 var btmArrowStyle = undefined
                 if (data.quantifier.min) {
                     // term is at the top
@@ -327,9 +356,9 @@
                     arrowMidBtmY = targetY + tUi.dim[1] + intraMargin
 
                     if (data.quantifier.min === 1 && data.quantifier.max === 1) {
-                        myH = targetY + tUi.dim[1] + intraMargin
+                        maxChildY = targetY + tUi.dim[1]
                     } else {
-                        myH = arrowMidBtmY + pad.v
+                        maxChildY = arrowMidBtmY
                         btmArrowStyle = 'loop'
                     }
                 } else {
@@ -337,7 +366,7 @@
                     arrowMidTopY = pad.v
                     targetY = arrowMidTopY + intraMargin
                     arrowMidBtmY = targetY + tUi.dim[1] / 2
-                    myH = targetY + tUi.dim[1] + pad.v
+                    maxChildY = targetY + tUi.dim[1]
 
                     if (data.quantifier.max === 1) {
                         btmArrowStyle = 'thru'
@@ -346,25 +375,27 @@
                     }
                 }
 
-                if (! data.quantifier.min && btmArrowStyle === 'loop') {
-                    // if term is at the bottom and bottom arrow is looping,
-                    // b/c arrows in term would be pointing the wrong way, remove them
-                    ;(function(child) {
-                        var disj
-                        if (child.type === 'Set of Chars') {
-                            tUi.neighborArrows.length = 0
-                        } else if (child.type === 'Group') {
-                            disj = surfaceData.getChildVal(child)
-                            disj.ui.neighborArrows.length = 0
-                        }
-                    })(surfaceData.getChildVal(data))
-                }
+                // add Quantifier ; position target and Quantifier ; set dim of parent (Quantified)
+                var myH
+                ;(function() {
+                    var qUi = setUiByType(data.quantifier)
 
-                tUi.pos = [pad.h, targetY]
-                myUi.dim = [pad.h * 2 + tUi.dim[0], myH]
+                    var myW = pad.h * 2 + Math.max(tUi.dim[0], qUi.dim[0])
+                    
+                    tUi.pos = [
+                        (myW - tUi.dim[0]) / 2,
+                        targetY
+                    ]
+                    qUi.pos = [
+                        (myW - qUi.dim[0]) / 2,
+                        maxChildY + intraMargin
+                    ]
 
-                // TODO need to show min,max, greedy
+                    myH = qUi.pos[1] + qUi.dim[1] + pad.v
+                    myUi.dim = [myW, myH]
+                })()
 
+                // add neighborArrows
                 ;(function() {
                     var atLeftEdge = [0, myH / 2]
                     var atRightEdge = [myUi.dim[0], myH / 2]
@@ -431,6 +462,21 @@
                     }
                 })()
 
+                if (! data.quantifier.min && btmArrowStyle === 'loop') {
+                    // if term is at the bottom and bottom arrow is looping,
+                    //     b/c arrows in term would be pointing the wrong way,
+                    //     and there is no good way to put arrows, remove them
+                    ;(function(child) {
+                        var disj
+                        if (child.type === 'Set of Chars') {
+                            tUi.neighborArrows.length = 0
+                        } else if (child.type === 'Group') {
+                            disj = surfaceData.getChildVal(child)
+                            disj.ui.neighborArrows.length = 0
+                        }
+                    })(surfaceData.getChildVal(data))
+                }
+
                 return myUi
             },
 
@@ -438,7 +484,7 @@
                 var pad = {x: [10,10], y: [3,10]}
                 var intraMargin = 5
 
-                var textBlock = getTextBlock([data.assertion])
+                var textBlock = getTextBlock([data.assertion], data.textLoc)
                 textBlock.pos = [pad.x[0], pad.y[0]]
 
                 var cUi = setUiByType(data.grouped)
@@ -460,7 +506,7 @@
                 }
             },
             'Assertion': function() {
-                var ui = setUiWithTextsOnly(['assertion'], data)
+                var ui = setUiWithTextsOnly([data.assertion], data)
                 ui.stroke = '#09d'
                 ui.fill = 'Non-Word Boundary' === data.assertion ? fillForNegative : null
                 return ui
@@ -525,19 +571,19 @@
                 return ui
             },
             'Any Char': function() {
-                var ui = setUiWithTextsOnly(['type'], data)
+                var ui = setUiWithTextsOnly([data.type], data)
                 ui.stroke = '#09d'
                 ui.fill = data.inclusive === false ? fillForNegative : null
                 return ui
             },
             'Specific Char': function() {
-                var ui = setUiWithTextsOnly(['display'], data)
+                var ui = setUiWithTextsOnly([data.display], data)
                 ui.stroke = '#09d'
                 ui.fill = data.inclusive === false ? fillForNegative : null
                 return ui
             },
             'Reference': function() {
-                var ui = setUiWithTextsOnly(['type', 'number'], data)
+                var ui = setUiWithTextsOnly([data.type, data.number], data)
                 ui.stroke = '#09d'
                 ui.fill = data.isBack ? null : fillForNegative
                 return ui
