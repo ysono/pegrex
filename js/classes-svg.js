@@ -117,7 +117,7 @@
 
                 return (
                     <g transform={txform}>
-                        <circle cx={ui.cx} cy={ui.cy} r={ui.r} />
+                        <circle cx={ui.cx} cy={ui.cy} r={ui.r} fill={ui.fill} />
                     </g>
                 )
             }
@@ -136,7 +136,7 @@
                         pos: optional [n,n], default [0,0]
                         isVertical: optional bool, default false
                         usesMarker: optional bool, default true
-                        markerColor: optional, default surfaceData.markerColor
+                        stroke: optional, default surfaceData.neighborArrowColor
                     }
                 */
                 var data = this.props.data
@@ -180,13 +180,12 @@
                 }, [])
                 var pathStr = connected.join(' ')
 
-                var markerEnd = usesMarker ? 'url(#marker-tri)' : ''
-
-                var stroke = data.markerColor || surfaceData.markerColor
-
                 return (
                     <g transform={txform}>
-                        <path d={pathStr} markerEnd={markerEnd} stroke={stroke} fill="none" />
+                        <path d={pathStr}
+                            markerEnd={usesMarker ? 'url(#marker-tri)' : ''}
+                            stroke={data.stroke || surfaceData.neighborArrowColor}
+                            fill="none" />
                     </g>
                 )
             }
@@ -221,7 +220,7 @@
                     <path d="M 0 0 L 10 5 L 0 10 z" /> \
                 </marker>'
                     .replace(/\{0\}/g, surfaceData.markerLen)
-                    .replace(/\{1\}/g, surfaceData.markerColor)
+                    .replace(/\{1\}/g, surfaceData.neighborArrowColor)
             var dropshadow = '\
                 <filter id="dropshadow" height="180%" width="180%"> \
                     <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> \
