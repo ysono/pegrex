@@ -328,7 +328,7 @@
                 }
 
                 var pad = {h: 40, v: 10}
-                var intraMargin = pad.v // between top/btm edge of target and the arrow that doesn't go thru it
+                var intraMargin = pad.v // gap between edges of target and arrows that run parallel to them outside them
 
                 var arrowMidTopY, /* y where top arrow runs in the middle */
                     arrowMidBtmY, /* ditto bottom */
@@ -365,63 +365,72 @@
                 myUi.dim = [pad.h * 2 + tUi.dim[0], myH]
 
                 // TODO need to show min,max, greedy
-                
-                var jointXPad = btmArrowStyle === 'thru' // horizontal distance between Quantified's edge and joint point
-                    ? 0 : pad.h / 6 * 5
-                var jointY = btmArrowStyle === 'thru'
-                    ? myH / 2 : arrowMidTopY
-                var jointLeft = [jointXPad, jointY]
-                var jointRight = [myUi.dim[0] - jointXPad, jointY]
 
-                myUi.neighborArrows = [{
+                ;(function() {
+                    var atLeftEdge = [0, myH / 2]
+                    var atRightEdge = [myUi.dim[0], myH / 2]
+                    var atChildLeftEdge = [tUi.pos[0], arrowMidTopY]
+                    var atChildRightEdge = [tUi.pos[0] + tUi.dim[0], arrowMidTopY]
+
+                    var jointLeft
+                    var jointRight
+                    if (btmArrowStyle === 'loop') {
+                        jointLeft = [atChildLeftEdge[0] - intraMargin, atChildLeftEdge[1]]
+                        jointRight = [atChildRightEdge[0] + intraMargin, atChildRightEdge[1]]
+                    } // else if btm arrow is not needed or is 'thru', no need for a joint point.
+
                     // the thru arrow at the top
-                    type: 'path',
-                    d: [
-                        [0, myH / 2],
-                        jointLeft,
-                        [tUi.pos[0], arrowMidTopY],
-                        [tUi.pos[0] + tUi.dim[0], arrowMidTopY],
-                        jointRight,
-                        [myUi.dim[0], myH / 2]
-                    ]
-                }]
-
-                if (btmArrowStyle === 'thru') {
-                    myUi.neighborArrows.push({
+                    myUi.neighborArrows = [{
                         type: 'path',
                         d: [
+                            atLeftEdge,
                             jointLeft,
-                            [tUi.pos[0], arrowMidBtmY],
-                            [tUi.pos[0] + tUi.dim[0], arrowMidBtmY],
-                            jointRight
-                        ],
-                        usesMarker: false
-                    })
-                } else if (btmArrowStyle === 'loop') {
-                    myUi.neighborArrows.push({
-                        type: 'path',
-                        d: [
-                            (function() {
-                                var r = 8
-                                function arc(clockwise, dx,dy) {
-                                    return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
-                                }
-                                // right of target -> down -> left -> up -> left of target
-                                return [
-                                    'M', jointRight,
-                                    arc(1, r, r),
-                                    'L', jointRight[0] + r, arrowMidBtmY - r,
-                                    arc(1, -r, r),
-                                    'L', jointLeft[0], arrowMidBtmY,
-                                    arc(1, -r, -r),
-                                    'L', jointLeft[0] - r, jointLeft[1] + r,
-                                    arc(1, r, -r)
-                                ].join(' ')
-                            })()
-                        ],
-                        usesMarker: false
-                    })
-                }
+                            atChildLeftEdge,
+                            atChildRightEdge,
+                            jointRight,
+                            atRightEdge
+                        ].filter(function(coord) {
+                            return coord
+                        })
+                    }]
+                    // detour arrow at the bottom
+                    if (btmArrowStyle === 'thru') {
+                        myUi.neighborArrows.push({
+                            type: 'path',
+                            d: [
+                                atLeftEdge,
+                                [tUi.pos[0], arrowMidBtmY],
+                                [tUi.pos[0] + tUi.dim[0], arrowMidBtmY],
+                                atRightEdge
+                            ],
+                            usesMarker: false
+                        })
+                    } else if (btmArrowStyle === 'loop') {
+                        myUi.neighborArrows.push({
+                            type: 'path',
+                            d: [
+                                (function() {
+                                    var r = intraMargin
+                                    function arc(clockwise, dx,dy) {
+                                        return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
+                                    }
+                                    // right of target -> down -> left -> up -> left of target
+                                    return [
+                                        'M', jointRight[0] - r, jointRight[1],
+                                        arc(1, r, r),
+                                        'L', jointRight[0], arrowMidBtmY - r,
+                                        arc(1, -r, r),
+                                        'L', jointLeft[0] + r, arrowMidBtmY,
+                                        arc(1, -r, -r),
+                                        'L', jointLeft[0], jointLeft[1] + r,
+                                        arc(1, r, -r)
+                                    ].join(' ')
+                                })()
+                            ],
+                            usesMarker: false
+                        })
+                    }
+                })()
 
                 return myUi
             },
@@ -486,6 +495,9 @@
                 ui.fill = data.inclusive ? null : fillForNegative
 
                 addNeighborArrows(data, pad)
+                ui.neighborArrows.forEach(function(arrow) {
+                    arrow.usesMarker = false
+                })
                 
                 return ui
             },
