@@ -361,6 +361,20 @@
                     }
                 }
 
+                if (btmArrowStyle === 'loop') {
+                    // b/c arrows in term would be pointing the wrong way, remove them
+                    ;(function(child) {
+                        var disj
+                        if (child.type === 'Set of Chars') {
+                            tUi.neighborArrows.length = 0
+                        } else if (child.type === 'Group') {
+                            debugger
+                            disj = surfaceData.getChildVal(child)
+                            disj.ui.neighborArrows.length = 0
+                        }
+                    })(surfaceData.getChildVal(data))
+                }
+
                 tUi.pos = [pad.h, targetY]
                 myUi.dim = [pad.h * 2 + tUi.dim[0], myH]
 
@@ -449,6 +463,7 @@
                     groupedPad.h,
                     textPad.v + textInfo.dim[1] + intraMargin
                 ]
+                cUi.neighborArrows.length = 0
 
                 return data.ui = {
                     dim: [
