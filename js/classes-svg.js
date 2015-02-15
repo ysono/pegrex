@@ -154,17 +154,19 @@
                                 straight line between (string -> coord)
                         pos: optional [n,n], default [0,0]
                         isVertical: optional bool, default false
-                        usesMarker: optional bool, default true
+                        usesMarkerEnd: optional bool, default true
+                        usesMarkerMid: optional bool, default false
                         stroke: optional, default surfaceData.neighborArrowColor
                     }
                 */
                 var data = this.props.data
                 var segms = data.d
-                var usesMarker = data.usesMarker !== false
+                var usesMarkerEnd = data.usesMarkerEnd !== false
+                var usesMarkerMid = data.usesMarkerMid
 
                 var txform = ['translate(', (data.pos || [0,0]), ')'].join('')
 
-                if (usesMarker) {
+                if (usesMarkerEnd) {
                     (function() {
                         var end = segms.slice(-1)[0]
                         if (! (end instanceof Array)) {
@@ -202,7 +204,8 @@
                 return (
                     <g transform={txform}>
                         <path d={pathStr}
-                            markerEnd={usesMarker ? 'url(#marker-tri)' : ''}
+                            markerEnd={usesMarkerEnd ? 'url(#marker-end-arrow)' : ''}
+                            markerMid={usesMarkerMid ? 'url(#marker-mid-cross)' : ''}
                             stroke={data.stroke || surfaceData.neighborArrowColor}
                             fill="none" />
                     </g>
@@ -233,10 +236,17 @@
                 childNode = createInstance(this.handleEvents, tree, patternSel)
             }
 
-            var marker = '\
-                <marker id="marker-tri" \
+            var markerEndArrow = '\
+                <marker id="marker-end-arrow" \
                     viewBox="0 0 10 10" refX="0" refY="5" markerWidth="{0}" markerHeight="{0}" orient="auto" fill="{1}"> \
                     <path d="M 0 0 L 10 5 L 0 10 z" /> \
+                </marker>'
+                    .replace(/\{0\}/g, surfaceData.markerLen)
+                    .replace(/\{1\}/g, surfaceData.neighborArrowColor)
+            var markerMidCross = '\
+                <marker id="marker-mid-cross" \
+                    viewBox="0 0 10 10" refX="5" refY="5" markerWidth="{0}" markerHeight="{0}" orient="auto" fill="none" stroke="{1}"> \
+                    <path d="M0 0 L 10 10 L 5 5 L 10 0 L 0 10" /> \
                 </marker>'
                     .replace(/\{0\}/g, surfaceData.markerLen)
                     .replace(/\{1\}/g, surfaceData.neighborArrowColor)
@@ -255,7 +265,7 @@
             return (
                 <div className="surface-parent">
                     <svg width={svgDim[0]} height={svgDim[1]}>
-                        <defs dangerouslySetInnerHTML={{__html: marker + dropshadow}}></defs>
+                        <defs dangerouslySetInnerHTML={{__html: markerEndArrow + markerMidCross + dropshadow}}></defs>
                         {childNode}
                     </svg>
                 </div>
