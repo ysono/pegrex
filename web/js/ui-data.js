@@ -192,7 +192,7 @@
         var leftBegin = [0, midY]
         var rightEnd = [parentUi.dim[0], midY]
         parentUi.neighborArrows = children.length
-            ? children.reduce(function(allArrows, child) {
+            ? children.reduce(function(allArrows, child, i) {
                 var childUi = child.ui
                 var childMidY = childUi.pos[1] + childUi.dim[1] / 2
                 allArrows.push({
@@ -201,7 +201,8 @@
                         leftBegin,
                         [childUi.pos[0], childMidY]
                     ],
-                    fromLeft: true
+                    fromLeft: true,
+                    childIndex: i
                 },
                 {
                     type: 'path',
@@ -209,7 +210,8 @@
                         [childUi.pos[0] + childUi.dim[0], childMidY],
                         rightEnd
                     ],
-                    toRight: true
+                    toRight: true,
+                    childIndex: i
                 })
                 return allArrows
             }, [])
@@ -249,7 +251,7 @@
                 // remove markers from disjunction's neighborArrows funneling into the right terminal
                 data.roots[0].ui.neighborArrows.forEach(function(arrow) {
                     if (arrow.toRight) {
-                        arrow.usesMarker = false
+                        arrow.usesMarkerEnd = false
                     }
                 })
 
@@ -289,7 +291,7 @@
                         [0, hrY],
                         [hr.dim[0], hrY]
                     ]
-                    hr.usesMarker = false
+                    hr.usesMarkerEnd = false
                     hr.stroke = '#ddd'
                 })
 
@@ -433,7 +435,7 @@
                                 [tUi.pos[0] + tUi.dim[0], arrowMidBtmY],
                                 atRightEdge
                             ],
-                            usesMarker: false
+                            usesMarkerEnd: false
                         })
                     } else if (btmArrowStyle === 'loop') {
                         myUi.neighborArrows.push({
@@ -457,7 +459,7 @@
                                     ].join(' ')
                                 })()
                             ],
-                            usesMarker: false
+                            usesMarkerEnd: false
                         })
                     }
                 })()
@@ -535,11 +537,11 @@
                     'y'
                 )
                 ui.stroke = '#b7a'
-                ui.fill = data.inclusive ? null : fillForNegative
 
                 addNeighborArrows(data, pad)
-                ui.neighborArrows.forEach(function(arrow) {
-                    arrow.usesMarker = false
+                ui.neighborArrows.forEach(function(arrow, i) {
+                    arrow.usesMarkerEnd = false
+                    arrow.usesMarkerMid = ! data.possibilities[arrow.childIndex].inclusive
                 })
                 
                 return ui
@@ -567,7 +569,7 @@
                     [linkW / 2, link.dim[1]]
                 ]
                 link.isVertical = true
-                link.usesMarker = false
+                link.usesMarkerEnd = false
 
                 return ui
             },
