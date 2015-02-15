@@ -36,7 +36,7 @@
         Fillers are optional.
         Fillers depend on post-processing to add `type` and other necessary data
     */
-    function withChildren(
+    function setUiWithChildren(
         parentData,
         pad, /* {x: [n,n], y: [n,n]} -- where [n,n] are start and end paddings in that direction */
         intraMargin, /* spacing between children and fillers */
@@ -122,20 +122,7 @@
         return parentUi
     }
 
-    /*
-        Returns spacial data for a bunch of texts to be shown
-            in rows, center-aligned, given pos of their top-left corner.
-        This is not assigned to any `data.ui`.
-        Returns {
-            dim: [n,n] -- purely the space the texts occupy. this fn does not have a concept of padding.
-            textRows: [
-                {
-                    // contains info ready to be processed by react class
-                }
-            ]
-        }
-    */
-    function getTextRows(texts, pos) {
+    function getTextBlock(texts) {
         var lnH = 16 // 1rem
         var charW = lnH / 2
 
@@ -143,41 +130,38 @@
             return t.length
         })
         var myW = charW * Math.max.apply(Math, textLens)
+        var midX = myW / 2
 
         return {
-            dim: [
-                myW,
-                lnH * texts.length
-            ],
-            textRows: texts.map(function(text, i) {
+            type: 'textBlock',
+            dim: [myW, lnH * texts.length],
+            rows: texts.map(function(text, i) {
                 return {
-                    type: 'text',
                     text: text,
-                    pos: [
-                        pos[0] + myW / 2,
-                        pos[1] + lnH * (i + 3/4) // why does 3/4 work?
+                    anchorPos: [
+                        midX,
+                        lnH * (i + 3/4) // why does 3/4 work?
                     ],
                     anchor: 'middle'
                 }
             })
         }
     }
-    function withTexts(textProps, data) {
-        var ui = data.ui = data.ui || {}
-
-        var pad = {h: 3, v: 1}
-        var pos = [pad.h, pad.v]
+    function setUiWithTextsOnly(textProps, data) {
         var texts = textProps.map(function(prop) {
             return String(data[prop])
         })
+        var textBlock = getTextBlock(texts)
 
-        var textInfo = getTextRows(texts, pos)
+        var pad = {h: 3, v: 1}
+        textBlock.pos = [pad.h, pad.v]
+
         return data.ui = {
             dim: [
-                pad.h * 2 + textInfo.dim[0],
-                pad.v * 2 + textInfo.dim[1]
+                pad.h * 2 + textBlock.dim[0],
+                pad.v * 2 + textBlock.dim[1]
             ],
-            textRows: textInfo.textRows
+            textBlocks: [textBlock]
         }
     }
 
@@ -230,14 +214,14 @@
     /*
         Sets data.ui.dim
         Does not set data.ui.pos
-        If data contains children, recursively sets their .ui.dim and .ui.pos (using fn `withChildren`)
+        If data contains children, recursively sets their .ui.dim and .ui.pos, using `setUiWithChildren`
         Returns data.ui, for convenience -- all parents have to post-process what this fn returns
             to, at minimum, add pos.
     */
     function setUiByType(data) {
         var map = {
             'Pattern': function() {
-                var ui = withChildren(
+                var ui = setUiWithChildren(
                     data,
                     {x: [0,0], y: [0,0]},
                     0,
@@ -275,7 +259,7 @@
                 data.alternatives = data.alternatives.filter(function(alt) {
                     return alt.terms.length
                 })
-                var ui = withChildren(
+                var ui = setUiWithChildren(
                     data,
                     pad,
                     5,
@@ -302,7 +286,7 @@
             },
             'Alternative': function() {
                 var pad = {x: [0,0], y: [0,0]}
-                var ui = withChildren(
+                var ui = setUiWithChildren(
                     data,
                     pad,
                     2,
@@ -451,36 +435,32 @@
             },
 
             'Grouped Assertion': function() {
-                var textPad = {h: 3, v: 1}
-                var groupedPad = {h: 10, v: 10}
+                var pad = {x: [10,10], y: [3,10]}
                 var intraMargin = 5
 
-                var textInfo = getTextRows([data.assertion],
-                    [textPad.h, textPad.v])
+                var textBlock = getTextBlock([data.assertion])
+                textBlock.pos = [pad.x[0], pad.y[0]]
 
                 var cUi = setUiByType(data.grouped)
-                cUi.stroke = '#888' // otherwise normally disj has stroke 'none'
                 cUi.pos = [
-                    groupedPad.h,
-                    textPad.v + textInfo.dim[1] + intraMargin
+                    pad.x[0],
+                    textBlock.pos[1] + textBlock.dim[1] + intraMargin
                 ]
-                cUi.neighborArrows.length = 0
+                cUi.stroke = '#888' // otherwise normally disj has stroke 'none'
+                cUi.neighborArrows.length = 0 // disj is not connected with the rest of the flow
 
                 return data.ui = {
                     dim: [
-                        Math.max(
-                            textPad.h * 2 + textInfo.dim[0],
-                            groupedPad.h * 2 + cUi.dim[0]
-                        ),
-                        cUi.pos[1] + cUi.dim[1] + groupedPad.v
+                        pad.x[0] + Math.max(textBlock.dim[0], cUi.dim[0]) + pad.x[1],
+                        cUi.pos[1] + cUi.dim[1] + pad.y[1]
                     ],
-                    textRows: textInfo.textRows,
+                    textBlocks: [textBlock],
                     stroke: '#09d',
                     fill: /^Pos/.test(data.assertion) ? null : fillForNegative
                 }
             },
             'Assertion': function() {
-                var ui = withTexts(['assertion'], data)
+                var ui = setUiWithTextsOnly(['assertion'], data)
                 ui.stroke = '#09d'
                 ui.fill = 'Non-Word Boundary' === data.assertion ? fillForNegative : null
                 return ui
@@ -501,7 +481,7 @@
             },
             'Set of Chars': function() {
                 var pad = {x: [30,30], y: [10,10]}
-                var ui = withChildren(
+                var ui = setUiWithChildren(
                     data,
                     pad,
                     10,
@@ -518,7 +498,7 @@
                 return ui
             },
             'Range of Chars': function() {
-                var ui = withChildren(
+                var ui = setUiWithChildren(
                     data,
                     {x: [10,10], y: [10,10]},
                     0,
@@ -545,19 +525,19 @@
                 return ui
             },
             'Any Char': function() {
-                var ui = withTexts(['type'], data)
+                var ui = setUiWithTextsOnly(['type'], data)
                 ui.stroke = '#09d'
                 ui.fill = data.inclusive === false ? fillForNegative : null
                 return ui
             },
             'Specific Char': function() {
-                var ui = withTexts(['display'], data)
+                var ui = setUiWithTextsOnly(['display'], data)
                 ui.stroke = '#09d'
                 ui.fill = data.inclusive === false ? fillForNegative : null
                 return ui
             },
             'Reference': function() {
-                var ui = withTexts(['type', 'number'], data)
+                var ui = setUiWithTextsOnly(['type', 'number'], data)
                 ui.stroke = '#09d'
                 ui.fill = data.isBack ? null : fillForNegative
                 return ui
