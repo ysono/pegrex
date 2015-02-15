@@ -12,6 +12,25 @@
                 } // `this` originated the event
             this.props.onEvents(payload)
         }
+        proto.hiliteSelected = function() {
+            // `filter` attr is not supported by react, so manually assign.
+            if (! this.refs.box) {
+                // component hasn't mounted.
+                return
+            }
+            var patternSel = this.props.patternSel
+            var textLoc = this.props.data.textLoc
+
+            var amSelected = patternSel && textLoc
+                && patternSel[0] <= textLoc[0]
+                && patternSel[1] >= textLoc[1]
+            var box = this.refs.box.getDOMNode()
+            if (amSelected) {
+                box.setAttribute('filter', "url(#dropshadow)")
+            } else {
+                box.removeAttribute('filter')
+            }
+        }
         return proto
     }
 
@@ -34,27 +53,11 @@
             whatever surfaceData.getChildVal(data) reads to get child
             data.ui
                 .textBlocks
+        
+        If data.textLoc exists, this class is selectable.
+        Each of textBlocks that is meant to be selectable needs to have textloc too.
     */
     var boxedClass = React.createClass(extendClassProto({
-        hiliteSelected: function() {
-            if (! this.refs.box) {
-                // component hasn't mounted.
-                return
-            }
-            var patternSel = this.props.patternSel
-            var textLoc = this.props.data.textLoc
-
-            var amSelected = patternSel && textLoc
-                && patternSel[0] <= textLoc[0]
-                && patternSel[1] >= textLoc[1]
-            var box = this.refs.box.getDOMNode()
-            if (amSelected) {
-                // `filter` attr is not supported by react, so hack.
-                box.setAttribute('filter', "url(#dropshadow)")
-            } else {
-                box.removeAttribute('filter')
-            }
-        },
         render: function() {
             var handleEvents = this.handleEvents
             var data = this.props.data
@@ -86,8 +89,9 @@
 
             this.hiliteSelected()
 
+            // data-type for the ease of visual debugging only; not used by program.
             return (
-                <g transform={txform}>
+                <g transform={txform} data-type={data.type}>
                     {boxElm}
                     {childElms}
                 </g>
@@ -111,7 +115,7 @@
 
         // below: UI-scoped types that do not come from parser
 
-        'textBlock': React.createClass({
+        'textBlock': React.createClass(extendClassProto({
             render: function() {
                 var data = this.props.data
                 var handleEvents = this.handleEvents
@@ -127,6 +131,8 @@
                         </text>
                     )
                 })
+
+                this.hiliteSelected()
                 
                 return (
                     <g transform={txform}>
@@ -134,7 +140,7 @@
                     </g>
                 )
             }
-        }),
+        })),
         'path': React.createClass({
             render: function() {
                 // TODO test

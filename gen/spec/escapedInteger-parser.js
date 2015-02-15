@@ -228,6 +228,7 @@ var specs = [
             {
                 type: 'Quantified',
                 quantifier: {
+                    type: 'Quantifier',
                     min: 2,
                     max: 2,
                     greedy: true,
@@ -342,6 +343,7 @@ var specs = [
             {
                 type: 'Quantified',
                 quantifier: {
+                    type: 'Quantifier',
                     min: 3,
                     max: 3,
                     greedy: true,
@@ -375,6 +377,7 @@ var specs = [
             {
                 type: 'Quantified',
                 quantifier: {
+                    type: 'Quantifier',
                     min: 3,
                     max: Infinity,
                     greedy: false,  

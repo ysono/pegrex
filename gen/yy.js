@@ -68,6 +68,7 @@
             // TODO validate min <= max
             if (token[0] !== '{') {
                 return {
+                    type: 'Quantifier',
                     min: token[0] === '+' ? 1 : 0,
                     max: token[0] === '?' ? 1 : Infinity,
                     greedy: token.length < 2
@@ -75,6 +76,7 @@
             }
             var matched = token.match(/{(\d+)(?:(,)(\d*))?}(\?)?/)
             return {
+                type: 'Quantifier',
                 min: Number(matched[1]),
                 max: matched[3]
                     ? Number(matched[3])
