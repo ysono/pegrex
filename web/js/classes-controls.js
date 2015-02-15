@@ -26,7 +26,7 @@
             if (hash === hashUtil.read()) {
                 return
             }
-            window.location.hash = encodeURIComponent(hash)
+            window.location.replace('#' + encodeURIComponent(hash))
         }
     }
     
