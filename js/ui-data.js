@@ -297,133 +297,106 @@
                 return ui
             },
             'Quantified': function() {
-                var interTermArrowY = 8 // TODO move to cetner
-
                 var tUi = setUiByType(data.target)
                 var myUi = data.ui = {
                     stroke: '#7a0'
                 }
 
-                var pad = {h: 30, v: interTermArrowY}
+                var pad = {h: 40, v: 10}
                 var intraMargin = pad.v // between top/btm edge of target and the arrow that doesn't go thru it
 
                 var arrowMidTopY, /* y where top arrow runs in the middle */
                     arrowMidBtmY, /* ditto bottom */
                     targetY,
                     myH
-                var needArrowBtm = true
+                var btmArrowStyle = undefined
                 if (data.quantifier.min) {
                     // term is at the top
                     targetY = pad.v
-                    arrowMidTopY = targetY + interTermArrowY
+                    arrowMidTopY = targetY + tUi.dim[1] / 2
                     arrowMidBtmY = targetY + tUi.dim[1] + intraMargin
 
                     if (data.quantifier.min === 1 && data.quantifier.max === 1) {
-                        needArrowBtm = false
                         myH = targetY + tUi.dim[1] + intraMargin
                     } else {
                         myH = arrowMidBtmY + pad.v
+                        btmArrowStyle = 'loop'
                     }
                 } else {
                     // term is at the bottom
-                    arrowMidTopY = interTermArrowY
+                    arrowMidTopY = pad.v
                     targetY = arrowMidTopY + intraMargin
-                    arrowMidBtmY = targetY + interTermArrowY
+                    arrowMidBtmY = targetY + tUi.dim[1] / 2
                     myH = targetY + tUi.dim[1] + pad.v
 
-                    if (! data.quantifier.max) {
-                        // min and max are 0
-                        needArrowBtm = false
+                    if (data.quantifier.max === 1) {
+                        btmArrowStyle = 'thru'
+                    } else if (data.quantifier.max) {
+                        btmArrowStyle = 'loop'
                     }
                 }
 
-                tUi.pos = [
-                    pad.h,
-                    targetY
-                ]
-                myUi.dim = [
-                    pad.h * 2 + tUi.dim[0],
-                    myH
-                ]
+                tUi.pos = [pad.h, targetY]
+                myUi.dim = [pad.h * 2 + tUi.dim[0], myH]
 
                 // TODO need to show min,max, greedy
                 
-                // thru arrow at the top
+                var jointXPad = btmArrowStyle === 'thru' // horizontal distance between Quantified's edge and joint point
+                    ? 0 : pad.h / 6 * 5
+                var jointY = btmArrowStyle === 'thru'
+                    ? myH / 2 : arrowMidTopY
+                var jointLeft = [jointXPad, jointY]
+                var jointRight = [myUi.dim[0] - jointXPad, jointY]
+
                 myUi.neighborArrows = [{
+                    // the thru arrow at the top
+                    type: 'path',
                     d: [
-                        [0, interTermArrowY],
+                        [0, myH / 2],
+                        jointLeft,
                         [tUi.pos[0], arrowMidTopY],
                         [tUi.pos[0] + tUi.dim[0], arrowMidTopY],
-                        [myUi.dim[0], interTermArrowY]
+                        jointRight,
+                        [myUi.dim[0], myH / 2]
                     ]
                 }]
-                // detour arrow at the bottom
-                if (needArrowBtm) {
-                    ;(function() {
-                        var r = 8
-                        function arc(clockwise, dx,dy) {
-                            return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
-                        }
-                        var jointLeftX
-                        var jointRightX
 
-                        var arrowBtm
-                        if (data.quantifier.min === 0 && data.quantifier.max === 1) {
-                            // left edge -> down -> right -> up -> right edge
-                            jointLeftX = pad.h / 3 * 2
-                            jointRightX = myUi.dim[0] - jointLeftX
-                            arrowBtm = (function() {
-                                var startOfPath = [jointLeftX - r, arrowMidTopY]
-                                var path = [
-                                    'L', startOfPath,
-                                    arc(1, r, r),
-                                    'L', jointLeftX, arrowMidBtmY - r,
-                                    arc(0, r, r),
-                                    'L', jointRightX - r, arrowMidBtmY,
-                                    arc(0, r, -r),
-                                    'L', jointRightX, arrowMidTopY + r,
-                                    arc(1, r, -r)
-                                ].join(' ')
-                                return {
-                                    d: [
-                                        [0, interTermArrowY],
-                                        startOfPath,
-                                        path,
-                                        [myUi.dim[0], interTermArrowY]
-                                    ]
+                if (btmArrowStyle === 'thru') {
+                    myUi.neighborArrows.push({
+                        type: 'path',
+                        d: [
+                            jointLeft,
+                            [tUi.pos[0], arrowMidBtmY],
+                            [tUi.pos[0] + tUi.dim[0], arrowMidBtmY],
+                            jointRight
+                        ],
+                        usesMarker: false
+                    })
+                } else if (btmArrowStyle === 'loop') {
+                    myUi.neighborArrows.push({
+                        type: 'path',
+                        d: [
+                            (function() {
+                                var r = 8
+                                function arc(clockwise, dx,dy) {
+                                    return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
                                 }
-                            })()
-                        } else {
-                            // right of target -> down -> left -> up -> left of target
-                            jointLeftX = pad.h / 3
-                            jointRightX = myUi.dim[0] - jointLeftX
-                            arrowBtm = (function() {
-                                var path = [
-                                    'M', tUi.pos[0] + tUi.dim[0], arrowMidTopY,
-                                    'L', jointRightX - r, arrowMidTopY,
+                                // right of target -> down -> left -> up -> left of target
+                                return [
+                                    'M', jointRight,
                                     arc(1, r, r),
-                                    'L', jointRightX, arrowMidBtmY - r,
+                                    'L', jointRight[0] + r, arrowMidBtmY - r,
                                     arc(1, -r, r),
-                                    'L', jointLeftX + r, arrowMidBtmY,
+                                    'L', jointLeft[0], arrowMidBtmY,
                                     arc(1, -r, -r),
-                                    'L', jointLeftX, arrowMidTopY + r,
+                                    'L', jointLeft[0] - r, jointLeft[1] + r,
                                     arc(1, r, -r)
                                 ].join(' ')
-                                return {
-                                    d: [
-                                        path,
-                                        [tUi.pos[0], arrowMidTopY]
-                                    ]
-                                }
                             })()
-                        }
-                        arrowBtm.usesMarker = false
-                        myUi.neighborArrows.push(arrowBtm)
-                    })()
+                        ],
+                        usesMarker: false
+                    })
                 }
-                myUi.neighborArrows.forEach(function(arrow) {
-                    arrow.type = 'path'
-                })
 
                 return myUi
             },
