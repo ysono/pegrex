@@ -33,7 +33,7 @@
                 .neighborArrows
             whatever surfaceData.getChildVal(data) reads to get child
             data.ui
-                .textRows
+                .textBlocks
     */
     var boxedClass = React.createClass(extendClassProto({
         hiliteSelected: function() {
@@ -75,7 +75,7 @@
                 (data.ui.fillers || [])
                 .concat(data.ui.neighborArrows || [])
                 .concat(surfaceData.getChildVal(data) || [])
-                .concat(data.ui.textRows || [])
+                .concat(data.ui.textBlocks || [])
                 .map(function(childVal) {
                     var childList = ([].concat(childVal))
                         .map(function(childData, i) {
@@ -111,15 +111,27 @@
 
         // below: UI-scoped types that do not come from parser
 
-        'text': React.createClass({
+        'textBlock': React.createClass({
             render: function() {
                 var data = this.props.data
+                var handleEvents = this.handleEvents
+
+                var txform = ['translate(', data.pos, ')'].join('')
+
+                var textNodes = data.rows.map(function(row) {
+                    return (
+                        <text x={row.anchorPos[0]} y={row.anchorPos[1]} textAnchor={row.anchor}
+                            fontFamily="monospace"
+                            onClick={handleEvents} className="clickable">
+                            {row.text}
+                        </text>
+                    )
+                })
+                
                 return (
-                    <text x={data.pos[0]} y={data.pos[1]} textAnchor={data.anchor}
-                        fontFamily="monospace"
-                        onClick={this.handleEvents} className="clickable">
-                        {data.text}
-                    </text>
+                    <g transform={txform}>
+                        {textNodes}
+                    </g>
                 )
             }
         }),
