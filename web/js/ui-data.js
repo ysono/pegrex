@@ -2,7 +2,7 @@
     'use strict'
 
     surfaceData.markerLen = 7
-    surfaceData.markerColor = '#8a8a8a'
+    surfaceData.neighborArrowColor = '#8a8a8a'
     var fillForNegative = '#ccc'
 
     var typeToChildProp = {
@@ -237,7 +237,8 @@
                     dim: [0,0],
                     cx: 0,
                     cy: 0,
-                    r: 6
+                    r: 6,
+                    fill: '#666'
                 }
             },
             'Disjunction': function() {
@@ -266,7 +267,7 @@
                         [hr.dim[0], hrY]
                     ]
                     hr.usesMarker = false
-                    hr.markerColor = '#ddd'
+                    hr.stroke = '#ddd'
                 })
 
                 addNeighborArrows(data, pad)
