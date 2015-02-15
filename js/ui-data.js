@@ -329,8 +329,8 @@
                     texts.push(data.greedy ? 'Greedy' : 'Lazy')
                 }
                 var ui = setUiWithTextsOnly(texts, data)
-                ui.fill = 'white'
-                ui.stroke = '#111'
+                ui.fill = '#fff8ea'
+                ui.stroke = '#bbb'
                 ui.strokeW = 1
                 return ui
             },
@@ -493,6 +493,7 @@
                     textBlock.pos[1] + textBlock.dim[1] + intraMargin
                 ]
                 cUi.stroke = '#888' // otherwise normally disj has stroke 'none'
+                cUi.strokeW = 1
                 cUi.neighborArrows.length = 0 // disj is not connected with the rest of the flow
 
                 return data.ui = {
@@ -501,13 +502,13 @@
                         cUi.pos[1] + cUi.dim[1] + pad.y[1]
                     ],
                     textBlocks: [textBlock],
-                    stroke: '#09d',
+                    stroke: '#f9f374',
                     fill: /^Pos/.test(data.assertion) ? null : fillForNegative
                 }
             },
             'Assertion': function() {
                 var ui = setUiWithTextsOnly([data.assertion], data)
-                ui.stroke = '#09d'
+                ui.stroke = '#f9f374'
                 ui.fill = 'Non-Word Boundary' === data.assertion ? fillForNegative : null
                 return ui
             },
@@ -584,7 +585,7 @@
             },
             'Reference': function() {
                 var ui = setUiWithTextsOnly([data.type, data.number], data)
-                ui.stroke = '#09d'
+                ui.stroke = '#f9f374'
                 ui.fill = data.isBack ? null : fillForNegative
                 return ui
             }

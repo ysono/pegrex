@@ -55,7 +55,7 @@
                 .textBlocks
         
         If data.textLoc exists, this class is selectable.
-        Each of textBlocks that is meant to be selectable needs to have textloc too.
+        E.g. each of textBlocks that is meant to be selectable needs to have textloc too.
     */
     var boxedClass = React.createClass(extendClassProto({
         render: function() {
