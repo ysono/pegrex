@@ -22,17 +22,17 @@
             data.ui
                 .pos // required
                 .dim // required
-                .fill // default 'white' so it can hide arrows underneath
+                .fill // default 'white' so it can hide neighborArrows underneath
                 .stroke
                 .strokeW // default 3. if zero, use stroke='none'
 
             // for decorative children
             data.ui
                 .fillers -> nests using createInstance based on filler.type
-                .arrows -> nests using createInstance based on arrow.type
+                .neighborArrows -> nests using createInstance based on arrow.type
 
             // for syntactically significant children
-            data.type
+            uses surfaceData.getChildVal(data)
 
             // for texts
             data.ui
@@ -74,11 +74,10 @@
                         ref="box" />
             )
 
-            var childProp = surfaceData.typeToChildProp[data.type]
             var childElms =
                 (data.ui.fillers || [])
-                .concat(data.ui.arrows || [])
-                .concat(childProp ? data[childProp] : [])
+                .concat(data.ui.neighborArrows || [])
+                .concat(surfaceData.getChildVal(data) || [])
                 .map(function(childVal) {
                     var childList = ([].concat(childVal))
                         .map(function(childData, i) {

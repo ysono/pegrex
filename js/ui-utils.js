@@ -1,4 +1,6 @@
 ;(function(surfaceData) {
+    'use strict'
+    
     surfaceData.utils = {
         reflectedQuadra: function(from, to, isVertical) {
             var vector = [
