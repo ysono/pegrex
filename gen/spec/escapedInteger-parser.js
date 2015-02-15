@@ -407,7 +407,7 @@ function runOne(regex, terms) {
     var src = regex.source
     var exp = pattern(disjunction(terms))
     var act = parser.parse(src)
-    var success = _.isEqual(act, exp, function(act, exp){
+    var success = _.isEqual(act, exp, function(act, exp) {
         if (act) {
             delete act.hint // not comparing hints
             if (act.alternatives || act.terms) {

@@ -270,7 +270,7 @@
                 var pad = {x: [30,30], y: [10,10]}
                 var hrH = 30
 
-                // deleting some of parser output here!!
+                // modifying parser output here!!
                 data.alternatives = data.alternatives.filter(function(alt) {
                     return alt.terms.length
                 })
@@ -530,20 +530,50 @@
             },
             'Set of Chars': function() {
                 var pad = {x: [30,30], y: [10,10]}
+                var intraMargin = 10
                 var ui = setUiWithChildren(
                     data,
                     pad,
-                    10,
+                    intraMargin,
                     'y'
                 )
                 ui.stroke = '#b7a'
 
+                if (! data.inclusive) {
+                    ;(function(children) {
+                        var tb = {
+                            inclusive: true
+                        }
+                        var tbUi = setUiWithTextsOnly([
+                            'Any', 'Other'
+                        ], tb)
+                        tbUi.pos = [
+                            (ui.dim[0] - tbUi.dim[0]) / 2,
+                            ui.dim[1] - pad.y[1] + intraMargin
+                        ]
+                        tbUi.stroke = '#888'
+                        tbUi.strokeW = 1
+                        // looks like 'Other' is short enough that we don't have to readjust parent ui width
+
+                        ui.dim[1] += (intraMargin + tbUi.dim[1])
+
+                        // modifying parser output here!!
+                        children.push(tb)
+                    })(surfaceData.getChildVal(data))
+                }
+
                 addNeighborArrows(data, pad)
-                ui.neighborArrows.forEach(function(arrow, i) {
-                    arrow.usesMarkerEnd = false
-                    arrow.usesMarkerMid = ! data.possibilities[arrow.childIndex].inclusive
+                ui.neighborArrows.forEach(function(arrow) {
+                    arrow.usesMarkerEnd = false // b/c it looks cluttered
+
+                    var child = data.possibilities[arrow.childIndex]
+                    if (child) {
+                        arrow.usesMarkerMid = ! child.inclusive
+                    } else {
+                        arrow.usesMarkerMid = ! data.inclusive
+                    }
                 })
-                
+
                 return ui
             },
             'Range of Chars': function() {
