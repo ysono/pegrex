@@ -26,15 +26,12 @@
                 .stroke
                 .strokeW // default 3. if zero, use stroke='none'
 
-            // for decorative children
+            // for children
+            // these children are routed to `createInstance`, so they each must have valid `.type`.
             data.ui
                 .fillers
                 .neighborArrows
-
-            // for syntactically significant children
-            uses surfaceData.getChildVal(data)
-
-            // for texts
+            whatever surfaceData.getChildVal(data) reads to get child
             data.ui
                 .textRows
     */
@@ -78,6 +75,7 @@
                 (data.ui.fillers || [])
                 .concat(data.ui.neighborArrows || [])
                 .concat(surfaceData.getChildVal(data) || [])
+                .concat(data.ui.textRows || [])
                 .map(function(childVal) {
                     var childList = ([].concat(childVal))
                         .map(function(childData, i) {
@@ -86,24 +84,12 @@
                     return childList
                 })
 
-            var textElms = (data.ui.textRows || [])
-                .map(function(row, i) {
-                    return (
-                        <text x={row.pos[0]} y={row.pos[1]} textAnchor={row.anchor}
-                            fontFamily="monospace" key={i}
-                            onClick={handleEvents} className="clickable">
-                            {row.text}
-                        </text>
-                    )
-                })
-
             this.hiliteSelected()
 
             return (
                 <g transform={txform}>
                     {boxElm}
                     {childElms}
-                    {textElms}
                 </g>
             )
         }
@@ -119,6 +105,21 @@
                     <g transform={txform}>
                         <circle cx={ui.cx} cy={ui.cy} r={ui.r} fill={ui.fill} />
                     </g>
+                )
+            }
+        }),
+
+        // below: UI-scoped types that do not come from parser
+
+        'text': React.createClass({
+            render: function() {
+                var data = this.props.data
+                return (
+                    <text x={data.pos[0]} y={data.pos[1]} textAnchor={data.anchor}
+                        fontFamily="monospace"
+                        onClick={this.handleEvents} className="clickable">
+                        {data.text}
+                    </text>
                 )
             }
         }),
