@@ -237,7 +237,17 @@
                     return [makeRange('0', '9')]
                 },
                 s: function() {
-                    return [builders.specificCharEsc('n')] // TODO
+                    return [
+                        builders.specificCharEsc('n'),
+                        builders.specificCharEsc('r'),
+                        builders.specificCharEsc('u2028'),
+                        builders.specificCharEsc('u2029'),
+                        builders.specificCharEsc('t'),
+                        builders.specificCharEsc('v'),
+                        builders.specificCharEsc('f'),
+                        builders.specificChar(' '),
+                        builders.specificCharEsc('u00a0')
+                    ]
                 },
                 w: function() {
                     return [
@@ -283,7 +293,7 @@
             }
         },
         specificCharEsc: function(key, meaning) {
-            meaning = meaning || {
+            var map = {
                 b: 'Backspace',
                 c: 'Control Char',
                 f: 'Form Feed',
@@ -292,8 +302,12 @@
                 t: 'Horizontal Tab',
                 v: 'Vertical Tab',
                 x: 'Hexadecimal Notation',
-                u: 'Hexadecimal Notation'
-            }[key[0]]
+                u: 'Hexadecimal Notation',
+                'u2028': 'Line Separator',
+                'u2029': 'Paragraph Separator',
+                'u00a0': 'Nbsp'
+            }
+            meaning = meaning || map[key] || map[key[0]]
             return {
                 type: 'Specific Char',
                 display: (meaning ? '\\' : '') + key,
@@ -358,7 +372,7 @@
             // Contrary to [ecma](http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.11),
             // support octal notations other than `\0`.
 
-            var evalled = eval("'\\" + decimals + "'") // it's safe.
+            var evalled = window.eval("'\\" + decimals + "'") // it's safe.
             var hasOctal = evalled[0] !== decimals[0]
 
             var loc0 = loc.first_column                
