@@ -21,15 +21,16 @@
             return data[prop]
         }
         if (prop instanceof Array) {
-            return prop.map(function(prop) {
-                return data[prop]
-            })
+            return prop.reduce(function(vals, prop) {
+                return vals.concat(data[prop] || [])
+            }, [])
         }
         // else return undefined
     }
 
     /*
-        Use when there are 0..* children. If only 1..1, use setUiByType.
+        Center-aligns the given component's children.
+        Determines overall dimensions and positions only.
 
         Conceptually,
         1) Call setUiByType on all children -->
@@ -41,8 +42,38 @@
             assign dim on parent
             not assigning pos on parent
 
-        Fillers are optional.
-        Fillers depend on post-processing to add `type` and other necessary data
+        Result is
+        parentData ~= {
+            type: 'Foo',
+            otherPropsForFoo: ...
+            theChildren: [
+                {
+                    type: 'Bar',
+                    otherPropsForBar: ...
+                    ui: {
+                        dim: [n,n] // assigned by nested call of setUiByType
+                        otherUiSpecsForBar: ... // assigned by nested call of setUiByType
+
+                        pos: [n,n] // assigned by setUiWithChildren
+                    } // assigned by nested call of setUiByType
+                }
+            ] // the children has to be an array
+            ui: {
+                dim: [n,n]
+                fillers: [
+                    // 0 or more fillers are added
+                    {
+                        dim: [n,n]
+                        pos: [n,n]
+                    }
+                ]
+            } // assigned by setUiWithChildren
+        }
+        Returns parentData.ui for convenience.
+
+        Caller of setUiWithChildren is responsible for assigning info required
+            for rendering both parentData and fillers.
+            E.g. fillers don't even have `.type`, and parentData.ui doesn't have `.pos`.
     */
     function setUiWithChildren(
         parentData,
@@ -129,62 +160,34 @@
         )
         return parentUi
     }
-
     /*
-        Convenience method for creating a text block.
-        Returns ui obj that is ready to be used by react classes.
-        However, unlike `setUiWith*` methods, this fn does not attach the ui obj to any data.
-            Receiver of the ui obj will have to attach it (aside from setting pos as you always have to).
-        Optional textLoc makes the rendered textBlock selectable.
-    */
-    function getTextBlock(contents, textLoc) {
-        var lnH = 16 // 1rem
-        var charW = lnH / 2
+        Add arrows between left and right neighbors and current data's vertically aligned children
+            from (the left neighbor) to (every child)
+            from (every child) to (the right neighbor)
 
-        var textLens = contents.map(function(t) {
-            return String(t).length
-        })
-        var myW = charW * Math.max.apply(Math, textLens)
-        var midX = myW / 2
+        Each children already needs to have dim and pos assigned,
+            e.g. using `setUiWithChildren`, or manually.
+        
+        Result is
+        parentData ~= {
+            theChildren: [
+                // the given children need to be an array of 0 or more objs
+            ]
+            etc: ...
+            ui: {
+                etc: ...
 
-        return {
-            type: 'textBlock',
-            dim: [myW, lnH * contents.length],
-            rows: contents.map(function(content, i) {
-                return {
-                    text: content,
-                    anchorPos: [
-                        midX,
-                        lnH * (i + 3/4) // why does 3/4 work?
-                    ],
-                    anchor: 'middle'
-                }
-            }),
-            textLoc: textLoc
+                neighborArrows: [
+                    // 1 or more arrows are added
+                    {
+                        type: 'path',
+                        d: ...
+                    }
+                ] // assigned by addNeighborArrows
+            }
         }
-    }
-    function setUiWithTextsOnly(contents, data) {
-        var textBlock = getTextBlock(contents, data.textLoc)
-
-        var pad = {h: 3, v: 1}
-        textBlock.pos = [pad.h, pad.v]
-
-        return data.ui = {
-            dim: [
-                pad.h * 2 + textBlock.dim[0],
-                pad.v * 2 + textBlock.dim[1]
-            ],
-            textBlocks: [textBlock]
-        }
-    }
-
-    /*
-        Add horizontal arrows to and from neighbors
-            set 1: from (left edge of parent) to (left edge of each child)
-            set 2: from (right edge of each child) to (right edge of parent)
-        to parentData.ui.neighborArrows
     */
-    function addNeighborArrows(parentData, pad) {
+    function addNeighborArrows(parentData) {
         var children = surfaceData.getChildVal(parentData)
         var parentUi = parentData.ui
 
@@ -227,11 +230,99 @@
     }
 
     /*
-        Sets data.ui.dim
-        Does not set data.ui.pos
-        If data contains children, recursively sets their .ui.dim and .ui.pos, using `setUiWithChildren`
-        Returns data.ui, for convenience -- all parents have to post-process what this fn returns
-            to, at minimum, add pos.
+        Creates a textBlock.
+        
+        Does not assign it to an component data. Hence caller must assign it,
+            probably pushing it to `theParentData.ui.textBlocks`.
+            (For doc on the list of props that are read, see `boxedClass`.)
+
+        Caller is responsible for assigning pos to the returned obj,
+            and complete any other necessary info.
+
+        If the parent component has textLoc, it's recommend to copy it over here.
+            (See fn `hiliteSelected` for explanation.)
+    */
+    function getTextBlock(contents, textLoc) {
+        var lnH = 16 // 1rem
+        var charW = lnH / 2
+
+        var textLens = contents.map(function(t) {
+            return String(t).length
+        })
+        var myW = charW * Math.max.apply(Math, textLens)
+        var midX = myW / 2
+
+        return {
+            type: 'textBlock',
+            dim: [myW, lnH * contents.length],
+            rows: contents.map(function(content, i) {
+                return {
+                    text: content,
+                    anchorPos: [
+                        midX,
+                        lnH * (i + 3/4) // why does 3/4 work?
+                    ],
+                    anchor: 'middle'
+                }
+            }),
+            textLoc: textLoc
+        }
+    }
+    /*
+        Assigns all info required for rendering a component that has
+            rows of texts (one textBlock) and nothing else.
+
+        Result is
+        data ~= {
+            etc: ...
+            ui: {
+                dim: [n,n],
+                textBlocks: [
+                    // one textBlock is added
+                    {
+                        type: 'textBlock'
+                        etc: ... see fn `getTextBlock`
+                    }
+                ]
+            } // assigned by setUiWithTextBlockOnly
+        }
+        Returns data.ui, for convenience.
+    */
+    function setUiWithTextBlockOnly(contents, data) {
+        var textBlock = getTextBlock(contents, data.textLoc)
+
+        var pad = {h: 3, v: 1}
+        textBlock.pos = [pad.h, pad.v]
+
+        return data.ui = {
+            dim: [
+                pad.h * 2 + textBlock.dim[0],
+                pad.v * 2 + textBlock.dim[1]
+            ],
+            textBlocks: [textBlock]
+        }
+    }
+
+    
+
+    /*
+        Assigns all info required for rendering the given component
+            and its children, if any.
+            That is, all except the positioning of the given component.
+
+        Result is
+        data ~= {
+            etc: ... // non-ui data may be modified
+            someChild: // assigned by setUiByType, if there is any child
+            someOtherChild: // assigned by setUiByType, if there is any child
+            ui: {
+                dim: [n,n]
+                etc: ...
+            } // assigned by setUiByType
+        }
+        Returns data.ui, for convenience.
+
+        Caller of setUiByType is responsible for assigning `data.ui.pos`.
     */
     function setUiByType(data) {
         var map = {
@@ -248,7 +339,7 @@
                 // make the left terminus have higher z-index than disj
                 data.roots.push(data.roots.shift())
 
-                // remove markers from disjunction's neighborArrows funneling into the right terminal
+                // remove markers from disj's neighborArrows funneling into the right terminus
                 data.roots[0].ui.neighborArrows.forEach(function(arrow) {
                     if (arrow.toRight) {
                         arrow.usesMarkerEnd = false
@@ -295,7 +386,21 @@
                     hr.stroke = '#ddd'
                 })
 
-                addNeighborArrows(data, pad)
+                if (data.mandatedDim) {
+                    ;(function() {
+                        // Special case. If disj's parent is a capturing group,
+                        //     it dictates expansion of disj's right and bottom edges.
+                        // Change disj's dim before drawing neighborArrows.
+                        var padRExpansion = data.mandatedDim.minPadR - pad.x[1]
+                        ui.dim[0] += Math.max(0, padRExpansion)
+
+                        if (ui.dim[1] < data.mandatedDim.minH) {
+                            ui.dim[1] = data.mandatedDim.minH
+                        }
+                    })()
+                }
+
+                addNeighborArrows(data)
 
                 return ui
             },
@@ -327,10 +432,10 @@
                     'min: ' + data.min,
                     'max: ' + (data.max === Infinity ? '\u221e' : data.max),
                 ]
-                if (data.max > 1) {
+                if (data.max === Infinity) {
                     texts.push(data.greedy ? 'Greedy' : 'Lazy')
                 }
-                var ui = setUiWithTextsOnly(texts, data)
+                var ui = setUiWithTextBlockOnly(texts, data)
                 ui.fill = '#fff8ea'
                 ui.stroke = '#bbb'
                 ui.strokeW = 1
@@ -377,7 +482,8 @@
                     }
                 }
 
-                // add Quantifier ; position target and Quantifier ; set dim of parent (Quantified)
+                // position children, which are target and Quantifier
+                // set dim of parent (Quantified)
                 var myH
                 ;(function() {
                     var qUi = setUiByType(data.quantifier)
@@ -464,10 +570,10 @@
                     }
                 })()
 
+                // if term is at the bottom and bottom arrow is looping,
+                //     b/c arrows in term would be pointing the wrong way,
+                //     and there is no good way to correct them, remove them
                 if (! data.quantifier.min && btmArrowStyle === 'loop') {
-                    // if term is at the bottom and bottom arrow is looping,
-                    //     b/c arrows in term would be pointing the wrong way,
-                    //     and there is no good way to put arrows, remove them
                     ;(function(child) {
                         var disj
                         if (child.type === 'Set of Chars') {
@@ -496,7 +602,7 @@
                 ]
                 cUi.stroke = '#888' // otherwise normally disj has stroke 'none'
                 cUi.strokeW = 1
-                cUi.neighborArrows.length = 0 // disj is not connected with the rest of the flow
+                cUi.neighborArrows.length = 0 // disj should not be connected with the rest of the flow
 
                 return data.ui = {
                     dim: [
@@ -509,24 +615,49 @@
                 }
             },
             'Assertion': function() {
-                var ui = setUiWithTextsOnly([data.assertion], data)
+                var ui = setUiWithTextBlockOnly([data.assertion], data)
                 ui.stroke = '#f9f374'
                 ui.fill = 'Non-Word Boundary' === data.assertion ? fillForNegative : null
                 return ui
             },
 
             'Group': function() {
-                // TODO show/link number
+                var tbPad = 3
+                var tb
+                if (typeof data.number === 'number') {
+                    tb = getTextBlock([
+                        '#' + data.number
+                    ], data.textLoc)
+
+                    // provide mandated dim to disj before setUiByType call
+                    data.grouped.mandatedDim = {
+                        minPadR: tbPad * 2 + tb.dim[0],
+                        minH: (tbPad * 2 + tb.dim[1]) * 2
+                    }
+                }
+
                 var pad = {h: 0, v: 0}
+
                 var cUi = setUiByType(data.grouped)
                 cUi.pos = [pad.h, pad.v]
-                return data.ui = {
+
+                var ui = data.ui = {
                     dim: [
                         pad.h * 2 + cUi.dim[0],
                         pad.v * 2 + cUi.dim[1]
                     ],
                     stroke: '#fb5'
                 }
+
+                if (tb) {
+                    tb.pos = [
+                        ui.dim[0] - tbPad - tb.dim[0],
+                        ui.dim[1] - tbPad - tb.dim[1]
+                    ]
+                    ui.textBlocks = [tb]
+                }
+
+                return ui
             },
             'Set of Chars': function() {
                 var pad = {x: [30,30], y: [10,10]}
@@ -540,11 +671,13 @@
                 ui.stroke = '#b7a'
 
                 if (! data.inclusive) {
-                    ;(function(children) {
+                    ;(function() {
+                        // creating a comonent obj with no type
+                        // no type --> rendered by `boxedClass` class
                         var tb = {
                             inclusive: true
                         }
-                        var tbUi = setUiWithTextsOnly([
+                        var tbUi = setUiWithTextBlockOnly([
                             'Any', 'Other'
                         ], tb)
                         tbUi.pos = [
@@ -553,50 +686,51 @@
                         ]
                         tbUi.stroke = '#888'
                         tbUi.strokeW = 1
-                        // looks like 'Other' is short enough that we don't have to readjust parent ui width
 
+                        // looks like 'Other' is short enough that we don't have to readjust parent ui width
                         ui.dim[1] += (intraMargin + tbUi.dim[1])
 
                         // modifying parser output here!!
-                        children.push(tb)
-                    })(surfaceData.getChildVal(data))
+                        // Adding the compo to `data.possibilities`
+                        //     rather than to `data.ui.textBlocks`
+                        //     for the convenience of creating neighborArrows
+                        data.possibilities.push(tb)
+                    })()
                 }
 
-                addNeighborArrows(data, pad)
+                addNeighborArrows(data)
                 ui.neighborArrows.forEach(function(arrow) {
                     arrow.usesMarkerEnd = false // b/c it looks cluttered
 
                     var child = data.possibilities[arrow.childIndex]
                     if (child) {
                         arrow.usesMarkerMid = ! child.inclusive
-                    } else {
-                        arrow.usesMarkerMid = ! data.inclusive
                     }
+                    // If no child, then it's b/c arrow.childIndex is undefined
+                    // b/c there was only one arrow b/c there was zero child
+                    // b/c this is an inclusive Set of Chars with zero possibilities.
+                    // Then, nothing to do.
                 })
 
                 return ui
             },
             'Range of Chars': function() {
+                var linkH = 15
                 var ui = setUiWithChildren(
                     data,
                     {x: [10,10], y: [10,10]},
                     0,
                     'y',
-                    15
+                    linkH
                 )
                 ui.stroke = '#f77'
                 ui.fill = data.inclusive ? null : fillForNegative
 
-                var rangeWs = data.range.map(function(sub) {
-                    return sub.ui.dim[0]
-                })
-                var linkW = Math.max.apply(Math, rangeWs)
-                // TODO do i need to set link.dim[0]?
                 var link = ui.fillers[0]
                 link.type = 'path'
                 link.d = [
-                    [linkW / 2, 0],
-                    [linkW / 2, link.dim[1]]
+                    [link.dim[0] / 2, 0],
+                    [link.dim[0] / 2, linkH]
                 ]
                 link.isVertical = true
                 link.usesMarkerEnd = false
@@ -604,19 +738,19 @@
                 return ui
             },
             'Any Char': function() {
-                var ui = setUiWithTextsOnly([data.type], data)
+                var ui = setUiWithTextBlockOnly([data.type], data)
                 ui.stroke = '#09d'
                 ui.fill = data.inclusive === false ? fillForNegative : null
                 return ui
             },
             'Specific Char': function() {
-                var ui = setUiWithTextsOnly([data.display], data)
+                var ui = setUiWithTextBlockOnly([data.display], data)
                 ui.stroke = '#09d'
                 ui.fill = data.inclusive === false ? fillForNegative : null
                 return ui
             },
             'Reference': function() {
-                var ui = setUiWithTextsOnly([data.type, data.number], data)
+                var ui = setUiWithTextBlockOnly([data.type, data.number], data)
                 ui.stroke = '#f9f374'
                 ui.fill = data.isBack ? null : fillForNegative
                 return ui
@@ -632,20 +766,16 @@
     } // end of fn setUiByType
 
     /*
-        Recursively sets `ui` prop to the data obj and its children.
-        Does not modify any other prop.
-        `ui` will contain minimum `pos` and `dim` props
-            as well as other info compatible with the corresonding react class
-            e.g. see fn `createBoxedClass`, a proxy to React.createClass
+        Assigns all info required for rendering the root component.
+        See `setUiByType`.
     */
     surfaceData.addUiData = function(data) {
-        var pad = {t:10,r:10,b:10,l:10}
-
+        var rootPad = 10
         var dUi = setUiByType(data)
-        dUi.pos = [pad.l,pad.t]
-        dUi.svgDim = [
-            pad.t + dUi.pos[0] + dUi.dim[0] + pad.b,
-            pad.l + dUi.pos[1] + dUi.dim[1] + pad.r
+        dUi.pos = [rootPad, rootPad]
+        dUi.dim = [
+            rootPad * 2 + dUi.pos[0] + dUi.dim[0],
+            rootPad * 2 + dUi.pos[1] + dUi.dim[1]
         ]
     }
 

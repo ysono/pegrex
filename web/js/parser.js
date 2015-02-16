@@ -748,6 +748,8 @@ if (typeof module !== 'undefined' && require.main === module) {
   exports.main(process.argv.slice(1));
 }
 };(function() {
+    'use strict'
+
     var terms_s = []
     var numCapturedGroups = 0
 
@@ -917,15 +919,18 @@ if (typeof module !== 'undefined' && require.main === module) {
             
             // convert some of 'Specific Char's to 'Range of Chars'.
             // more readable to do it here than in lex.
-            var i, item, prevItem, replacement
+            var i, item, prevItem, nextItem, replacement
             for (i = 1; i < items.length - 1; i++) {
                 item = items[i]
                 prevItem = items[i - 1]
+                nextItem = items[i + 1]
                 if (item.type === 'Specific Char' && item.display === '-'
-                    && prevItem.type === 'Specific Char') {
+                    && prevItem.type === 'Specific Char'
+                    && nextItem && nextItem.type === 'Specific Char') {
+
                     replacement = builders.charSetRange(
                         prevItem,
-                        items[i + 1])
+                        nextItem)
                     items.splice(i - 1, 3, replacement)
 
                     // On the next loop, want i to point to 2 elms ahead of replacement.
