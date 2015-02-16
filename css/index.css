@@ -7,7 +7,7 @@ html, body {
     height: 100%;
 }
 .texts-parent {
-    margin: 20px 30px;
+    margin: 20px 1%;
     border: solid 1px;
     text-align: center;
 }
@@ -25,29 +25,29 @@ html, body {
     display: none;
 }
 .texts-parent>fieldset :not(legend) {
-    font-size: 1.2em;
+    font-size: 1.2rem;
     font-family: monospace;
 }
 .texts-parent>fieldset .prefix {
     display: inline-block;
-    width: 8em;
+    width: 12rem;
     text-align: right;
 }
 .texts-parent>fieldset .infix {
     display: inline-block;
-    width: 2em;
+    width: 2rem;
     text-align: center;
 }
 .texts-parent>fieldset .suffix {
     display: inline-block;
-    width: 1em;
+    width: 1rem;
 }
 
 .texts-parent .pattern {
-    width: 60%;
+    width: 70%;
 }
 .texts-parent .flags {
-    width: 3em;
+    width: 3rem;
 }
 
 svg .clickable {

@@ -15,6 +15,9 @@
         'Set of Chars': 'possibilities',
         'Range of Chars': 'range'
     }
+    /*
+        Locate children for a generic component.
+    */
     surfaceData.getChildVal = function(data) {
         var prop = typeToChildProp[data.type]
         if (typeof prop === 'string') {
@@ -313,8 +316,8 @@
         Result is
         data ~= {
             etc: ... // non-ui data may be modified
-            someChild: // assigned by setUiByType, if there is any child
-            someOtherChild: // assigned by setUiByType, if there is any child
+            someSingleChild: // assigned e.g. by calling setUiByType
+            someArrayOfChildren: // assigned e.g. by calling setUiWithChildren
             ui: {
                 dim: [n,n]
                 etc: ...
@@ -574,15 +577,18 @@
                 //     b/c arrows in term would be pointing the wrong way,
                 //     and there is no good way to correct them, remove them
                 if (! data.quantifier.min && btmArrowStyle === 'loop') {
-                    ;(function(child) {
+                    ;(function() {
+                        var child = data.target
                         var disj
+                        // these are the two types of data.target that has
+                        //     a neighborArrow in them.
                         if (child.type === 'Set of Chars') {
                             tUi.neighborArrows.length = 0
                         } else if (child.type === 'Group') {
-                            disj = surfaceData.getChildVal(child)
+                            disj = child.grouped
                             disj.ui.neighborArrows.length = 0
                         }
-                    })(surfaceData.getChildVal(data))
+                    })()
                 }
 
                 return myUi
