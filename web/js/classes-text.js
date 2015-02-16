@@ -7,6 +7,7 @@
                 <div className="texts-parent">
                     <Literal
                         pattern={this.props.pattern} flags={this.props.flags}
+                        patternHasError={this.props.patternHasError}
                         patternSel={this.props.patternSel}
                         onChange={this.props.onChange} onSelect={this.props.onSelect} />
                     <hr />
@@ -35,15 +36,13 @@
         },
         handleSelect: function(e) {
             // note: chrome doesn't remember which direction a mouse selected -> always 'none'
-            //     also, 1. select fwd using keyboard 2. select to home (shift+home or cmd+shift+left) --> wrong
+            //     also, 1. select fwd using keyboard 2. select to home (shift+home or cmd+shift+left)
+            //         --> seln is not anchored on original point.
 
             // info: if blur was for clicking on svg, blur fires before re-focus, so it works
 
-            /* need to handle blur b/c otherwise
-                chrome doesn't let you escape focus
-                ff keeps selection on blur
-                ie11 just kinda freezes and dies?
-            */
+            // need to handle blur b/c otherwise infinite loop
+            // TODO test
             var elm = e.target
             var patternSel = e.type === 'blur'
                 ? null
@@ -54,20 +53,21 @@
             if (this.props.patternSel) {
                 sel(this.refs.pattern.getDOMNode(), this.props.patternSel)
             }
+
+            var errorClassName = this.props.patternHasError ? 'error' : ''
+
             return (
                 <fieldset className="literal">
-                    <legend>Literal</legend>
-                    <span>
-                        <span className="prefix">/</span>
-                        <input ref="pattern" type="text" className="pattern"
-                            placeholder={'(?:)'}
-                            value={this.props.pattern} onChange={this.handleChange}
-                            onSelect={this.handleSelect} onBlur={this.handleSelect} />
-                        <span className="infix">/</span>
-                        <input ref="flags" type="text" className="flags"
-                            value={this.props.flags} onChange={this.handleChange} />
-                        <span className="suffix"></span>
-                    </span>
+                    <span className="prefix">/</span>
+                    <input type="text" ref="pattern" placeholder={'(?:)'}
+                        value={this.props.pattern} onChange={this.handleChange}
+                        onSelect={this.handleSelect}
+                        className={'pattern ' + errorClassName} />
+                    <span className="infix">/</span>
+                    <input type="text" ref="flags"
+                        value={this.props.flags} onChange={this.handleChange}
+                        className={'flags ' + errorClassName} />
+                    <span className="suffix"></span>
                 </fieldset>
             )
         }
@@ -168,16 +168,15 @@
             }
             return (
                 <fieldset className="ctor">
-                    <legend>Constructor</legend>
-                    <span>
-                        <span className="prefix">new RegExp('</span>
-                        <input ref="pattern" type="text" className="pattern"
-                            value={escParts.pattern} onChange={this.handleChange} />
-                        <span className="infix">','</span>
-                        <input ref="flags" type="text" className="flags"
-                            value={escParts.flags} onChange={this.handleChange} />
-                        <span className="suffix">')</span>
-                    </span>
+                    <span className="prefix">{"new RegExp('"}</span>
+                    <input type="text" ref="pattern" 
+                        value={escParts.pattern} onChange={this.handleChange}
+                        className="pattern" />
+                    <span className="infix">','</span>
+                    <input type="text" ref="flags"
+                        value={escParts.flags} onChange={this.handleChange}
+                        className="flags" />
+                    <span className="suffix">{"')"}</span>
                 </fieldset>
             )
         }

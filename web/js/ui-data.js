@@ -708,14 +708,19 @@
                 ui.neighborArrows.forEach(function(arrow) {
                     arrow.usesMarkerEnd = false // b/c it looks cluttered
 
-                    var child = data.possibilities[arrow.childIndex]
-                    if (child) {
-                        arrow.usesMarkerMid = ! child.inclusive
+                    if (typeof arrow.childIndex === 'number') {
+                        var child = data.possibilities[arrow.childIndex]
+                        // don't cross out line going to nested set, which is a predefined set
+                        //     b/c it has "Any Other" as whitelist
+                        if (child && child.type !== 'Set of Chars') {
+                            arrow.usesMarkerMid = ! child.inclusive
+                        }
+                    } else {
+                        // If no child, then it's b/c arrow.childIndex is undefined
+                        // b/c there was only one arrow b/c there was zero child
+                        // b/c this is an inclusive Set of Chars with zero possibilities.
+                        // Then, nothing to do.
                     }
-                    // If no child, then it's b/c arrow.childIndex is undefined
-                    // b/c there was only one arrow b/c there was zero child
-                    // b/c this is an inclusive Set of Chars with zero possibilities.
-                    // Then, nothing to do.
                 })
 
                 return ui
@@ -756,7 +761,8 @@
                 return ui
             },
             'Reference': function() {
-                var ui = setUiWithTextBlockOnly([data.type, data.number], data)
+                var ui = setUiWithTextBlockOnly(
+                    [data.type, 'To #' + data.number], data)
                 ui.stroke = '#f9f374'
                 ui.fill = data.isBack ? null : fillForNegative
                 return ui
