@@ -2,6 +2,12 @@
     'use strict'
 
     function extendClassProto(proto) {
+        /*
+            Single handler for all events.
+            Any element should bind all events to this handler.
+            The single handler fn is passed down elements as `onEvents={this.handleEvents}`
+                as long as all nested children are created by the helper `createInstance`.
+        */
         proto.handleEvents = function(e) {
             var payload = e.pegrexPayload
                 ? e // pass-thru
@@ -12,6 +18,26 @@
                 } // `this` originated the event
             this.props.onEvents(payload)
         }
+        /*
+            How highlight works:
+            1. Some random surface Element anywhere has `onClick={this.handleEvents}` assigned,
+                which is the `proto.handleEvents` above.
+            2. `handleEvents` bubbles up that surface Element's `this.props.data`.
+            3. React is externally wired so if `data.textLoc` exists,
+                it updates `this.props.patternSel` on all surface Elements;
+                hence `this.render` of all surface Elements are called.
+            4. The current surface Element's `this.render` is written to call `this.hiteliteSelected`,
+                which is the `proto.hiliteSelected` here.
+            5. `hiliteSelected` matches the current Element's `this.props.textLoc` against
+                the updated `this.props.patternSel`.
+            6. If it's a match, visually indicates so by visually modifying `this.refs.box.getDOMNode()`.
+
+            Tl;dr
+            1. (`onClick={this.handleEvents}`) + (Element's proto was extended by `extendClassProto`)
+                + (always using `createInstance` to create children Elements)
+                = the `onClick` node can trigger highlighting by click.
+            2. Write `this.render` to call `this.hiliteSelected` if `this.refs.box` is a valid ref.
+        */
         proto.hiliteSelected = function() {
             // `filter` attr is not supported by react, so manually assign.
             if (! this.refs.box) {
@@ -35,7 +61,7 @@
     }
 
     /*
-        render fn reads following vals. All are optional unless noted.
+        boxedClass's render fn reads following vals. All are optional unless noted.
         In the increasing order of z-index ...
             // for rect
             data.ui
@@ -45,17 +71,17 @@
                 .stroke
                 .strokeW // default 3. if zero, use stroke='none'
 
-            // for children
-            // these children are routed to `createInstance`, so they each must have valid `.type`.
+            // for other children
+            // The creation of these children elements are delegated to `createInstance`,
+            //     so they each must have valid `.type`.
+            // The separation of props is for convenience while adding ui data;
+            //     render fn does not care which types of children are in which props.
             data.ui
                 .fillers
                 .neighborArrows
-            whatever surfaceData.getChildVal(data) reads to get child
+            whatever surfaceData.getChildVal(data) reads in order to get children
             data.ui
                 .textBlocks
-        
-        If data.textLoc exists, this class is selectable.
-        E.g. each of textBlocks that is meant to be selectable needs to have textloc too.
     */
     var boxedClass = React.createClass(extendClassProto({
         render: function() {
@@ -74,22 +100,28 @@
                         ref="box" />
             )
 
-            var childElms =
-                (data.ui.fillers || [])
-                .concat(data.ui.neighborArrows || [])
-                .concat(surfaceData.getChildVal(data) || [])
-                .concat(data.ui.textBlocks || [])
-                .map(function(childVal) {
-                    var childList = ([].concat(childVal))
-                        .map(function(childData, i) {
-                            return createInstance(handleEvents, childData, patternSel, i)
-                        })
-                    return childList
-                })
+            /*
+                val is [
+                    [children from one property]
+                ]
+                I think this is better for key management than having one big array?
+            */
+            var childElms = [
+                data.ui.fillers || [],
+                data.ui.neighborArrows || [],
+                surfaceData.getChildVal(data) || [],
+                data.ui.textBlocks || [],
+            ].map(function(childVal) {
+                var childList = ([].concat(childVal))
+                    .map(function(childData, i) {
+                        return createInstance(handleEvents, childData, patternSel, i)
+                    })
+                return childList
+            })
 
             this.hiliteSelected()
 
-            // data-type for the ease of visual debugging only; not used by program.
+            // data-type for aiding with debugging only; not used by program.
             return (
                 <g transform={txform} data-type={data.type}>
                     {boxElm}
@@ -122,18 +154,17 @@
 
                 var txform = ['translate(', data.pos, ')'].join('')
 
-                var textNodes = data.rows.map(function(row) {
+                var textNodes = data.rows.map(function(row, i) {
                     return (
                         <text x={row.anchorPos[0]} y={row.anchorPos[1]} textAnchor={row.anchor}
                             fontFamily="monospace"
-                            onClick={handleEvents} className="clickable">
+                            onClick={handleEvents} className="clickable"
+                            key={i}>
                             {row.text}
                         </text>
                     )
                 })
 
-                this.hiliteSelected()
-                
                 return (
                     <g transform={txform}>
                         {textNodes}
@@ -232,7 +263,7 @@
             var svgDim = [0,0]
             var childNode
             if (tree) {
-                svgDim = tree.ui.svgDim
+                svgDim = tree.ui.dim
                 childNode = createInstance(this.handleEvents, tree, patternSel)
             }
 
