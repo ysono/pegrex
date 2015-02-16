@@ -1153,12 +1153,9 @@ if (typeof module !== 'undefined' && require.main === module) {
         }
     } // end of var builders
     parser.yy.b = builders
-    parser.yy.parseError = function(msg, hash) {
-        throw {
-            loc: [hash.loc.first_column, hash.loc.last_column],
-            msg: msg
-        }
-    }
+
+    // note: we could assign yy.parseError to customize error to include text location,
+    //     but location isn't helpful.
 
     parser.parse = (function(orig) {
         function postParse() {

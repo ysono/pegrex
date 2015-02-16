@@ -32,13 +32,13 @@
     
     var Controls = React.createClass({
         getInitialState: function() {
-            var parts = hashUtil.parse() || {
+            var state = hashUtil.parse() || {
                 pattern: '',
-                flags: '',
-                patternSel: null
+                flags: ''
             }
-            parts.tree = this.textsToTree(parts)
-            return parts
+            this.patternToTree(state)
+            state.patternSel = null // will be [n,n] - beg/end indices of selection.
+            return state
         },
         componentDidMount: function() {
             var updateSelfFromHash = (function() {
@@ -50,38 +50,38 @@
             window.addEventListener('hashchange', updateSelfFromHash)
         },
 
-        textsToTree: function(parts) {
-            var tree
+        patternToTree: function(parts) {
             try {
-                tree = parser.parse(parts.pattern)
-                surfaceData.addUiData(tree)
-                return tree
+                parts.tree = parser.parse(parts.pattern)
+                surfaceData.addUiData(parts.tree)
             } catch(e) {
-                // don't propagate b/c still want text states updated
-                // TODO highlight text location
-                console.error('parsing failed', e.stack, e)
+                console.warn('parsing failed', e)
+                parts.tree = undefined
+                parts.patternHasError = true
             }
         },
         handleTextsChange: function(parts) {
-            if ( this.state.pattern === parts.pattern
-                && this.state.flags === parts.flags ) {
-                return
+            var didChange = false
+            if (this.state.pattern !== parts.pattern) {
+                this.patternToTree(parts)
+                didChange = true
             }
-            var state = {
-                pattern: parts.pattern,
-                flags: parts.flags,
-                tree: this.textsToTree(parts),
-                patternSel: null
+            if (this.state.flags !== parts.flags) {
+                // TODO
+                didChange = true
             }
-            hashUtil.update(state)
-            this.setState(state)
+
+            if (didChange) {
+                hashUtil.update(parts)
+                this.setState(parts)
+            }
+            // else don't make an unnecessary loop to hash change.
         },
         handleTextsSelect: function(patternSel) {
             this.setState({
                 patternSel: patternSel
             })
         },
-
 
         handleSurfaceChange: function(x) {
             this.setState({
@@ -95,6 +95,7 @@
                     <reactClasses.Texts
                         pattern={this.state.pattern}
                         flags={this.state.flags}
+                        patternHasError={this.state.patternHasError}
                         patternSel={this.state.patternSel}
                         onChange={this.handleTextsChange}
                         onSelect={this.handleTextsSelect} />

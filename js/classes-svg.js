@@ -92,7 +92,7 @@
             var txform = ['translate(', data.ui.pos, ')'].join('')
 
             var boxElm = (
-                <rect width={data.ui.dim[0]} height={data.ui.dim[1]}
+                <rect width={data.ui.dim[0]} height={data.ui.dim[1]} rx="3" ry="3"
                         stroke={data.ui.stroke}
                         strokeWidth={data.ui.strokeW || 3}
                         fill={data.ui.fill || 'white'}
