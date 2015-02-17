@@ -17,6 +17,8 @@
                     <Ctor
                         pattern={this.props.pattern}
                         flags={this.props.flags}
+                        validPattern={this.props.validPattern}
+                        validFlags={this.props.validFlags}
                         onChange={this.props.onChange} />
                 </div>
             )
@@ -116,7 +118,7 @@
             return {
                 prevParts: {},
                 escParts: {},
-                escInvalidParts: {}
+                escValidParts: {}
             }
         },
 
@@ -152,9 +154,9 @@
             var state = {
                 prevParts: parts,
                 escParts: escParts,
-                escInvalidParts: {
-                    pattern: parts.pattern == null,
-                    flags: parts.flags == null
+                escValidParts: {
+                    pattern: parts.pattern != null,
+                    flags: parts.flags != null
                 }
             }
             parts.pattern = parts.pattern || ''
@@ -164,18 +166,25 @@
         },
         render: function() {
             var self = this
+
+            var valids = {
+                pattern: this.props.validPattern,
+                flags: this.props.validFlags
+            }
+
             var escParts = {}, classNames = {}
             ;['pattern', 'flags'].forEach(function(partName) {
-                classNames[partName] = partName
-
                 if (self.state.prevParts[partName] === self.props[partName]) {
                     escParts[partName] = self.state.escParts[partName]
-                    classNames[partName] += self.state.escInvalidParts[partName]
-                        ? ' error' : ''
+                    valids[partName] = valids[partName]
+                        && self.state.escValidParts[partName]
                 } else {
                     escParts[partName] = self.escape(self.props[partName])
                 }
+
+                classNames[partName] = partName + (valids[partName] ? '' : ' error')
             })
+
             return (
                 <fieldset className="ctor">
                     <span className="prefix">{"new RegExp('"}</span>
