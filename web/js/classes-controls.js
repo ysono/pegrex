@@ -39,17 +39,46 @@
             this.patternToTree(state)
             this.validateFlags(state)
             state.patternSel = null // will be [n,n] - beg/end indices of selection.
+            state.patternEditorMode = 'select'
             return state
         },
         componentDidMount: function() {
-            var updateSelfFromHash = (function() {
-                var parts = hashUtil.parse()
-                if (parts) {
-                    this.handleTextsChange(parts)
-                }
-            }).bind(this)
-            window.addEventListener('hashchange', updateSelfFromHash)
+            window.addEventListener('hashchange', this.handleHashChange)
         },
+
+        /*
+            TODO add this fn
+            All event handlers delegate to here, which in turn runs all relevant
+                event handlers based on what was provided in the partial state.
+
+            Therefore, the caller of `syncState` is _guaranteed_ to 
+        */
+        // syncState: function(partialState) {
+        //     var keys = Object.keys(partialState).reduce(function(map, key) {
+        //         map[key] = true
+        //         return map
+        //     }, {})
+        //     if (partialState.pattern || partialState.flags) {
+        //         hashUtil.update(partialState)
+        //         this.handleTextsChange(partialState)
+        //     }
+        //     if (partialState.patternSel) {
+
+        //     }
+        //     this.setState(partialState)
+        // },
+
+        /* from hash */
+
+        handleHashChange: function() {
+            var parts = hashUtil.parse()
+            if (parts) {
+                this.handleTextsChange(parts)
+            }
+            // this.syncState(parts)
+        },
+
+        /* from texts */
 
         patternToTree: function(parts) {
             try {
@@ -88,6 +117,7 @@
                 parts.patternSel = null // or else cursor/selection won't change as user types.
                 hashUtil.update(parts)
                 this.setState(parts)
+                // this.syncState(parts)
             }
             // else don't make an unnecessary loop to hash change.
         },
@@ -97,19 +127,59 @@
             })
         },
 
+        /* from surface */
+
         handleSurfaceEvents: function(x) {
             // handles all events. handle different types here.
-            this.setState({
-                patternSel: x.data.textLoc
-            })
+            // (currently all events are clicks)
+            function spliceStr(from, to) {
+                var arr = this.split('')
+                arr.splice(from, to - from)
+                return arr.join('')
+            }
+
+            var mode = this.state.patternEditorMode
+            var state
+            if (mode === 'select') {
+                this.setState({
+                    patternSel: x.data.textLoc
+                })
+            } else if(mode === 'delete') {
+                if (x.data.textLoc) {
+                    console.info('splicing', x.data.textLoc)
+                    state = {
+                        pattern: spliceStr.apply(
+                            this.state.pattern, x.data.textLoc),
+                        patternSel: [x.data.textLoc[0], x.data.textLoc[0]]
+                    }
+                    this.patternToTree(state)
+                    hashUtil.update({
+                        pattern: state.pattern,
+                        flags: this.state.flags
+                    })
+                    this.setState(state)
+                }
+            }
         },
+
+        /* from editors */
 
         handleFlagsEditorChange: function(flags) {
             var state = {
                 flags: flags
             }
             this.validateFlags(state)
+            hashUtil.update({
+                pattern: this.state.pattern,
+                flags: state.flags
+            })
             this.setState(state)
+        },
+
+        handlePatternEditorModeChange: function(mode) {
+            this.setState({
+                patternEditorMode: mode
+            })
         },
 
         render: function() {
@@ -133,6 +203,8 @@
                             flags={this.state.flags}
                             validFlags={this.state.validFlags}
                             onChange={this.handleFlagsEditorChange} />
+                        <reactClasses.PatternEditor
+                            onModeChange={this.handlePatternEditorModeChange} />
                     </div>
                 </div>
             )

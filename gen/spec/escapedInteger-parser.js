@@ -1,6 +1,9 @@
 var _ = require('lodash')
 var parser = require('../parser')
 
+// parser needs `window.eval`
+global.window = global.window || global
+
 function pattern(disj) {
     return {
         type: 'Pattern',
