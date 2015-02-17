@@ -2,9 +2,15 @@ html, body {
     height:100%;
     margin: 0;
 }
-.controls-parent, .controls {
+.react-parent, .controls-parent {
     position: relative;
     height: 100%;
+}
+
+/* under controls-parent */
+
+.visuals-parent {
+    position: relative;
 }
 .texts-parent {
     margin: 20px 1%;
@@ -17,6 +23,7 @@ html, body {
     text-align: center;
 }
 
+/* under texts-parent */
 
 .texts-parent>fieldset {
     border: none;
@@ -63,7 +70,24 @@ html, body {
     }
 }
 
+/* under surface-parent */
 
 svg .clickable {
     cursor: pointer;
+}
+
+/* under editor */
+
+.flags-editor {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin-right: 20px;
+    background-color: pink;
+}
+.flags-editor>* {
+    display: block;
+    width: 32px;
+    height: 32px;
+    border: solid 3px cyan;
 }

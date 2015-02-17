@@ -97,15 +97,24 @@
             })
         },
 
-        handleSurfaceChange: function(x) {
+        handleSurfaceEvents: function(x) {
+            // handles all events. handle different types here.
             this.setState({
                 patternSel: x.data.textLoc
             })
         },
 
+        handleFlagsEditorChange: function(flags) {
+            var state = {
+                flags: flags
+            }
+            this.validateFlags(state)
+            this.setState(state)
+        },
+
         render: function() {
             return (
-                <div className="controls">
+                <div className="controls-parent">
                     <reactClasses.Texts
                         pattern={this.state.pattern}
                         flags={this.state.flags}
@@ -114,17 +123,23 @@
                         patternSel={this.state.patternSel}
                         onChange={this.handleTextsChange}
                         onSelect={this.handleTextsSelect} />
-                    <reactClasses.Surface
-                        tree={this.state.tree}
-                        flags={this.state.flags}
-                        patternSel={this.state.patternSel}
-                        onEvents={this.handleSurfaceChange} />
+                    <div className="visuals-parent">
+                        <reactClasses.Surface
+                            tree={this.state.tree}
+                            flags={this.state.flags}
+                            patternSel={this.state.patternSel}
+                            onEvents={this.handleSurfaceEvents} />
+                        <reactClasses.FlagsEditor
+                            flags={this.state.flags}
+                            validFlags={this.state.validFlags}
+                            onChange={this.handleFlagsEditorChange} />
+                    </div>
                 </div>
             )
         }
     })
     React.render(
         <Controls />,
-        document.getElementsByClassName('controls-parent')[0]
+        document.getElementsByClassName('react-parent')[0]
     )
 })()
