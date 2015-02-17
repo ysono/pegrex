@@ -198,6 +198,7 @@
                             tree={this.state.tree}
                             flags={this.state.flags}
                             patternSel={this.state.patternSel}
+                            patternEditorMode={this.state.patternEditorMode}
                             onSelect={this.handleSurfaceSelect} />
                         <reactClasses.FlagsEditor
                             flags={this.state.flags}
