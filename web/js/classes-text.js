@@ -6,13 +6,17 @@
             return (
                 <div className="texts-parent">
                     <Literal
-                        pattern={this.props.pattern} flags={this.props.flags}
-                        patternHasError={this.props.patternHasError}
+                        pattern={this.props.pattern}
+                        flags={this.props.flags}
+                        validPattern={this.props.validPattern}
+                        validFlags={this.props.validFlags}
                         patternSel={this.props.patternSel}
-                        onChange={this.props.onChange} onSelect={this.props.onSelect} />
+                        onChange={this.props.onChange}
+                        onSelect={this.props.onSelect} />
                     <hr />
                     <Ctor
-                        pattern={this.props.pattern} flags={this.props.flags}
+                        pattern={this.props.pattern}
+                        flags={this.props.flags}
                         onChange={this.props.onChange} />
                 </div>
             )
@@ -54,19 +58,27 @@
                 sel(this.refs.pattern.getDOMNode(), this.props.patternSel)
             }
 
-            var errorClassName = this.props.patternHasError ? 'error' : ''
+            function className(propName, valid) {
+                return propName + (valid ? '' : ' error')
+            }
+            var classNames = {
+                pattern: className('pattern', this.props.validPattern),
+                flags: className('flags', this.props.validFlags)
+            }
 
             return (
                 <fieldset className="literal">
                     <span className="prefix">/</span>
                     <input type="text" ref="pattern" placeholder={'(?:)'}
-                        value={this.props.pattern} onChange={this.handleChange}
+                        value={this.props.pattern}
+                        onChange={this.handleChange}
                         onSelect={this.handleSelect}
-                        className={'pattern ' + errorClassName} />
+                        className={classNames.pattern} />
                     <span className="infix">/</span>
                     <input type="text" ref="flags"
-                        value={this.props.flags} onChange={this.handleChange}
-                        className="flags" />
+                        value={this.props.flags}
+                        onChange={this.handleChange}
+                        className={classNames.flags} />
                     <span className="suffix"></span>
                 </fieldset>
             )
@@ -103,7 +115,8 @@
         getInitialState: function() {
             return {
                 prevParts: {},
-                escParts: {}
+                escParts: {},
+                escInvalidParts: {}
             }
         },
 
@@ -139,7 +152,7 @@
             var state = {
                 prevParts: parts,
                 escParts: escParts,
-                escInvalid: {
+                escInvalidParts: {
                     pattern: parts.pattern == null,
                     flags: parts.flags == null
                 }
@@ -157,7 +170,7 @@
 
                 if (self.state.prevParts[partName] === self.props[partName]) {
                     escParts[partName] = self.state.escParts[partName]
-                    classNames[partName] += self.state.escInvalid[partName]
+                    classNames[partName] += self.state.escInvalidParts[partName]
                         ? ' error' : ''
                 } else {
                     escParts[partName] = self.escape(self.props[partName])
@@ -167,11 +180,13 @@
                 <fieldset className="ctor">
                     <span className="prefix">{"new RegExp('"}</span>
                     <input type="text" ref="pattern" 
-                        value={escParts.pattern} onChange={this.handleChange}
+                        value={escParts.pattern}
+                        onChange={this.handleChange}
                         className={classNames.pattern} />
                     <span className="infix">','</span>
                     <input type="text" ref="flags"
-                        value={escParts.flags} onChange={this.handleChange}
+                        value={escParts.flags}
+                        onChange={this.handleChange}
                         className={classNames.flags} />
                     <span className="suffix">{"')"}</span>
                 </fieldset>

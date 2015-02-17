@@ -857,11 +857,12 @@ if (typeof module !== 'undefined' && require.main === module) {
             var hint = [
                 'Asserts that immediately',
                 atBeg ? 'left' : 'right',
-                'of this position is a line separation.',
-                'Matches the zero-length string between the line separation and the char',
+                'of this position is a "line separation".',
+                'Matches the zero-length string between the "line separation" and the char',
                 atBeg ? 'after' : 'before',
                 'it.',
-                'A line separation is represented by one of these chars:',
+                'In the regular single-line mode, a "line separation" is the beginning or the end of the input.',
+                'In multi-line mode, a "line separation" also includes these chars:',
                 sepChars,
             ].join(' ') + '.'
             return {
