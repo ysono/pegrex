@@ -34,7 +34,7 @@ html, body {
 }
 
 .texts-parent>fieldset>.prefix {
-    width: 12rem;
+    width: 10rem;
     text-align: right;
 }
 .texts-parent>fieldset>.infix {
@@ -55,6 +55,12 @@ html, body {
 
 .texts-parent>fieldset>input.error {
     background-color: #F0A9A1;
+}
+
+@media (max-width: 768px) {
+    .texts-parent>fieldset>:not(input) {
+        display: none;
+    }
 }
 
 

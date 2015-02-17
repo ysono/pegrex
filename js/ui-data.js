@@ -497,7 +497,11 @@
                     ]
                     qUi.pos = [
                         (myW - qUi.dim[0]) / 2,
-                        maxChildY + intraMargin
+                        Math.max(maxChildY, qUi.dim[1]) + intraMargin
+                        // Reason for Math.max: want the quantifier to be
+                        // below the mid vertical point b/c otherwise
+                        // e.g. `x*` is so narrow horizontally that
+                        // quantifier overlaps arrows.
                     ]
 
                     myH = qUi.pos[1] + qUi.dim[1] + pad.v
@@ -556,24 +560,6 @@
                                     usesMarkerEnd: false
                                 }
                             ]
-
-                            // if target is at the bottom and bottom arrow is looping,
-                            //     arrows in target would be pointing the wrong way,
-                            //     and there is no good way to correct them, so simply remove them
-                            if (! data.quantifier.min) {
-                                ;(function() {
-                                    var child = data.target
-                                    var disj
-                                    // these are the two types of data.target that has
-                                    //     a neighborArrow in them.
-                                    if (child.type === 'Set of Chars') {
-                                        tUi.neighborArrows.length = 0
-                                    } else if (child.type === 'Group') {
-                                        disj = child.grouped
-                                        disj.ui.neighborArrows.length = 0
-                                    }
-                                })()
-                            }
                         })()
                         return
                     }
@@ -604,6 +590,27 @@
                     }
                 })()
 
+                // if target is at the bottom and bottom arrow is looping,
+                //     neighborArrows in target would be pointing the wrong way,
+                if (! data.quantifier.min && btmArrowStyle === 'loop') {
+                    ;(function() {
+                        var child = data.target
+                        if (child.type === 'Set of Chars') {
+                            // b/e within a set, the path goes thru only one char,
+                            // eliminating directinality is sufficient.
+                            // (Set of Chars already eliminates arrowheads
+                            // to avoid visual cluttering, but keep code in here
+                            // for clarity.)
+                            tUi.neighborArrows.forEach(function(arrow) {
+                                arrow.usesMarkerEnd = false
+                            })
+                        } else if (child.type === 'Group') {
+                            // there is no easy way to correct them, so simply remove them
+                            child.grouped.ui.neighborArrows.length = 0
+                        }
+                    })()
+                }
+
                 return myUi
             },
 
@@ -619,6 +626,7 @@
                     pad.x[0],
                     textBlock.pos[1] + textBlock.dim[1] + intraMargin
                 ]
+                cUi.fill = 'white' // override 'none' so that user can highlight disj
                 cUi.stroke = '#888' // otherwise normally disj has stroke 'none'
                 cUi.strokeW = 1
                 cUi.neighborArrows.length = 0 // disj should not be connected with the rest of the flow
