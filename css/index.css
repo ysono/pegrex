@@ -83,11 +83,10 @@ svg .clickable {
     top: 0;
     right: 0;
     margin-right: 20px;
-    background-color: pink;
+    padding: 0;
+    background-color: rgba(255,248,234,.9);
 }
 .flags-editor>* {
     display: block;
-    width: 32px;
-    height: 32px;
-    border: solid 3px cyan;
+    margin: 8px;
 }
