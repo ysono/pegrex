@@ -66,7 +66,7 @@
                     <span className="infix">/</span>
                     <input type="text" ref="flags"
                         value={this.props.flags} onChange={this.handleChange}
-                        className={'flags ' + errorClassName} />
+                        className="flags" />
                     <span className="suffix"></span>
                 </fieldset>
             )
@@ -74,7 +74,7 @@
     })
     var Ctor = React.createClass({
         /*
-            In a simple conditions, we can let react loop back our updates.
+            In simple conditions, we can let react loop back our updates.
             
             E.g. a val in DOM is changed to `a\\`
                 -> update parent component that val has changed to the unescaped val of `a\`
@@ -85,18 +85,20 @@
             But in many conditions, the escaped and unescaped vals are not inverses of each other.
             
             E.g. val in DOM is `a\`
-                -> cannot unescape. There is no possible loop back that
-                    will give back `a\` in render fn.
+                B/c this val is invalid, we want to update the parent component that the
+                    escaped value is blank (and we want the graphical represenation to be blank).
+                    But then loop back will override the DOM val with blank; making it
+                    impossible to type a `\`.
+                Even if we wanted to update not with blank but with a hacked unescaped val that
+                    escapes back to the original `a\`, such a val does not exist.
             
-            Hence we need a state to keep current unescaped val, whether valid or invalid.
-                --> use this.state.escParts
-            
-            In render fn, determine when to use val provided in props, and when to use this.state.escParts.
-                --> use this.state.prevParts.
-            If this.state.prevParts equals parts in props, then use this.state.escParts.
-            
-            When updating, if we want the next call of render to use this.state.escParts,
-            set this.state.prevParts to the current parts.
+            Solution:
+            On change, save the current escaped part (this.state.esc*),
+                and the converted unescaped part (this.state.prev*).
+            On render, compare the saved escaped part against the received part.
+                If they're different, then use the received part. It can be assumed
+                    that the received part came from some mechanism besides loop back (e.g. hash).
+                If they're the same, then use the saved escaped part.
         */
         getInitialState: function() {
             return {
@@ -105,18 +107,12 @@
             }
         },
 
-        getEscapedParts: function(parts) {
-            function escape(str) {
-                return str.replace(/\\/g, '\\\\')
-            }
-            return {
-                pattern: escape(parts.pattern),
-                flags: escape(parts.flags)
-            }
+        escape: function(part) {
+            return part.replace(/\\/g, '\\\\')
         },
         getUnescapedParts: function(escParts) {
             function unescape(str) {
-                // TODO add test
+                // TODO test
 
                 // String literal with an odd number of slashes at the end is invalid.
                 // TODO highlight it
@@ -140,42 +136,43 @@
         handleChange: function() {
             var escParts = getRefVals(this.refs)
             var parts = this.getUnescapedParts(escParts)
-            var isEscapable = parts.pattern != null && parts.flags != null
-            if (isEscapable) {
-                this.setState({
-                    prevParts: parts,
-                    escParts: escParts
-                })
-                this.props.onChange(parts)
-            } else {
-                this.setState({
-                    prevParts: {
-                        pattern: this.props.pattern,
-                        flags: this.props.flags
-                    },
-                    escParts: escParts
-                })
+            var state = {
+                prevParts: parts,
+                escParts: escParts,
+                escInvalid: {
+                    pattern: parts.pattern == null,
+                    flags: parts.flags == null
+                }
             }
+            parts.pattern = parts.pattern || ''
+            parts.flags = parts.flags || ''
+            this.setState(state)
+            this.props.onChange(parts)
         },
         render: function() {
-            var prevParts = this.state.prevParts
-            var escParts
-            if (prevParts.pattern === this.props.pattern
-                && prevParts.flags === this.props.flags) {
-                escParts = this.state.escParts
-            } else {
-                escParts = this.getEscapedParts(this.props)
-            }
+            var self = this
+            var escParts = {}, classNames = {}
+            ;['pattern', 'flags'].forEach(function(partName) {
+                classNames[partName] = partName
+
+                if (self.state.prevParts[partName] === self.props[partName]) {
+                    escParts[partName] = self.state.escParts[partName]
+                    classNames[partName] += self.state.escInvalid[partName]
+                        ? ' error' : ''
+                } else {
+                    escParts[partName] = self.escape(self.props[partName])
+                }
+            })
             return (
                 <fieldset className="ctor">
                     <span className="prefix">{"new RegExp('"}</span>
                     <input type="text" ref="pattern" 
                         value={escParts.pattern} onChange={this.handleChange}
-                        className="pattern" />
+                        className={classNames.pattern} />
                     <span className="infix">','</span>
                     <input type="text" ref="flags"
                         value={escParts.flags} onChange={this.handleChange}
-                        className="flags" />
+                        className={classNames.flags} />
                     <span className="suffix">{"')"}</span>
                 </fieldset>
             )

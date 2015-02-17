@@ -54,6 +54,7 @@
             try {
                 parts.tree = parser.parse(parts.pattern)
                 surfaceData.addUiData(parts.tree)
+                parts.patternHasError = false
             } catch(e) {
                 console.warn('parsing failed', e)
                 parts.tree = undefined
@@ -72,6 +73,7 @@
             }
 
             if (didChange) {
+                parts.patternSel = null // or else cursor/selection won't change as user types.
                 hashUtil.update(parts)
                 this.setState(parts)
             }
