@@ -36,9 +36,7 @@
                 pattern: '',
                 flags: ''
             }
-            this.patternToTree(state)
-            this.validateFlags(state)
-            state.patternSel = null // will be [n,n] - beg/end indices of selection.
+            this.prepStateForTextsChange(state)
             state.patternEditorMode = 'select'
             return state
         },
@@ -46,39 +44,17 @@
             window.addEventListener('hashchange', this.handleHashChange)
         },
 
-        /*
-            TODO add this fn
-            All event handlers delegate to here, which in turn runs all relevant
-                event handlers based on what was provided in the partial state.
+        /* helpers for hash */
 
-            Therefore, the caller of `syncState` is _guaranteed_ to 
-        */
-        // syncState: function(partialState) {
-        //     var keys = Object.keys(partialState).reduce(function(map, key) {
-        //         map[key] = true
-        //         return map
-        //     }, {})
-        //     if (partialState.pattern || partialState.flags) {
-        //         hashUtil.update(partialState)
-        //         this.handleTextsChange(partialState)
-        //     }
-        //     if (partialState.patternSel) {
-
-        //     }
-        //     this.setState(partialState)
-        // },
-
-        /* from hash */
-
-        handleHashChange: function() {
-            var parts = hashUtil.parse()
-            if (parts) {
-                this.handleTextsChange(parts)
-            }
-            // this.syncState(parts)
+        updateHash: function(newState) {
+            newState.pattern = typeof newState.pattern === 'string'
+                ? newState.pattern : this.state.pattern
+            newState.flags = typeof newState.flags === 'string'
+                ? newState.flags : this.state.flags
+            hashUtil.update(newState)
         },
 
-        /* from texts */
+        /* helpers for texts change */
 
         patternToTree: function(parts) {
             try {
@@ -102,36 +78,65 @@
             })
             parts.validFlags = isValid
         },
-        handleTextsChange: function(parts) {
+        /* for optimization, reads from state: pattern, flag */
+        /* returns undefined if no texts change occurred. */
+        prepStateForTextsChange: function(newState) {
             var didChange = false
-            if (this.state.pattern !== parts.pattern) {
-                this.patternToTree(parts)
+            if (this.state && this.state.pattern === newState.pattern) {
+                delete newState.pattern
+            } else {
+                this.patternToTree(newState)
+                newState.patternSel = null // do not force cursor/selection to stay in the same location
                 didChange = true
             }
-            if (this.state.flags !== parts.flags) {
-                this.validateFlags(parts)
+            if (this.state && this.state.flags === newState.flags) {
+                delete newState.flags
+            } else {
+                this.validateFlags(newState)
                 didChange = true
             }
 
             if (didChange) {
-                parts.patternSel = null // or else cursor/selection won't change as user types.
-                hashUtil.update(parts)
-                this.setState(parts)
-                // this.syncState(parts)
+                return newState
             }
-            // else don't make an unnecessary loop to hash change.
         },
+
+        /* events from hash */
+
+        /* sets in state: (pattern, tree, validPattern), (flags, validFlags), patternSel */
+        handleHashChange: function() {
+            var parts = hashUtil.parse()
+            var newState = this.prepStateForTextsChange(parts)
+            if (newState) {
+                this.setState(newState)
+            }
+        },
+
+        /* events from texts */
+
+        /* sets in state: pattern, tree, validPattern, flags, validFlags, patternSel, hash */
+        handleTextsChange: function(parts) {
+            var newState = this.prepStateForTextsChange(parts)
+            if (newState) {
+                this.updateHash(newState)
+                this.setState(newState)
+            }
+        },
+        /* sets in state: patternSel */
         handleTextsSelect: function(patternSel) {
             this.setState({
                 patternSel: patternSel
             })
         },
 
-        /* from surface */
+        /* events from surface */
 
-        handleSurfaceEvents: function(x) {
+        /* reads from state: patternEditorMode */
+        /* in select mode, sets in state: patternSel */
+        /* in delete mode, reads from state: pattern
+            sets in state: pattern, tree, validPattern, patternSel, hash */
+        handleSurfaceSelect: function(textLoc) {
             // handles all events. handle different types here.
-            // (currently all events are clicks)
             function spliceStr(from, to) {
                 var arr = this.split('')
                 arr.splice(from, to - from)
@@ -139,43 +144,39 @@
             }
 
             var mode = this.state.patternEditorMode
-            var state
             if (mode === 'select') {
                 this.setState({
-                    patternSel: x.data.textLoc
+                    patternSel: textLoc
                 })
             } else if(mode === 'delete') {
-                if (x.data.textLoc) {
-                    console.info('splicing', x.data.textLoc)
-                    state = {
-                        pattern: spliceStr.apply(
-                            this.state.pattern, x.data.textLoc),
-                        patternSel: [x.data.textLoc[0], x.data.textLoc[0]]
-                    }
-                    this.patternToTree(state)
-                    hashUtil.update({
-                        pattern: state.pattern,
-                        flags: this.state.flags
-                    })
-                    this.setState(state)
+                if (textLoc) {
+                    ;(function() {
+                        var newState = {
+                            pattern: spliceStr.apply(
+                                this.state.pattern, textLoc),
+                            patternSel: [textLoc[0], textLoc[0]]
+                        }
+                        this.patternToTree(newState)
+                        this.updateHash(newState)
+                        this.setState(newState)
+                    })()
                 }
             }
         },
 
-        /* from editors */
+        /* events from editors */
 
+        /* sets in state: flags, validFlags, hash */
         handleFlagsEditorChange: function(flags) {
-            var state = {
+            var newState = {
                 flags: flags
             }
-            this.validateFlags(state)
-            hashUtil.update({
-                pattern: this.state.pattern,
-                flags: state.flags
-            })
-            this.setState(state)
+            this.validateFlags(newState)
+            this.updateHash(newState)
+            this.setState(newState)
         },
 
+        /* sets in state: patternEditorMode */
         handlePatternEditorModeChange: function(mode) {
             this.setState({
                 patternEditorMode: mode
@@ -198,12 +199,13 @@
                             tree={this.state.tree}
                             flags={this.state.flags}
                             patternSel={this.state.patternSel}
-                            onEvents={this.handleSurfaceEvents} />
+                            onSelect={this.handleSurfaceSelect} />
                         <reactClasses.FlagsEditor
                             flags={this.state.flags}
                             validFlags={this.state.validFlags}
                             onChange={this.handleFlagsEditorChange} />
                         <reactClasses.PatternEditor
+                            patternEditorMode={this.state.patternEditorMode}
                             onModeChange={this.handlePatternEditorModeChange} />
                     </div>
                 </div>
