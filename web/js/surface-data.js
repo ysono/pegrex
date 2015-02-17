@@ -87,7 +87,7 @@
         fillerDimPara /* optional, needed iff using fillers.
             dimension of filler in the direction of expansion.
             its dimension in the other direction will equal to that of the largest child */
-    ) {
+        ) {
 
         var dirOrtho = dirPara === 'x' ? 'y' : 'x'
 
