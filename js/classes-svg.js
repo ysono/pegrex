@@ -5,14 +5,14 @@
         /*
             Single handler for all events.
             Any element should bind all events to this handler.
-            The single handler fn is passed down elements as `onEvents={this.handleEvents}`
+            The single handler fn is passed down elements as `onEvents={this.bubbleUpEvent}`
                 as long as all nested children are created by the helper `createInstance`.
         */
-        proto.handleEvents = function(e) {
-            var payload = e.pegrexPayload
+        proto.bubbleUpEvent = function(e) {
+            var payload = e.pegrexEvt
                 ? e // pass-thru
                 : {
-                    pegrexPayload: true,
+                    pegrexEvt: true,
                     data: this.props.data,
                     e: e
                 } // `this` originated the event
@@ -20,9 +20,9 @@
         }
         /*
             How highlight works:
-            1. Some random surface Element anywhere has `onClick={this.handleEvents}` assigned,
-                which is the `proto.handleEvents` above.
-            2. `handleEvents` bubbles up that surface Element's `this.props.data`.
+            1. Some random surface Element anywhere has `onClick={this.bubbleUpEvent}` assigned,
+                which is the `proto.bubbleUpEvent` above.
+            2. `bubbleUpEvent` bubbles up that surface Element's `this.props.data`.
             3. React is externally wired so if `data.textLoc` exists,
                 it updates `this.props.patternSel` on all surface Elements;
                 hence `this.render` of all surface Elements are called.
@@ -33,7 +33,7 @@
             6. If it's a match, visually indicates so by visually modifying `this.refs.box.getDOMNode()`.
 
             Tl;dr
-            1. (`onClick={this.handleEvents}`) + (Element's proto was extended by `extendClassProto`)
+            1. (`onClick={this.bubbleUpEvent}`) + (Element's proto was extended by `extendClassProto`)
                 + (always using `createInstance` to create children Elements)
                 = the `onClick` node can trigger highlighting by click.
             2. Write `this.render` to call `this.hiliteSelected` if `this.refs.box` is a valid ref.
@@ -85,7 +85,7 @@
     */
     var boxedClass = React.createClass(extendClassProto({
         render: function() {
-            var handleEvents = this.handleEvents
+            var bubbleUpEvent = this.bubbleUpEvent
             var data = this.props.data
             var patternSel = this.props.patternSel
 
@@ -96,7 +96,7 @@
                         stroke={data.ui.stroke}
                         strokeWidth={data.ui.strokeW || 3}
                         fill={data.ui.fill || 'white'}
-                        onClick={handleEvents} className="clickable"
+                        onClick={bubbleUpEvent} className="clickable"
                         ref="box" />
             )
 
@@ -114,7 +114,7 @@
             ].map(function(childVal) {
                 var childList = ([].concat(childVal))
                     .map(function(childData, i) {
-                        return createInstance(handleEvents, childData, patternSel, i)
+                        return createInstance(bubbleUpEvent, childData, patternSel, i)
                     })
                 return childList
             })
@@ -150,7 +150,7 @@
         'textBlock': React.createClass(extendClassProto({
             render: function() {
                 var data = this.props.data
-                var handleEvents = this.handleEvents
+                var bubbleUpEvent = this.bubbleUpEvent
 
                 var txform = ['translate(', data.pos, ')'].join('')
 
@@ -158,7 +158,7 @@
                     return (
                         <text x={row.anchorPos[0]} y={row.anchorPos[1]} textAnchor={row.anchor}
                             fontFamily="monospace"
-                            onClick={handleEvents} className="clickable"
+                            onClick={bubbleUpEvent} className="clickable"
                             key={i}>
                             {row.text}
                         </text>
@@ -244,10 +244,10 @@
             }
         })
     }
-    function createInstance(handleEvents, data, patternSel, key) {
+    function createInstance(bubbleUpEvent, data, patternSel, key) {
         var clazz = typeToClass[data.type] || boxedClass
         var instance = React.createElement(clazz, {
-            onEvents: handleEvents,
+            onEvents: bubbleUpEvent,
             data: data,
             patternSel: patternSel,
             key: key
@@ -256,6 +256,9 @@
     }
 
     reactClasses.Surface = React.createClass(extendClassProto({
+        handleSelect: function(pegrexEvt) {
+            this.props.onSelect(pegrexEvt.data.textLoc)
+        },
         render: function() {
             var tree = this.props.tree
             var patternSel = this.props.patternSel
@@ -264,7 +267,7 @@
             var childNode
             if (tree) {
                 svgDim = tree.ui.dim
-                childNode = createInstance(this.handleEvents, tree, patternSel)
+                childNode = createInstance(this.handleSelect, tree, patternSel)
             }
 
             var markerEndArrow = '\
@@ -296,7 +299,9 @@
             return (
                 <div className="surface-parent">
                     <svg width={svgDim[0]} height={svgDim[1]}>
-                        <defs dangerouslySetInnerHTML={{__html: markerEndArrow + markerMidCross + dropshadow}}></defs>
+                        <defs dangerouslySetInnerHTML={{
+                            __html: markerEndArrow + markerMidCross + dropshadow
+                        }}></defs>
                         {childNode}
                     </svg>
                 </div>

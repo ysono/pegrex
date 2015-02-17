@@ -85,8 +85,8 @@
         dirPara, /* 'x' or 'y'. direction of expansion. */
 
         fillerDimPara /* optional, needed iff using fillers.
-            dimension of filler in the direction of expansion.
-            its dimension in the other direction will equal to that of the largest child */
+            Dimension of fillers in the direction of expansion.
+            Their dimension in the other direction will equal to that of the largest child */
         ) {
 
         var dirOrtho = dirPara === 'x' ? 'y' : 'x'
@@ -409,12 +409,13 @@
             },
             'Alternative': function() {
                 var pad = {x: [0,0], y: [0,0]}
+                var arrowW = 25
                 var ui = setUiWithChildren(
                     data,
                     pad,
                     2,
                     'x',
-                    25
+                    arrowW
                 )
                 ui.stroke = 'none'
                 ui.fill = 'none'
@@ -424,7 +425,7 @@
                     arrow.type = 'path'
                     arrow.d = [
                         [0, midY],
-                        [arrow.dim[0], midY]
+                        [arrowW, midY]
                     ]
                 })
                 return ui
@@ -664,7 +665,6 @@
                 }
 
                 var pad = {h: 0, v: 0}
-
                 var cUi = setUiByType(data.grouped)
                 cUi.pos = [pad.h, pad.v]
 
@@ -737,8 +737,9 @@
                             arrow.usesMarkerMid = ! child.inclusive
                         }
                     } else {
-                        // If no child, then it's b/c arrow.childIndex is undefined
-                        // b/c there was only one arrow b/c there was zero child
+                        // arrow.childIndex is undefined
+                        // b/c there is only one arrow
+                        // b/c there is zero child
                         // b/c this is an inclusive Set of Chars with zero possibilities.
                         // Then, nothing to do.
                     }
