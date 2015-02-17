@@ -20,20 +20,22 @@
         }
         /*
             How highlight works:
-            1. Some random surface Element anywhere has `onClick={this.bubbleUpEvent}` assigned,
+            1. Some random surface node anywhere has `onClick={this.bubbleUpEvent}` assigned,
                 which is the `proto.bubbleUpEvent` above.
             2. `bubbleUpEvent` bubbles up that surface Element's `this.props.data`.
-            3. React is externally wired so if `data.textLoc` exists,
+            3. React classes are externally wired so that if `data.textLoc` exists,
                 it updates `this.props.patternSel` on all surface Elements;
                 hence `this.render` of all surface Elements are called.
-            4. The current surface Element's `this.render` is written to call `this.hiteliteSelected`,
+            4. The current surface Element's `this.render` calls `this.hiteliteSelected`,
                 which is the `proto.hiliteSelected` here.
             5. `hiliteSelected` matches the current Element's `this.props.textLoc` against
                 the updated `this.props.patternSel`.
-            6. If it's a match, visually indicates so by visually modifying `this.refs.box.getDOMNode()`.
+            6. If it's a match, `hiliteSelected` visually indicates so by
+                visually modifying `this.refs.box.getDOMNode()`.
 
             Tl;dr
-            1. (`onClick={this.bubbleUpEvent}`) + (Element's proto was extended by `extendClassProto`)
+            1. (Element has a DOM node with `onClick={this.bubbleUpEvent}`)
+                + (Element's proto was extended by `extendClassProto`)
                 + (always using `createInstance` to create children Elements)
                 = the `onClick` node can trigger highlighting by click.
             2. Write `this.render` to call `this.hiliteSelected` if `this.refs.box` is a valid ref.
@@ -281,7 +283,15 @@
         return instance
     }
 
-    reactClasses.Surface = React.createClass(extendClassProto({
+    /*
+        props ~= {
+            onSelect: required
+            tree: required
+            patternSel: optional
+            patternEditorMode: optional
+        }
+    */
+    var Surface = React.createClass(extendClassProto({
         handleSelect: function(pegrexEvt) {
             this.props.onSelect(pegrexEvt.data.textLoc)
         },
@@ -336,4 +346,6 @@
         }
     }))
 
+    reactClasses.boxedClass = boxedClass
+    reactClasses.Surface = Surface
 })(window.reactClasses = window.reactClasses || {})
