@@ -67,7 +67,6 @@
         },
 
         quantifier: function(token) {
-            // TODO validate min <= max
             if (token[0] !== '{') {
                 return {
                     type: 'Quantifier',
@@ -77,7 +76,7 @@
                 }
             }
             var matched = token.match(/{(\d+)(?:(,)(\d*))?}(\?)?/)
-            return {
+            var result = {
                 type: 'Quantifier',
                 min: Number(matched[1]),
                 max: matched[3]
@@ -87,6 +86,11 @@
                         : Number(matched[1]),
                 greedy: ! matched[4]
             }
+            if (result.min > result.max) {
+                throw 'In a Quantifier, min must be <= to max. Invalid pair: '
+                    + [result.min, result.max]
+            }
+            return result
         },
         quantified: function(target, quantifier) {
             return {
@@ -156,7 +160,10 @@
         },
 
         charSetRange: function(from, to) {
-            // TODO validate (range begin < range end)
+            if (from.display > to.display) {
+                throw 'In a Range of Chars, the beginning char must be <= to the ending char.'
+                    + ' Invalid pair: ' + [from.display, to.display]
+            }
             return {
                 type: 'Range of Chars',
                 range: [from, to],

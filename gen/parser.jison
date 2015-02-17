@@ -89,7 +89,7 @@ For discrepancies noted below, a real-life example can be found in
 <ESCAPED_NONDECI>[x][0-9A-Fa-f]{2}      this.popState(); return 'ESC_HEX2'
 <ESCAPED_NONDECI>[u][0-9A-Fa-f]{4}      this.popState(); return 'ESC_HEX4'
 <ESCAPED_NONDECI>[dDsSwW]               this.popState(); return 'ESC_CLASS'
-<ESCAPED_NONDECI>.                      this.popState(); return 'ESC_ETC' /* an approx. ecma's defn is much more involved. */
+<ESCAPED_NONDECI>[^cxu]                 this.popState(); return 'ESC_ETC' /* an approx. ecma's defn is much more involved. */
 
 %%
 

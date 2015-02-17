@@ -712,7 +712,7 @@ case 37:this.popState(); return 42 /* an approx. ecma's defn is much more involv
 break;
 }
 },
-rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[(][?])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:[(])/,/^(?:[:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:.)/],
+rules: [/^(?:$)/,/^(?:.)/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:[)])/,/^(?:.)/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:[|])/,/^(?:.)/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[(][?])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[=!])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:[(])/,/^(?:[:])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:[^cxu])/],
 conditions: {"ESCAPED_NONDECI":{"rules":[0,5,10,32,33,34,35,36,37],"inclusive":true},"ESCAPED_IN_CLASS":{"rules":[0,4,5,9,10,29,30,31],"inclusive":true},"CLASS":{"rules":[0,2,5,7,10,26,27,28],"inclusive":true},"ESCAPED_IN_ATOM":{"rules":[0,3,5,8,10,24,25],"inclusive":true},"TERM_GROUP_NONCAPTR":{"rules":[0,5,10,17,22],"inclusive":true},"TERM":{"rules":[0,5,10,12,13,14,15,16,18,19,20,21,23],"inclusive":true},"ALT":{"rules":[0,5,10,11],"inclusive":true},"DISJ":{"rules":[0,5,6,10],"inclusive":true},"INITIAL":{"rules":[0,1,5,10],"inclusive":true}}
 });
 function popTill(lexer, state) {
@@ -816,7 +816,6 @@ if (typeof module !== 'undefined' && require.main === module) {
         },
 
         quantifier: function(token) {
-            // TODO validate min <= max
             if (token[0] !== '{') {
                 return {
                     type: 'Quantifier',
@@ -826,7 +825,7 @@ if (typeof module !== 'undefined' && require.main === module) {
                 }
             }
             var matched = token.match(/{(\d+)(?:(,)(\d*))?}(\?)?/)
-            return {
+            var result = {
                 type: 'Quantifier',
                 min: Number(matched[1]),
                 max: matched[3]
@@ -836,6 +835,11 @@ if (typeof module !== 'undefined' && require.main === module) {
                         : Number(matched[1]),
                 greedy: ! matched[4]
             }
+            if (result.min > result.max) {
+                throw 'In a Quantifier, min must be <= to max. Invalid pair: '
+                    + [result.min, result.max]
+            }
+            return result
         },
         quantified: function(target, quantifier) {
             return {
@@ -905,7 +909,10 @@ if (typeof module !== 'undefined' && require.main === module) {
         },
 
         charSetRange: function(from, to) {
-            // TODO validate (range begin < range end)
+            if (from.display > to.display) {
+                throw 'In a Range of Chars, the beginning char must be <= to the ending char.'
+                    + ' Invalid pair: ' + [from.display, to.display]
+            }
             return {
                 type: 'Range of Chars',
                 range: [from, to],
