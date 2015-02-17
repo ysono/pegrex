@@ -37,6 +37,7 @@
                 flags: ''
             }
             this.patternToTree(state)
+            this.validateFlags(state)
             state.patternSel = null // will be [n,n] - beg/end indices of selection.
             return state
         },
@@ -54,12 +55,24 @@
             try {
                 parts.tree = parser.parse(parts.pattern)
                 surfaceData.addUiData(parts.tree)
-                parts.patternHasError = false
+                parts.validPattern = true
             } catch(e) {
                 console.warn('parsing failed', e)
                 parts.tree = undefined
-                parts.patternHasError = true
+                parts.validPattern = false
             }
+        },
+        validateFlags: function(parts) {
+            // The major browsers 0..1 of each of 3 flags.
+            var set = {}
+            debugger
+            var isValid = parts.flags.split('').every(function(flag) {
+                if (! /[gim]/.test(flag)) { return false }
+                if (set[flag]) { return false }
+                set[flag] = true
+                return true
+            })
+            parts.validFlags = isValid
         },
         handleTextsChange: function(parts) {
             var didChange = false
@@ -68,7 +81,7 @@
                 didChange = true
             }
             if (this.state.flags !== parts.flags) {
-                // TODO
+                this.validateFlags(parts)
                 didChange = true
             }
 
@@ -97,7 +110,8 @@
                     <reactClasses.Texts
                         pattern={this.state.pattern}
                         flags={this.state.flags}
-                        patternHasError={this.state.patternHasError}
+                        validPattern={this.state.validPattern}
+                        validFlags={this.state.validFlags}
                         patternSel={this.state.patternSel}
                         onChange={this.handleTextsChange}
                         onSelect={this.handleTextsSelect} />
