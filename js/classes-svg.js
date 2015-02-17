@@ -298,7 +298,8 @@
 
             return (
                 <div className="surface-parent">
-                    <svg width={svgDim[0]} height={svgDim[1]}>
+                    <svg width={svgDim[0]} height={svgDim[1]}
+                        data-mode={this.props.patternEditorMode}>
                         <defs dangerouslySetInnerHTML={{
                             __html: markerEndArrow + markerMidCross + dropshadow
                         }}></defs>

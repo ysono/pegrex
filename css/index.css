@@ -72,8 +72,11 @@ html, body {
 
 /* under surface-parent */
 
-svg .clickable {
+svg[data-mode="select"] .clickable {
     cursor: pointer;
+}
+svg[data-mode="delete"] .clickable {
+    cursor: crosshair;
 }
 
 /* under editor */
