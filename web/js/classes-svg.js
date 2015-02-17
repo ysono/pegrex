@@ -172,30 +172,56 @@
                 )
             }
         })),
+
+        /*
+            in this.props.path: {
+                d: required -- array of (strings or [n,n]).
+                    If using marker, last element must be [n,n], b/c it will be adjusted.
+                    All coords are absolute.
+                    Segments in d are connected by...
+                        nothing between (* -> string)
+                        quadratic bezier between (coord -> coord)
+                        straight line between (string -> coord)
+                pos: optional [n,n], default [0,0]
+                isVertical: optional bool, default false
+                usesMarkerEnd: optional bool, default true
+                usesMarkerMid: optional bool, default false
+                stroke: optional, default surfaceData.neighborArrowColor
+            }
+        */
         'path': React.createClass({
             render: function() {
                 // TODO test
-                /* in this.props.path: {
-                        d: required -- array of (strings or [n,n]).
-                            If using marker, last element must be [n,n], b/c it will be adjusted.
-                            All coords are absolute.
-                            Segments in d are connected by...
-                                nothing between (* -> string)
-                                quadratic bezier between (coord -> coord)
-                                straight line between (string -> coord)
-                        pos: optional [n,n], default [0,0]
-                        isVertical: optional bool, default false
-                        usesMarkerEnd: optional bool, default true
-                        usesMarkerMid: optional bool, default false
-                        stroke: optional, default surfaceData.neighborArrowColor
-                    }
-                */
                 var data = this.props.data
                 var segms = data.d
                 var usesMarkerEnd = data.usesMarkerEnd !== false
                 var usesMarkerMid = data.usesMarkerMid
 
                 var txform = ['translate(', (data.pos || [0,0]), ')'].join('')
+
+                function reflectedQuadra(from, to, isVertical) {
+                    var vector = [
+                        to[0] - from[0],
+                        to[1] - from[1]
+                    ]
+                    var quadraCtrlPt
+                    if (isVertical) {
+                        quadraCtrlPt = [
+                            from[0],
+                            from[1] + vector[1] / 4
+                        ]
+                    } else {
+                        quadraCtrlPt = [
+                            from[0] + vector[0] / 4,
+                            from[1]
+                        ]
+                    }
+                    var midPt = [
+                        from[0] + vector[0] / 2,
+                        from[1] + vector[1] / 2
+                    ]
+                    return ['Q', quadraCtrlPt, midPt, 'T', to].join(' ')
+                }
 
                 if (usesMarkerEnd) {
                     ;(function() {
@@ -219,7 +245,7 @@
                         }
                         if (segms[i - 1] instanceof Array) {
                             // coord followed by coord
-                            return surfaceData.utils.reflectedQuadra(segms[i - 1], segm, data.isVertical)
+                            return reflectedQuadra(segms[i - 1], segm, data.isVertical)
                         }
                         if (i) {
                             // string followed by coord

@@ -204,9 +204,9 @@
                             flags={this.state.flags}
                             validFlags={this.state.validFlags}
                             onChange={this.handleFlagsEditorChange} />
-                        <reactClasses.PatternEditor
+                        <reactClasses.PatternEditorModePicker
                             patternEditorMode={this.state.patternEditorMode}
-                            onModeChange={this.handlePatternEditorModeChange} />
+                            onChange={this.handlePatternEditorModeChange} />
                     </div>
                 </div>
             )
