@@ -65,7 +65,6 @@
         validateFlags: function(parts) {
             // The major browsers 0..1 of each of 3 flags.
             var set = {}
-            debugger
             var isValid = parts.flags.split('').every(function(flag) {
                 if (! /[gim]/.test(flag)) { return false }
                 if (set[flag]) { return false }
