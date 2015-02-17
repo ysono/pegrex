@@ -434,10 +434,8 @@
                 var texts = [
                     'min: ' + data.min,
                     'max: ' + (data.max === Infinity ? '\u221e' : data.max),
+                    data.greedy ? 'Greedy' : 'Lazy'
                 ]
-                if (data.max === Infinity) {
-                    texts.push(data.greedy ? 'Greedy' : 'Lazy')
-                }
                 var ui = setUiWithTextBlockOnly(texts, data)
                 ui.fill = '#fff8ea'
                 ui.stroke = '#bbb'
@@ -508,28 +506,86 @@
 
                 // add neighborArrows
                 ;(function() {
-                    var atLeftEdge = [0, myH / 2]
-                    var atRightEdge = [myUi.dim[0], myH / 2]
-                    var atChildLeftEdge = [tUi.pos[0], arrowMidTopY]
-                    var atChildRightEdge = [tUi.pos[0] + tUi.dim[0], arrowMidTopY]
+                    var overallLeftPt = [0, myH / 2]
+                    var overallRightPt = [myUi.dim[0], myH / 2]
+                    var atMidTopLeft = [tUi.pos[0], arrowMidTopY]
+                    var atMidTopRight = [tUi.pos[0] + tUi.dim[0], arrowMidTopY]
 
-                    var jointLeft
-                    var jointRight
                     if (btmArrowStyle === 'loop') {
-                        jointLeft = [atChildLeftEdge[0] - intraMargin, atChildLeftEdge[1]]
-                        jointRight = [atChildRightEdge[0] + intraMargin, atChildRightEdge[1]]
-                    } // else if btm arrow is not needed or is 'thru', no need for a joint point.
+                        ;(function() {
+                            var r = intraMargin
+                            var offMidTopLeft = [atMidTopLeft[0] - r, atMidTopLeft[1] + r]
+                            var offMidTopRight = [atMidTopRight[0] + r, atMidTopRight[1] + r]
+                            var leftCtrlPtForTopArrow = [offMidTopLeft[0], overallLeftPt[1]]
+                            var rightCtrlPtForTopArrow = [offMidTopRight[0], overallRightPt[1]]
+                            function arc(clockwise, dx,dy) {
+                                return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
+                            }
+                            myUi.neighborArrows = [
+                                {
+                                    // the thru arrow at the top
+                                    type: 'path',
+                                    d: [
+                                        [
+                                            'M', overallLeftPt,
+                                            'C', leftCtrlPtForTopArrow, leftCtrlPtForTopArrow, offMidTopLeft,
+                                            arc(1, r, -r),
+                                            'L', atMidTopRight,
+                                            arc(1, r, r),
+                                            'C', rightCtrlPtForTopArrow, rightCtrlPtForTopArrow,
+                                                overallRightPt[0] - surfaceData.markerLen - .01, overallRightPt[1]
+                                                // here, hacking so marker points horizontally to the right.
+                                        ].join(' '),
+                                        overallRightPt
+                                    ]
+                                },
+                                {
+                                    // detour arrow at the bottom.
+                                    // right of target -> down -> left -> up -> left of target
+                                    type: 'path',
+                                    d: [
+                                        [
+                                            'M', offMidTopRight,
+                                            'L', atMidTopRight[0] + r, arrowMidBtmY - r,
+                                            arc(1, -r, r),
+                                            'L', atMidTopLeft[0], arrowMidBtmY,
+                                            arc(1, -r, -r),
+                                            'L', atMidTopLeft[0] - r, atMidTopLeft[1] + r
+                                        ].join(' ')
+                                    ],
+                                    usesMarkerEnd: false
+                                }
+                            ]
+
+                            // if target is at the bottom and bottom arrow is looping,
+                            //     arrows in target would be pointing the wrong way,
+                            //     and there is no good way to correct them, so simply remove them
+                            if (! data.quantifier.min) {
+                                ;(function() {
+                                    var child = data.target
+                                    var disj
+                                    // these are the two types of data.target that has
+                                    //     a neighborArrow in them.
+                                    if (child.type === 'Set of Chars') {
+                                        tUi.neighborArrows.length = 0
+                                    } else if (child.type === 'Group') {
+                                        disj = child.grouped
+                                        disj.ui.neighborArrows.length = 0
+                                    }
+                                })()
+                            }
+                        })()
+                        return
+                    }
 
                     // the thru arrow at the top
                     myUi.neighborArrows = [{
                         type: 'path',
                         d: [
-                            atLeftEdge,
-                            jointLeft,
-                            atChildLeftEdge,
-                            atChildRightEdge,
-                            jointRight,
-                            atRightEdge
+                            overallLeftPt,
+                            atMidTopLeft,
+                            atMidTopRight,
+                            overallRightPt
                         ].filter(function(coord) {
                             return coord
                         })
@@ -539,57 +595,14 @@
                         myUi.neighborArrows.push({
                             type: 'path',
                             d: [
-                                atLeftEdge,
+                                overallLeftPt,
                                 [tUi.pos[0], arrowMidBtmY],
                                 [tUi.pos[0] + tUi.dim[0], arrowMidBtmY],
-                                atRightEdge
-                            ],
-                            usesMarkerEnd: false
-                        })
-                    } else if (btmArrowStyle === 'loop') {
-                        myUi.neighborArrows.push({
-                            type: 'path',
-                            d: [
-                                (function() {
-                                    var r = intraMargin
-                                    function arc(clockwise, dx,dy) {
-                                        return ['a',r,r,0,0,clockwise,dx,dy].join(' ')
-                                    }
-                                    // right of target -> down -> left -> up -> left of target
-                                    return [
-                                        'M', jointRight[0] - r, jointRight[1],
-                                        arc(1, r, r),
-                                        'L', jointRight[0], arrowMidBtmY - r,
-                                        arc(1, -r, r),
-                                        'L', jointLeft[0] + r, arrowMidBtmY,
-                                        arc(1, -r, -r),
-                                        'L', jointLeft[0], jointLeft[1] + r,
-                                        arc(1, r, -r)
-                                    ].join(' ')
-                                })()
-                            ],
-                            usesMarkerEnd: false
+                                overallRightPt
+                            ]
                         })
                     }
                 })()
-
-                // if term is at the bottom and bottom arrow is looping,
-                //     b/c arrows in term would be pointing the wrong way,
-                //     and there is no good way to correct them, remove them
-                if (! data.quantifier.min && btmArrowStyle === 'loop') {
-                    ;(function() {
-                        var child = data.target
-                        var disj
-                        // these are the two types of data.target that has
-                        //     a neighborArrow in them.
-                        if (child.type === 'Set of Chars') {
-                            tUi.neighborArrows.length = 0
-                        } else if (child.type === 'Group') {
-                            disj = child.grouped
-                            disj.ui.neighborArrows.length = 0
-                        }
-                    })()
-                }
 
                 return myUi
             },
