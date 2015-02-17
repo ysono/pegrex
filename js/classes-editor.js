@@ -37,10 +37,10 @@
         }
     })
 
-    reactClasses.PatternEditor = React.createClass({
+    reactClasses.PatternEditorModePicker = React.createClass({
         handleChange: function(e) {
             var mode = e.target.value
-            this.props.onModeChange(mode)
+            this.props.onChange(mode)
         },
         render: function() {
             var self = this
@@ -57,7 +57,7 @@
                 )
             })
             return (
-                <fieldset className="pattern-editor">
+                <fieldset className="pattern-editor-mode-picker">
                     {radios}
                 </fieldset>
             )
