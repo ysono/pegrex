@@ -116,9 +116,9 @@
         */
         getInitialState: function() {
             return {
-                prevParts: {},
-                escParts: {},
-                escValidParts: {}
+                prevParts: {foo: 'bar'},
+                escParts: {foo: 'bar'},
+                escValidParts: {foo: 'bar'}
             }
         },
 
@@ -151,17 +151,18 @@
         handleChange: function() {
             var escParts = getRefVals(this.refs)
             var parts = this.getUnescapedParts(escParts)
-            var state = {
-                prevParts: parts,
-                escParts: escParts,
-                escValidParts: {
-                    pattern: parts.pattern != null,
-                    flags: parts.flags != null
-                }
+            var escValidParts = {
+                pattern: parts.pattern != null,
+                flags: parts.flags != null
             }
-            parts.pattern = parts.pattern || ''
-            parts.flags = parts.flags || ''
-            this.setState(state)
+            var prevParts = {}
+            prevParts.pattern = parts.pattern = parts.pattern || ''
+            prevParts.flags = parts.flags = parts.flags || ''
+            this.setState({
+                prevParts: prevParts,
+                escParts: escParts,
+                escValidParts: escValidParts
+            })
             this.props.onChange(parts)
         },
         render: function() {
