@@ -137,12 +137,6 @@
             sets in state: pattern, tree, validPattern, patternSel, hash */
         handleSurfaceSelect: function(textLoc) {
             // handles all events. handle different types here.
-            function spliceStr(from, to) {
-                var arr = this.split('')
-                arr.splice(from, to - from)
-                return arr.join('')
-            }
-
             var mode = this.state.patternEditorMode
             if (mode === 'select') {
                 this.setState({
@@ -151,6 +145,11 @@
             } else if(mode === 'delete') {
                 if (textLoc) {
                     ;(function() {
+                        function spliceStr(from, to) {
+                            var arr = this.split('')
+                            arr.splice(from, to - from)
+                            return arr.join('')
+                        }
                         var newState = {
                             pattern: spliceStr.apply(
                                 this.state.pattern, textLoc),
@@ -159,7 +158,7 @@
                         this.patternToTree(newState)
                         this.updateHash(newState)
                         this.setState(newState)
-                    })()
+                    }).bind(this)()
                 }
             }
         },
