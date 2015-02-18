@@ -4,61 +4,51 @@
     var PatternEditor = React.createClass({
         getInitialState: function() {
             return {
-                createType: null,
-                createParams: [],
-                dataPerCell: Array.apply(null, {length: 10})
+                typeToCreate: null,
+                paramsForCreate: [],
+                dataPerCell: []
             }
         },
-        handleChangeCreateType: function(e) {
+        handleChangeTypeToCreate: function(e) {
             var type = e.target.value
             this.setState({
-                createType: type,
-                createParams: editorData.typeToParams[type]
+                typeToCreate: type,
+                paramsForCreate: tokenCreator.typeToParams[type]
             })
         },
         handleCreate: function(inputs) {
-            var data = editorData.build(
-                this.state.createType,
+            var data = tokenCreator.create(
+                this.state.typeToCreate,
                 inputs)
 
-            var dataPerCell = this.state.dataPerCell
-            var emptyCellIndex
-            dataPerCell.some(function(data, i) {
-                if (! data) {
-                    emptyCellIndex = i
-                    return true
-                }
-            })
-            if (typeof emptyCellIndex === 'number') {
-                dataPerCell[emptyCellIndex] = data
-            } else {
-                dataPerCell.push(data)
-            }
+            this.state.dataPerCell.push(data)
             this.setState({
-                dataPerCell: dataPerCell
+                dataPerCell: this.state.dataPerCell
             })
         },
         render: function() {
             var self = this
-            var typeToParams = editorData.typeToParams
-            var createOptions = Object.keys(typeToParams).map(function(type, i) {
+            var typeToParams = tokenCreator.typeToParams
+            var createOptions = Object.keys(typeToParams).map(function(type) {
                 return (
-                    <label key={i}>
+                    <label key={type}>
                         <input type="radio" name="palette-editor-create-type"
                             value={type}
-                            onChange={self.handleChangeCreateType} />
+                            onChange={self.handleChangeTypeToCreate} />
                         <span>{type}</span>
                     </label>
                 )
             })
             return (
                 <div className="pattern-editor">
-                    <fieldset>
-                        <legend>Create</legend>
-                        {createOptions}
-                    </fieldset>
-                    <CreateForm params={this.state.createParams}
-                        onSubmit={this.handleCreate} />
+                    <div className="create-parent">
+                        <fieldset className="create-type">
+                            <legend>Create</legend>
+                            {createOptions}
+                        </fieldset>
+                        <CreateForm params={this.state.paramsForCreate}
+                            onSubmit={this.handleCreate} />
+                    </div>
                     <Palette dataPerCell={this.state.dataPerCell} />
                 </div>
             )
@@ -68,26 +58,37 @@
         handleSubmit: function(e) {
             e.preventDefault()
             var refs = this.refs
-            var payload = Object.keys(refs).reduce(function(payload, builderArgInex) {
-                var val = refs[builderArgInex].getDOMNode().value
-                payload[builderArgInex] = val
+            var isValid = true
+            var payload = Object.keys(refs).reduce(function(payload, builderArgIndex) {
+                var ref = refs[builderArgIndex]
+                var val = ref.getDOMNode().value
+                if (! ref.props.validate(val)) {
+                    console.error('val', val, 'is not valid for arg #', builderArgIndex) // TODO show to user
+                    isValid = false
+                    return
+                }
+                payload[builderArgIndex] = val
                 return payload
             }, {})
-            this.props.onSubmit(payload)
+            if (isValid) {
+                this.props.onSubmit(payload)
+            }
         },
         render: function() {
             var params = this.props.params
-            var inputNodes = params.map(function(param) {
+            var inputNodes = params.map(function(param, i) {
                 return (
-                    <label>
+                    <label key={i}>
                         <span>{param.label}</span>
                         <input type="text"
+                            validate={param.validate}
                             ref={param.builderArgIndex} />
                     </label>
                 )
             })
             return (
-                <form onSubmit={this.handleSubmit}>
+                <form onSubmit={this.handleSubmit}
+                    className="create-form">
                     {inputNodes}
                     <input type="submit" value="Create" />
                 </form>
@@ -96,11 +97,16 @@
     })
     var Palette = React.createClass({
         render: function() {
-            var cells = this.props.dataPerCell.map(function(data, i) {
-                return (<Cell data={data} key={i} />)
-            })
+            var minSize = 10
+            var dataPerCell = this.props.dataPerCell
+            var cells = Array.apply(null, {
+                    length: Math.max(minSize, dataPerCell.length)
+                })
+                .map(function(foo, i) {
+                    return <Cell data={dataPerCell[i]} key={i} />
+                })
             return (
-                <div>
+                <div className="palette">
                     {cells}
                 </div>
             )
@@ -114,7 +120,9 @@
                     onSelect: function() {},
                     tree: data
                 })
-                : null
+                : (
+                    <div className="empty-surface" />
+                )
         }
     })
 

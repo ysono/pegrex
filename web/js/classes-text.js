@@ -8,8 +8,8 @@
                     <Literal
                         pattern={this.props.pattern}
                         flags={this.props.flags}
-                        validPattern={this.props.validPattern}
-                        validFlags={this.props.validFlags}
+                        isPatternValid={this.props.isPatternValid}
+                        isFlagsValid={this.props.isFlagsValid}
                         patternSel={this.props.patternSel}
                         onChange={this.props.onChange}
                         onSelect={this.props.onSelect} />
@@ -17,8 +17,8 @@
                     <Ctor
                         pattern={this.props.pattern}
                         flags={this.props.flags}
-                        validPattern={this.props.validPattern}
-                        validFlags={this.props.validFlags}
+                        isPatternValid={this.props.isPatternValid}
+                        isFlagsValid={this.props.isFlagsValid}
                         onChange={this.props.onChange} />
                 </div>
             )
@@ -64,8 +64,8 @@
                 return propName + (valid ? '' : ' error')
             }
             var classNames = {
-                pattern: className('pattern', this.props.validPattern),
-                flags: className('flags', this.props.validFlags)
+                pattern: className('pattern', this.props.isPatternValid),
+                flags: className('flags', this.props.isFlagsValid)
             }
 
             return (
@@ -169,8 +169,8 @@
             var self = this
 
             var valids = {
-                pattern: this.props.validPattern,
-                flags: this.props.validFlags
+                pattern: this.props.isPatternValid,
+                flags: this.props.isFlagsValid
             }
 
             var escParts = {}, classNames = {}

@@ -21,7 +21,7 @@
                 return (
                     <label key={i}>
                         <input type="checkbox"
-                            disabled={! self.props.validFlags}
+                            disabled={! self.props.isFlagsValid}
                             checked={self.props.flags.indexOf(flag) >= 0}
                             onChange={self.handleChange}
                             ref={flag} />

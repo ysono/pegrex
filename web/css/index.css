@@ -98,8 +98,23 @@ html, body {
 
 /* under pattern-editor-parent */
 
-.pattern-editor .surface-parent {
-    display: inline;
+.create-parent>* {
+    display: inline-block;
+}
+
+.create-type {
+    width: 20%;
+}
+.create-type>* {
+    display: block;
+}
+
+.palette>* {
+    display: inline-block;
+    width: 100px;
+    height: 100px;
+    border: solid 1px;
+    overflow: auto;
 }
 
 /* svg common */
