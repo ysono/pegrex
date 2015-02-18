@@ -1,22 +1,19 @@
-;(function(editorData) {
+;(function(tokenCreator) {
     'use strict'
 
-    editorData.typeToParams = {
+    tokenCreator.typeToParams = {
         'Any Char': [],
         'Specific Char': [
             {
                 label: 'Character',
                 builderArgIndex: 0,
-                validator: function(val) {
+                validate: function(val) {
                     // TODO escapes
                     return val.length === 1
                 }
             }
         ]
     }
-    // editorData.getParams = function(type) {
-    //     return typeToParams[type]
-    // }
 
     var typeToBuilderName = {
         'Any Char': 'anyChar',
@@ -33,8 +30,11 @@
             specificCharEsc including decimals
         */
     }
-    /* `params` is an obj */
-    editorData.build = function(type, params) {
+    /*
+        params is an obj, used as a map of
+            (index in args for builder) -> (val of arg)
+    */
+    tokenCreator.create = function(type, params) {
         var builderName = typeToBuilderName[type]
         var builderArgs = Object.keys(params).reduce(function(arr, index) {
             arr[index] = params[index]
@@ -44,4 +44,17 @@
         surfaceData.addUiData(data)
         return data
     }
-})(window.editorData = window.editorData || {})
+
+    var tokenToString = {
+        'Any Char': function() {
+            return '.'
+        },
+        'Specific Char': function(data) {
+            return data.display
+        }
+    }
+    tokenCreator.add = function() {
+        // TODO where
+    }
+
+})(window.tokenCreator = window.tokenCreator || {})

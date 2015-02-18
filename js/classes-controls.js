@@ -60,11 +60,11 @@
             try {
                 parts.tree = parser.parse(parts.pattern)
                 surfaceData.addUiData(parts.tree)
-                parts.validPattern = true
+                parts.isPatternValid = true
             } catch(e) {
                 console.warn('parsing failed', e)
                 parts.tree = undefined
-                parts.validPattern = false
+                parts.isPatternValid = false
             }
         },
         validateFlags: function(parts) {
@@ -76,7 +76,7 @@
                 set[flag] = true
                 return true
             })
-            parts.validFlags = isValid
+            parts.isFlagsValid = isValid
         },
         /* for optimization, reads from state: pattern, flag */
         /* returns undefined if no texts change occurred. */
@@ -103,7 +103,7 @@
 
         /* events from hash */
 
-        /* sets in state: (pattern, tree, validPattern), (flags, validFlags), patternSel */
+        /* sets in state: (pattern, tree, isPatternValid), (flags, isFlagsValid), patternSel */
         handleHashChange: function() {
             var parts = hashUtil.parse()
             var newState = this.prepStateForTextsChange(parts)
@@ -114,7 +114,7 @@
 
         /* events from texts */
 
-        /* sets in state: pattern, tree, validPattern, flags, validFlags, patternSel, hash */
+        /* sets in state: pattern, tree, isPatternValid, flags, isFlagsValid, patternSel, hash */
         handleTextsChange: function(parts) {
             var newState = this.prepStateForTextsChange(parts)
             if (newState) {
@@ -134,7 +134,7 @@
         /* reads from state: patternEditorMode */
         /* in select mode, sets in state: patternSel */
         /* in delete mode, reads from state: pattern
-            sets in state: pattern, tree, validPattern, patternSel, hash */
+            sets in state: pattern, tree, isPatternValid, patternSel, hash */
         handleSurfaceSelect: function(textLoc) {
             // handles all events. handle different types here.
             var mode = this.state.patternEditorMode
@@ -165,7 +165,7 @@
 
         /* events from editors */
 
-        /* sets in state: flags, validFlags, hash */
+        /* sets in state: flags, isFlagsValid, hash */
         handleFlagsEditorChange: function(flags) {
             var newState = {
                 flags: flags
@@ -188,8 +188,8 @@
                     <reactClasses.Texts
                         pattern={this.state.pattern}
                         flags={this.state.flags}
-                        validPattern={this.state.validPattern}
-                        validFlags={this.state.validFlags}
+                        isPatternValid={this.state.isPatternValid}
+                        isFlagsValid={this.state.isFlagsValid}
                         patternSel={this.state.patternSel}
                         onChange={this.handleTextsChange}
                         onSelect={this.handleTextsSelect} />
@@ -202,7 +202,7 @@
                             onSelect={this.handleSurfaceSelect} />
                         <reactClasses.FlagsEditor
                             flags={this.state.flags}
-                            validFlags={this.state.validFlags}
+                            isFlagsValid={this.state.isFlagsValid}
                             onChange={this.handleFlagsEditorChange} />
                         <reactClasses.PatternEditorModePicker
                             patternEditorMode={this.state.patternEditorMode}
