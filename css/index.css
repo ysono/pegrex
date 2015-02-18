@@ -119,8 +119,11 @@ html, body {
 
 /* svg common */
 
-svg[data-mode="select"] .clickable {
+svg .clickable {
     cursor: pointer;
+}
+svg[data-mode="add"] .clickable {
+    cursor: crosshair;
 }
 svg[data-mode="delete"] .clickable {
     cursor: crosshair;

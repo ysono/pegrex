@@ -44,7 +44,7 @@
         },
         render: function() {
             var self = this
-            var radios = ['Select', 'Delete'].map(function(label, i) {
+            var radios = ['Select', 'Add', 'Delete'].map(function(label, i) {
                 var val = label.toLowerCase()
                 return (
                     <label key={i}>

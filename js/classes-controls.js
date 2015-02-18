@@ -31,6 +31,12 @@
     }
     
     var Controls = React.createClass({
+        /* props of state:
+            pattern, tree, isPatternValid,
+            flags, isFlagsValid,
+            patternSel, hash,
+            patternEditorMode
+            patternEditorText */
         getInitialState: function() {
             var state = hashUtil.parse() || {
                 pattern: '',
@@ -38,6 +44,7 @@
             }
             this.prepStateForTextsChange(state)
             state.patternEditorMode = 'select'
+            state.patternEditorText = null
             return state
         },
         componentDidMount: function() {
@@ -68,7 +75,7 @@
             }
         },
         validateFlags: function(parts) {
-            // The major browsers 0..1 of each of 3 flags.
+            // The major browsers want 0..1 of each of 3 flags.
             var set = {}
             var isValid = parts.flags.split('').every(function(flag) {
                 if (! /[gim]/.test(flag)) { return false }
@@ -114,7 +121,7 @@
 
         /* events from texts */
 
-        /* sets in state: pattern, tree, isPatternValid, flags, isFlagsValid, patternSel, hash */
+        /* sets in state: (pattern, tree, isPatternValid), (flags, isFlagsValid), patternSel, hash */
         handleTextsChange: function(parts) {
             var newState = this.prepStateForTextsChange(parts)
             if (newState) {
@@ -133,8 +140,9 @@
 
         /* reads from state: patternEditorMode */
         /* in select mode, sets in state: patternSel */
+        /* in add mode, reads in state: patternEditorText TODO sets pattern etc */
         /* in delete mode, reads from state: pattern
-            sets in state: pattern, tree, isPatternValid, patternSel, hash */
+            sets in state: (pattern, tree, isPatternValid), patternSel, hash */
         handleSurfaceSelect: function(textLoc) {
             // handles all events. handle different types here.
             var mode = this.state.patternEditorMode
@@ -142,6 +150,12 @@
                 this.setState({
                     patternSel: textLoc
                 })
+            } else if(mode === 'add') {
+                // TODO
+                debugger
+                if (this.state.patternEditorText) {
+                    // TODO and if destination is valid, ...
+                }
             } else if(mode === 'delete') {
                 if (textLoc) {
                     ;(function() {
@@ -165,7 +179,7 @@
 
         /* events from editors */
 
-        /* sets in state: flags, isFlagsValid, hash */
+        /* sets in state: (flags, isFlagsValid), hash */
         handleFlagsEditorChange: function(flags) {
             var newState = {
                 flags: flags
@@ -179,6 +193,13 @@
         handlePatternEditorModeChange: function(mode) {
             this.setState({
                 patternEditorMode: mode
+            })
+        },
+
+        /* sets in state: patternEditorText */
+        handlePatternEditorSelect: function(text) {
+            this.setState({
+                patternEditorText: text
             })
         },
 
@@ -209,7 +230,8 @@
                             onChange={this.handlePatternEditorModeChange} />
                     </div>
                     <div className="pattern-editor-parent">
-                        <reactClasses.PatternEditor />
+                        <reactClasses.PatternEditor
+                            onSelect={this.handlePatternEditorSelect} />
                     </div>
                 </div>
             )

@@ -49,7 +49,8 @@
                         <CreateForm params={this.state.paramsForCreate}
                             onSubmit={this.handleCreate} />
                     </div>
-                    <Palette dataPerCell={this.state.dataPerCell} />
+                    <Palette dataPerCell={this.state.dataPerCell}
+                        onSelect={this.props.onSelect} />
                 </div>
             )
         }
@@ -81,6 +82,7 @@
                     <label key={i}>
                         <span>{param.label}</span>
                         <input type="text"
+                            pattern={param.pattern}
                             validate={param.validate}
                             ref={param.builderArgIndex} />
                     </label>
@@ -96,14 +98,30 @@
         }
     })
     var Palette = React.createClass({
+        getInitialState: function() {
+            return {
+                selectedCellIndex: null // TODO what if cell is deleted? might have to move this to parent
+            }
+        },
+        handleSelect: function(cell) {
+            var text = tokenCreator.toString(cell.props.data)
+            this.setState({
+                selectedCellIndex: cell.props.index
+            })
+            this.props.onSelect(text)
+        },
         render: function() {
-            var minSize = 10
+            var self = this
+            var minNumCells = 10
             var dataPerCell = this.props.dataPerCell
             var cells = Array.apply(null, {
-                    length: Math.max(minSize, dataPerCell.length)
+                    length: Math.max(minNumCells, dataPerCell.length)
                 })
                 .map(function(foo, i) {
-                    return <Cell data={dataPerCell[i]} key={i} />
+                    return <Cell data={dataPerCell[i]}
+                        isSelected={self.state.selectedCellIndex === i}
+                        onSelect={self.handleSelect}
+                        index={i} ref={i} key={i} />
                 })
             return (
                 <div className="palette">
@@ -113,12 +131,18 @@
         }
     })
     var Cell = React.createClass({
+        handleSelect: function() {
+            this.props.onSelect(this)
+        },
         render: function() {
             var data = this.props.data
             return data
                 ? React.createElement(reactClasses.Surface, {
-                    onSelect: function() {},
-                    tree: data
+                    tree: data,
+                    onSelect: this.handleSelect,
+                    patternSel: this.props.isSelected
+                        ? [0, Infinity] // so that the whole thing is always selected
+                        : null
                 })
                 : (
                     <div className="empty-surface" />
