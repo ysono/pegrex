@@ -7,6 +7,7 @@
             {
                 label: 'Character',
                 builderArgIndex: 0,
+                pattern: '.',
                 validate: function(val) {
                     // TODO escapes
                     return val.length === 1
@@ -41,6 +42,7 @@
             return arr
         }, [])
         var data = parser.yy.b[builderName].apply(parser.yy.b, builderArgs)
+        data.textLoc = [0, 0] // so that the whole thing is always selectable
         surfaceData.addUiData(data)
         return data
     }
@@ -53,8 +55,9 @@
             return data.display
         }
     }
-    tokenCreator.add = function() {
-        // TODO where
+    tokenCreator.toString = function(data) {
+        var fn = tokenToString[data.type]
+        return fn(data)
     }
 
 })(window.tokenCreator = window.tokenCreator || {})
