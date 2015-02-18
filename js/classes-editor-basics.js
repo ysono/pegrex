@@ -20,7 +20,7 @@
             var choices = Object.keys(labels).map(function(flag, i) {
                 return (
                     <label key={i}>
-                        <input type="checkbox" name={flag}
+                        <input type="checkbox"
                             disabled={! self.props.validFlags}
                             checked={self.props.flags.indexOf(flag) >= 0}
                             onChange={self.handleChange}

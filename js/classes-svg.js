@@ -285,8 +285,8 @@
 
     /*
         props ~= {
-            onSelect: required
             tree: required
+            onSelect: required
             patternSel: optional
             patternEditorMode: optional
         }
@@ -302,7 +302,7 @@
             var svgDim = [0,0]
             var childNode
             if (tree) {
-                svgDim = tree.ui.dim
+                svgDim = tree.ui.surfaceDim
                 childNode = createInstance(this.handleSelect, tree, patternSel)
             }
 
@@ -316,7 +316,7 @@
             var markerMidCross = '\
                 <marker id="marker-mid-cross" \
                     viewBox="0 0 10 10" refX="5" refY="5" markerWidth="{0}" markerHeight="{0}" orient="auto" fill="none" stroke="{1}"> \
-                    <path d="M0 0 L 10 10 L 5 5 L 10 0 L 0 10" /> \
+                    <path d="M 0 0 L 10 10 L 5 5 L 10 0 L 0 10" /> \
                 </marker>'
                     .replace(/\{0\}/g, surfaceData.markerLen)
                     .replace(/\{1\}/g, surfaceData.neighborArrowColor)
@@ -346,6 +346,5 @@
         }
     }))
 
-    reactClasses.boxedClass = boxedClass
     reactClasses.Surface = Surface
 })(window.reactClasses = window.reactClasses || {})
