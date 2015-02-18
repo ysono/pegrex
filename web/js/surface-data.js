@@ -807,9 +807,9 @@
         var rootPad = 10
         var dUi = setUiByType(data)
         dUi.pos = [rootPad, rootPad]
-        dUi.dim = [
-            rootPad * 2 + dUi.pos[0] + dUi.dim[0],
-            rootPad * 2 + dUi.pos[1] + dUi.dim[1]
+        dUi.surfaceDim = [
+            rootPad * 2 + dUi.dim[0],
+            rootPad * 2 + dUi.dim[1]
         ]
     }
 

@@ -9,18 +9,13 @@ html, body {
 
 /* under controls-parent */
 
-.visuals-parent {
-    position: relative;
-}
 .texts-parent {
     margin: 20px 1%;
     border: solid 1px;
     text-align: center;
 }
-.surface-parent {
-    width: 100%;
-    overflow: auto;
-    text-align: center;
+.visuals-parent {
+    position: relative;
 }
 
 /* under texts-parent */
@@ -70,16 +65,13 @@ html, body {
     }
 }
 
-/* under surface-parent */
+/* under visuals-parent */
 
-svg[data-mode="select"] .clickable {
-    cursor: pointer;
+.visuals-parent>.surface-parent {
+    width: 100%;
+    overflow: auto;
+    text-align: center;
 }
-svg[data-mode="delete"] .clickable {
-    cursor: crosshair;
-}
-
-/* under editors */
 
 .flags-editor, .pattern-editor-mode-picker {
     position: absolute;
@@ -102,4 +94,19 @@ svg[data-mode="delete"] .clickable {
 .pattern-editor-mode-picker {
     left: 0;
     margin-left: 20px;
+}
+
+/* under pattern-editor-parent */
+
+.pattern-editor .surface-parent {
+    display: inline;
+}
+
+/* svg common */
+
+svg[data-mode="select"] .clickable {
+    cursor: pointer;
+}
+svg[data-mode="delete"] .clickable {
+    cursor: crosshair;
 }

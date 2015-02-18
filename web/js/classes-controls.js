@@ -207,6 +207,8 @@
                         <reactClasses.PatternEditorModePicker
                             patternEditorMode={this.state.patternEditorMode}
                             onChange={this.handlePatternEditorModeChange} />
+                    </div>
+                    <div className="pattern-editor-parent">
                         <reactClasses.PatternEditor />
                     </div>
                 </div>
