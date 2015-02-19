@@ -72,19 +72,19 @@
   }
 */
 var parser = (function(){
-var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[2,6],$V1=[5,8,20],$V2=[5,8,16,17,18,20,21,22,24,28],$V3=[8,16,17,18,20,21,22,24,28],$V4=[5,8,14,15,16,17,18,20,21,22,24,28],$V5=[1,28],$V6=[1,29],$V7=[1,30],$V8=[1,31],$V9=[1,32],$Va=[1,33],$Vb=[22,26,33],$Vc=[5,8,14,15,16,17,18,20,21,22,24,26,28,33];
+var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,6],$V1=[1,20],$V2=[1,7,20],$V3=[1,7,16,17,18,20,21,22,24,28],$V4=[1,7,14,15,16,17,18,20,21,22,24,28],$V5=[1,28],$V6=[1,29],$V7=[1,30],$V8=[1,31],$V9=[1,32],$Va=[1,33],$Vb=[22,26,33],$Vc=[1,7,14,15,16,17,18,20,21,22,24,26,28,33];
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"Pattern":3,"Disjunction":4,"EOF":5,"Alternative_s":6,"Alternative":7,"ALT_DELIM":8,"Term_s":9,"Term":10,"Assertion":11,"Atom":12,"Quantifier":13,"ATOM_QUANT_SHORT":14,"ATOM_QUANT_NUM":15,"ASSERTN_LB":16,"ASSERTN_WB":17,"TERM_GROUP_BEGIN":18,"ASSERTN_LOOKFWD_FLAG":19,"TERM_GROUP_END":20,"ATOM_CHAR_ANY":21,"ESCAPE_PREFIX":22,"AtomEscape":23,"CLASS_BEGIN":24,"ClassAtom_s":25,"CLASS_END":26,"ATOM_GROUP_NONCAPTR_BEGIN":27,"ATOM_ETC":28,"ATOM_ESCAPE_DECIMALS":29,"CharacterEscapeOrChracterClassEscape":30,"ClassAtom":31,"ClassEscape":32,"CLASS_ATOM_ETC":33,"CLASS_ATOM_ESCAPE_DECIMALS":34,"CLASS_ATOM_ESCAPE_BS":35,"ESC_DECI":36,"ESC_CTRL":37,"ESC_HEX4":38,"ESC_HEX2":39,"ESC_CLASS":40,"ESC_ETC":41,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"EOF",8:"ALT_DELIM",14:"ATOM_QUANT_SHORT",15:"ATOM_QUANT_NUM",16:"ASSERTN_LB",17:"ASSERTN_WB",18:"TERM_GROUP_BEGIN",19:"ASSERTN_LOOKFWD_FLAG",20:"TERM_GROUP_END",21:"ATOM_CHAR_ANY",22:"ESCAPE_PREFIX",24:"CLASS_BEGIN",26:"CLASS_END",27:"ATOM_GROUP_NONCAPTR_BEGIN",28:"ATOM_ETC",29:"ATOM_ESCAPE_DECIMALS",33:"CLASS_ATOM_ETC",34:"CLASS_ATOM_ESCAPE_DECIMALS",35:"CLASS_ATOM_ESCAPE_BS",36:"ESC_DECI",37:"ESC_CTRL",38:"ESC_HEX4",39:"ESC_HEX2",40:"ESC_CLASS",41:"ESC_ETC"},
-productions_: [0,[3,2],[4,1],[6,1],[6,3],[7,1],[9,0],[9,2],[10,1],[10,1],[10,2],[13,1],[13,1],[11,1],[11,1],[11,4],[12,1],[12,2],[12,3],[12,3],[12,4],[12,1],[23,1],[23,1],[25,0],[25,2],[31,2],[31,1],[32,1],[32,1],[32,1],[30,1],[30,1],[30,1],[30,1],[30,1],[30,1]],
+symbols_: {"error":2,"Pattern":3,"Disjunction":4,"Alternative_s":5,"Alternative":6,"ALT_DELIM":7,"Term_s":8,"TERM_EMPTY":9,"Term":10,"Assertion":11,"Atom":12,"Quantifier":13,"ATOM_QUANT_SHORT":14,"ATOM_QUANT_NUM":15,"ASSERTN_LB":16,"ASSERTN_WB":17,"TERM_GROUP_BEGIN":18,"ASSERTN_LOOKFWD_FLAG":19,"TERM_GROUP_END":20,"ATOM_CHAR_ANY":21,"ESCAPE_PREFIX":22,"AtomEscape":23,"CLASS_BEGIN":24,"ClassAtom_s":25,"CLASS_END":26,"ATOM_GROUP_NONCAPTR_BEGIN":27,"ATOM_ETC":28,"ATOM_ESCAPE_DECIMALS":29,"CharacterEscapeOrChracterClassEscape":30,"ClassAtom":31,"ClassEscape":32,"CLASS_ATOM_ETC":33,"CLASS_ATOM_ESCAPE_DECIMALS":34,"CLASS_ATOM_ESCAPE_BS":35,"ESC_DECI":36,"ESC_CTRL":37,"ESC_HEX4":38,"ESC_HEX2":39,"ESC_CLASS":40,"ESC_ETC":41,"$accept":0,"$end":1},
+terminals_: {2:"error",7:"ALT_DELIM",9:"TERM_EMPTY",14:"ATOM_QUANT_SHORT",15:"ATOM_QUANT_NUM",16:"ASSERTN_LB",17:"ASSERTN_WB",18:"TERM_GROUP_BEGIN",19:"ASSERTN_LOOKFWD_FLAG",20:"TERM_GROUP_END",21:"ATOM_CHAR_ANY",22:"ESCAPE_PREFIX",24:"CLASS_BEGIN",26:"CLASS_END",27:"ATOM_GROUP_NONCAPTR_BEGIN",28:"ATOM_ETC",29:"ATOM_ESCAPE_DECIMALS",33:"CLASS_ATOM_ETC",34:"CLASS_ATOM_ESCAPE_DECIMALS",35:"CLASS_ATOM_ESCAPE_BS",36:"ESC_DECI",37:"ESC_CTRL",38:"ESC_HEX4",39:"ESC_HEX2",40:"ESC_CLASS",41:"ESC_ETC"},
+productions_: [0,[3,1],[4,1],[5,1],[5,3],[6,1],[8,1],[8,2],[10,1],[10,1],[10,2],[13,1],[13,1],[11,1],[11,1],[11,4],[12,1],[12,2],[12,3],[12,3],[12,4],[12,1],[23,1],[23,1],[25,0],[25,2],[31,2],[31,1],[32,1],[32,1],[32,1],[30,1],[30,1],[30,1],[30,1],[30,1],[30,1]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
 var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
-return yy.b.pattern($$[$0-1])
+return yy.b.pattern($$[$0])
 break;
 case 2:
 this.$ = yy.b.withLoc(_$[$0]).disjunction($$[$0])
@@ -116,7 +116,7 @@ case 14:
 this.$ = yy.b.assertionWB($$[$0])
 break;
 case 15:
-this.$ = yy.b.assertionLF($$[$0-2], fixNestedDisjLoc($$[$0-1],_$[$0-2]) )
+this.$ = yy.b.assertionLF($$[$0-2], $$[$0-1])
 break;
 case 16:
 this.$ = yy.b.anyChar()
@@ -153,8 +153,8 @@ this.$ = yy.b.charSetPreDefn($$[$0])
 break;
 }
 },
-table: [o([5,8,16,17,18,21,22,24,28],$V0,{3:1,4:2,6:3,7:4,9:5}),{1:[3]},{5:[1,6]},o([5,20],[2,2],{8:[1,7]}),o($V1,[2,3]),o($V1,[2,5],{10:8,11:9,12:10,16:[1,11],17:[1,12],18:[1,13],21:[1,14],22:[1,15],24:[1,16],28:[1,17]}),{1:[2,1]},o($V2,$V0,{9:5,7:18}),o($V2,[2,7]),o($V2,[2,8]),o($V2,[2,9],{13:19,14:[1,20],15:[1,21]}),o($V2,[2,13]),o($V2,[2,14]),o($V3,$V0,{6:3,7:4,9:5,4:23,19:[1,22],27:[1,24]}),o($V4,[2,16]),{23:25,29:[1,26],30:27,36:$V5,37:$V6,38:$V7,39:$V8,40:$V9,41:$Va},o($Vb,[2,24],{25:34}),o($V4,[2,21]),o($V1,[2,4]),o($V2,[2,10]),o($V2,[2,11]),o($V2,[2,12]),o($V3,$V0,{6:3,7:4,9:5,4:35}),{20:[1,36]},o($V3,$V0,{6:3,7:4,9:5,4:37}),o($V4,[2,17]),o($V4,[2,22]),o($V4,[2,23]),o($Vc,[2,31]),o($Vc,[2,32]),o($Vc,[2,33]),o($Vc,[2,34]),o($Vc,[2,35]),o($Vc,[2,36]),{22:[1,40],26:[1,38],31:39,33:[1,41]},{20:[1,42]},o($V4,[2,19]),{20:[1,43]},o($V4,[2,18]),o($Vb,[2,25]),{30:47,32:44,34:[1,45],35:[1,46],36:$V5,37:$V6,38:$V7,39:$V8,40:$V9,41:$Va},o($Vb,[2,27]),o($V2,[2,15]),o($V4,[2,20]),o($Vb,[2,26]),o($Vb,[2,28]),o($Vb,[2,29]),o($Vb,[2,30])],
-defaultActions: {6:[2,1]},
+table: [{3:1,4:2,5:3,6:4,8:5,9:$V0},{1:[3]},{1:[2,1]},o($V1,[2,2],{7:[1,7]}),o($V2,[2,3]),o($V2,[2,5],{10:8,11:9,12:10,16:[1,11],17:[1,12],18:[1,13],21:[1,14],22:[1,15],24:[1,16],28:[1,17]}),o($V3,[2,6]),{6:18,8:5,9:$V0},o($V3,[2,7]),o($V3,[2,8]),o($V3,[2,9],{13:19,14:$V1,15:[1,21]}),o($V3,[2,13]),o($V3,[2,14]),{4:23,5:3,6:4,8:5,9:$V0,19:[1,22],27:[1,24]},o($V4,[2,16]),{23:25,29:[1,26],30:27,36:$V5,37:$V6,38:$V7,39:$V8,40:$V9,41:$Va},o($Vb,[2,24],{25:34}),o($V4,[2,21]),o($V2,[2,4]),o($V3,[2,10]),o($V3,[2,11]),o($V3,[2,12]),{4:35,5:3,6:4,8:5,9:$V0},{20:[1,36]},{4:37,5:3,6:4,8:5,9:$V0},o($V4,[2,17]),o($V4,[2,22]),o($V4,[2,23]),o($Vc,[2,31]),o($Vc,[2,32]),o($Vc,[2,33]),o($Vc,[2,34]),o($Vc,[2,35]),o($Vc,[2,36]),{22:[1,40],26:[1,38],31:39,33:[1,41]},{20:[1,42]},o($V4,[2,19]),{20:[1,43]},o($V4,[2,18]),o($Vb,[2,25]),{30:47,32:44,34:[1,45],35:[1,46],36:$V5,37:$V6,38:$V7,39:$V8,40:$V9,41:$Va},o($Vb,[2,27]),o($V3,[2,15]),o($V4,[2,20]),o($Vb,[2,26]),o($Vb,[2,28]),o($Vb,[2,29]),o($Vb,[2,30])],
+defaultActions: {2:[2,1]},
 parseError: function parseError(str, hash) {
     if (hash.recoverable) {
         this.trace(str);
@@ -299,29 +299,6 @@ parse: function parse(input) {
     }
     return true;
 }};
-
-
-/*
-    Bug with jison ???
-    E.g. input 'a|x'
-        loc of '|' is (1,2)
-        loc of '|x' is (1,3) but ought to be (2,3)
-        loc of 'x' is (2,3)
-    E.g. '(?=x)'
-        locs of both the nested disj and its nested alt are (2,4) but ought to be (3,4)
-    Same issue with (?:x) and (x)
-    If the token is modified to match '(?==x)', then the loc starts with the first '=', right after the '?'
-    E.g. '(?=x|y)'
-        loc of the nested disj and its first alt is wrong b/c they wrongly include '='
-        loc of the second alt is wrong b/c alt wrongly includes '|'
-    And it's _not_ b/c yy.b.withLoc is overriding correct loc.
-    We don't have to stuff web doesn't make selectable. Normally disj and alt are both not selectable.
-    Hack to fix disj under a look-fwd assertion only.
-*/
-function fixNestedDisjLoc(disj, precedingLoc) {
-    disj.textLoc[0] = precedingLoc.last_column
-    return disj
-}
 /* generated by jison-lex 0.3.4 */
 var lexer = (function(){
 var lexer = ({
@@ -650,13 +627,13 @@ options: {},
 performAction: function anonymous(yy,yy_,$avoiding_name_collisions,YY_START) {
 var YYSTATE=YY_START;
 switch($avoiding_name_collisions) {
-case 0:this.begin('TERM'); this.unput(yy_.yytext); return
+case 0:this.begin('ALT_BEGIN'); this.unput(yy_.yytext); return
 break;
-case 1:return 5
+case 1:this.popState(); this.begin('TERM'); return 9
 break;
 case 2:popTillOutOf(this, 'TERM_GROUP'); return 20
 break;
-case 3:return 8
+case 3:this.begin('ALT_BEGIN'); return 7
 break;
 case 4:return 14
 break;
@@ -666,11 +643,11 @@ case 6:this.begin('TERM_GROUP'); return 18
 break;
 case 7:this.begin('TERM_GROUP_NONCAPTR'); return
 break;
-case 8:this.begin('TERM'); this.unput(yy_.yytext); return
+case 8:this.begin('ALT_BEGIN'); this.unput(yy_.yytext); return
 break;
-case 9:this.begin('TERM'); return 19
+case 9:this.begin('ALT_BEGIN'); return 19
 break;
-case 10:this.begin('TERM'); return 27
+case 10:this.begin('ALT_BEGIN'); return 27
 break;
 case 11:return 16
 break;
@@ -714,8 +691,8 @@ case 30:this.popState(); return 41 /* an approx. ecma's defn is much more involv
 break;
 }
 },
-rules: [/^(?:.)/,/^(?:$)/,/^(?:[)])/,/^(?:[|])/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[(])/,/^(?:[?])/,/^(?:.)/,/^(?:[=!])/,/^(?:[:])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:[^cxu])/],
-conditions: {"ESCAPED_NONDECI":{"rules":[25,26,27,28,29,30],"inclusive":false},"ESCAPED_IN_CLASS":{"rules":[22,23,24],"inclusive":false},"CLASS":{"rules":[19,20,21],"inclusive":false},"ESCAPED_IN_ATOM":{"rules":[17,18],"inclusive":false},"TERM_GROUP_NONCAPTR":{"rules":[9,10],"inclusive":false},"TERM_GROUP":{"rules":[7,8],"inclusive":false},"TERM":{"rules":[1,2,3,4,5,6,11,12,13,14,15,16],"inclusive":false},"INITIAL":{"rules":[0],"inclusive":true}}
+rules: [/^(?:.)/,/^(?:())/,/^(?:[)])/,/^(?:[|])/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[(])/,/^(?:[?])/,/^(?:.)/,/^(?:[=!])/,/^(?:[:])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:[^cxu])/],
+conditions: {"ESCAPED_NONDECI":{"rules":[25,26,27,28,29,30],"inclusive":false},"ESCAPED_IN_CLASS":{"rules":[22,23,24],"inclusive":false},"CLASS":{"rules":[19,20,21],"inclusive":false},"ESCAPED_IN_ATOM":{"rules":[17,18],"inclusive":false},"TERM_GROUP_NONCAPTR":{"rules":[9,10],"inclusive":false},"TERM_GROUP":{"rules":[7,8],"inclusive":false},"TERM":{"rules":[2,3,4,5,6,11,12,13,14,15,16],"inclusive":false},"ALT_BEGIN":{"rules":[1],"inclusive":false},"INITIAL":{"rules":[0],"inclusive":true}}
 });
 function popTillOutOf(lexer, state) {
     var st
