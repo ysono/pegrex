@@ -77,7 +77,7 @@
         },
         render: function() {
             var params = this.props.params
-            var inputNodes = params.map(function(param, i) {
+            var inputCompos = params.map(function(param, i) {
                 return (
                     <label key={i}>
                         <span>{param.label}</span>
@@ -91,7 +91,7 @@
             return (
                 <form onSubmit={this.handleSubmit}
                     className="create-form">
-                    {inputNodes}
+                    {inputCompos}
                     <input type="submit" value="Create" />
                 </form>
             )

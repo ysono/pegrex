@@ -7,13 +7,13 @@
                 component will eventually receive it and process it.
         */
         proto.handleSelect = function(e) {
-            var payload
+            var pegrexEvt
             if (e.isPegrexEvt) {
                 // Then pass-thru.
-                payload = e
+                pegrexEvt = e
             } else {
                 // Then `this` originated the event.
-                payload = {
+                pegrexEvt = {
                     isPegrexEvt: true,
                     textLoc: this.props.data.textLoc
                 }
@@ -22,7 +22,7 @@
                 // If so, prevent elements behind it from firing more click events.
                 e.stopPropagation()
             }
-            this.props.onBubbleUpSelect(payload)
+            this.props.onBubbleUpSelect(pegrexEvt)
         }
         /*
             Compares given selection range on the pattern string against the
@@ -76,7 +76,7 @@
                 .strokeW // default 3. if zero, use stroke='none'
 
             // for other children
-            // The creation of these children elements are delegated to `createInstance`,
+            // The creation of these children components are delegated to `createInstance`,
             //     so they each must have valid `.type`.
             // The separation of props is for convenience while adding ui data;
             //     render fn does not care which types of children are in which props.
@@ -95,7 +95,7 @@
 
             var txform = ['translate(', data.ui.pos, ')'].join('')
 
-            var boxElm = (
+            var boxCompo = (
                 <rect width={data.ui.dim[0]} height={data.ui.dim[1]} rx="3" ry="3"
                         stroke={data.ui.stroke}
                         strokeWidth={data.ui.strokeW || 3}
@@ -109,7 +109,7 @@
                 ]
                 I think this is better for key management than having one big array?
             */
-            var childElms = [
+            var childCompos = [
                 data.ui.fillers || [],
                 data.ui.neighborArrows || [],
                 surfaceData.getChildVal(data) || [],
@@ -127,8 +127,8 @@
             // data-type for aiding with debugging only; not used by program.
             return (
                 <g transform={txform} data-type={data.type}>
-                    {boxElm}
-                    {childElms}
+                    {boxCompo}
+                    {childCompos}
                 </g>
             )
         }
@@ -156,7 +156,7 @@
 
                 var txform = ['translate(', data.pos, ')'].join('')
 
-                var textNodes = data.rows.map(function(row, i) {
+                var textCompos = data.rows.map(function(row, i) {
                     return (
                         <text x={row.anchorPos[0]} y={row.anchorPos[1]} textAnchor={row.anchor}
                             fontFamily="monospace"
@@ -168,7 +168,7 @@
 
                 return (
                     <g transform={txform}>
-                        {textNodes}
+                        {textCompos}
                     </g>
                 )
             }
@@ -316,10 +316,10 @@
             var patternSel = this.props.patternSel
 
             var svgDim = [0,0]
-            var childNode
+            var childCompo
             if (tree) {
                 svgDim = tree.ui.surfaceDim
-                childNode = createInstance(this.handleSelect, tree, patternSel)
+                childCompo = createInstance(this.handleSelect, tree, patternSel)
             }
 
             var markerEndArrow = '\
@@ -355,7 +355,7 @@
                         <defs dangerouslySetInnerHTML={{
                             __html: markerEndArrow + markerMidCross + dropshadow
                         }}></defs>
-                        {childNode}
+                        {childCompo}
                     </svg>
                 </div>
             )

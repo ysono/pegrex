@@ -25,10 +25,6 @@
         }
     })
 
-    function sel(input, range) {
-        input.focus() // ff requires it
-        input.setSelectionRange.apply(input, range)
-    }
     function getRefVals(refs) {
         return Object.keys(refs).reduce(function(map, refName) {
             map[refName] = refs[refName].getDOMNode().value
@@ -57,7 +53,10 @@
         },
         render: function() {
             if (this.props.patternSel) {
-                sel(this.refs.pattern.getDOMNode(), this.props.patternSel)
+                ;(function(input, range) {
+                    // input.focus() // TODO ff requires it to change seln, but this makes the <input> steal focus and flicker.
+                    input.setSelectionRange.apply(input, range)
+                })(this.refs.pattern.getDOMNode(), this.props.patternSel)
             }
 
             function className(propName, valid) {

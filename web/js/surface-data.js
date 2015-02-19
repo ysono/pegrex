@@ -413,6 +413,9 @@
                 }
 
                 addNeighborArrows(data)
+                // data.ui.neighborArrows.forEach(function(arrow) {
+                    // TODO use 'C' to avoid passing under someone alt's first or last term.
+                // })
 
                 return ui
             },
@@ -430,12 +433,23 @@
                 ui.fill = 'none'
 
                 var midY = ui.dim[1] / 2 - pad.y[0]
-                ui.fillers.forEach(function(arrow) {
-                    arrow.type = 'path'
-                    arrow.d = [
-                        [0, midY],
-                        [arrowW, midY]
-                    ]
+                ui.fillers.forEach(function(filler) {
+                    // Want to make whole filler selectable, and add an arrow.
+                    // no type --> rendered by `boxedClass` class
+                    filler.type = undefined
+                    filler.ui = {
+                        pos: filler.pos,
+                        dim: filler.dim,
+                        // arbitrarily using neighborArrows; could be another prop
+                        // supported by `boxedClass`.
+                        neighborArrows: [{
+                            type: 'path',
+                            d: [
+                                [0, midY],
+                                [arrowW, midY]
+                            ]
+                        }]
+                    }
                 })
                 return ui
             },
@@ -708,9 +722,10 @@
 
                 if (! data.inclusive) {
                     ;(function() {
-                        // creating a comonent obj with no type
-                        // no type --> rendered by `boxedClass` class
+                        // Add the 'Any Other' block
                         var tb = {
+                            // no type --> rendered by `boxedClass` class
+                            type: undefined,
                             inclusive: true
                         }
                         var tbUi = setUiWithTextBlockOnly([

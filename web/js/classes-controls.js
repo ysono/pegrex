@@ -140,40 +140,50 @@
 
         /* reads from state: patternEditorMode */
         /* in select mode, sets in state: patternSel */
-        /* in add mode, reads in state: patternEditorText TODO sets pattern etc */
+        /* in add mode, reads in state: patternEditorText
+            sets in state: (pattern, tree, isPatternValid), patternSel, hash */
         /* in delete mode, reads from state: pattern
             sets in state: (pattern, tree, isPatternValid), patternSel, hash */
         handleSurfaceSelect: function(textLoc) {
+            function spliceStr(str, range, replacement) {
+                return str.slice(0, range[0])
+                    + (replacement || '')
+                    + str.slice(range[1])
+            }
+
             // handles all events. handle different types here.
             var mode = this.state.patternEditorMode
             if (mode === 'select') {
                 this.setState({
                     patternSel: textLoc
                 })
-            } else if(mode === 'add') {
-                // TODO
-                debugger
-                if (this.state.patternEditorText) {
-                    // TODO and if destination is valid, ...
+                return
+            }
+
+            var newState
+            if(mode === 'add') {
+                if (this.state.patternEditorText && textLoc) {
+                    newState = {
+                        pattern: spliceStr(
+                            this.state.pattern, textLoc,
+                            this.state.patternEditorText),
+                        patternSel: [textLoc[0],
+                            textLoc[0] + this.state.patternEditorText.length]
+                    }
                 }
             } else if(mode === 'delete') {
                 if (textLoc) {
-                    ;(function() {
-                        function spliceStr(from, to) {
-                            var arr = this.split('')
-                            arr.splice(from, to - from)
-                            return arr.join('')
-                        }
-                        var newState = {
-                            pattern: spliceStr.apply(
-                                this.state.pattern, textLoc),
-                            patternSel: [textLoc[0], textLoc[0]]
-                        }
-                        this.patternToTree(newState)
-                        this.updateHash(newState)
-                        this.setState(newState)
-                    }).bind(this)()
+                    newState = {
+                        pattern: spliceStr(
+                            this.state.pattern, textLoc),
+                        patternSel: [textLoc[0], textLoc[0]]
+                    }
                 }
+            }
+            if (newState) {
+                this.patternToTree(newState)
+                this.updateHash(newState)
+                this.setState(newState)
             }
         },
 
