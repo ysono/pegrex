@@ -1,49 +1,39 @@
 ;(function(reactClasses) {
     'use strict'
 
-    function extendClassProto(proto) {
+    function makeSelectableProto(proto) {
         /*
-            Single handler for all events.
-            Any element should bind all events to this handler.
-            The single handler fn is passed down elements as `onEvents={this.bubbleUpEvent}`
-                as long as all nested children are created by the helper `createInstance`.
+            Relays a select event to the parent component. The root `Surface`
+                component will eventually receive it and process it.
         */
-        proto.bubbleUpEvent = function(e) {
-            var payload = e.pegrexEvt
-                ? e // pass-thru
-                : {
-                    pegrexEvt: true,
-                    data: this.props.data,
-                    e: e
-                } // `this` originated the event
-            this.props.onEvents(payload)
+        proto.handleSelect = function(e) {
+            var payload
+            if (e.isPegrexEvt) {
+                // Then pass-thru.
+                payload = e
+            } else {
+                // Then `this` originated the event.
+                payload = {
+                    isPegrexEvt: true,
+                    textLoc: this.props.data.textLoc
+                }
+
+                // Event can come from a click on a transparent element.
+                // If so, prevent elements behind it from firing more click events.
+                e.stopPropagation()
+            }
+            this.props.onBubbleUpSelect(payload)
         }
         /*
-            How highlight works:
-            1. Some random surface node anywhere has `onClick={this.bubbleUpEvent}` assigned,
-                which is the `proto.bubbleUpEvent` above.
-            2. `bubbleUpEvent` bubbles up that surface Element's `this.props.data`.
-            3. React classes are externally wired so that if `data.textLoc` exists,
-                it updates `this.props.patternSel` on all surface Elements;
-                hence `this.render` of all surface Elements are called.
-            4. The current surface Element's `this.render` calls `this.hiteliteSelected`,
-                which is the `proto.hiliteSelected` here.
-            5. `hiliteSelected` matches the current Element's `this.props.textLoc` against
-                the updated `this.props.patternSel`.
-            6. If it's a match, `hiliteSelected` visually indicates so by
-                visually modifying `this.refs.box.getDOMNode()`.
-
-            Tl;dr
-            1. (Element has a DOM node with `onClick={this.bubbleUpEvent}`)
-                + (Element's proto was extended by `extendClassProto`)
-                + (always using `createInstance` to create children Elements)
-                = the `onClick` node can trigger highlighting by click.
-            2. Write `this.render` to call `this.hiliteSelected` if `this.refs.box` is a valid ref.
+            Compares given selection range on the pattern string against the
+                span of the pattern string that `this` component is associated with.
+            If the selection encompasses `this`'s span, then highlight `this`.
+            Speicfically, highlight is applied to the element within `this` referred to
+                by `hiliteElm`, if it exists.
         */
         proto.hiliteSelected = function() {
             // `filter` attr is not supported by react, so manually assign.
-            if (! this.refs.box) {
-                // component hasn't mounted.
+            if (! this.refs.hiliteElm) {
                 return
             }
             var patternSel = this.props.patternSel
@@ -52,11 +42,23 @@
             var amSelected = patternSel && textLoc
                 && patternSel[0] <= textLoc[0]
                 && patternSel[1] >= textLoc[1]
-            var box = this.refs.box.getDOMNode()
+            var hiliteElm = this.refs.hiliteElm.getDOMNode()
             if (amSelected) {
-                box.setAttribute('filter', "url(#dropshadow)")
+                hiliteElm.setAttribute('filter', "url(#dropshadow)")
             } else {
-                box.removeAttribute('filter')
+                hiliteElm.removeAttribute('filter')
+            }
+        }
+        /*
+            If `this` component is associated with a span of the pattern string,
+                then register `this`'s root element with `onClick={this.handleSelect}`
+                so clicking anywhere in the root element triggers selection.
+        */
+        proto.componentDidMount = function() {
+            if (this.props.data.textLoc) {
+                var thisRootNode = this.getDOMNode()
+                thisRootNode.addEventListener('click', this.handleSelect)
+                thisRootNode.classList.add('selectable')
             }
         }
         return proto
@@ -85,9 +87,9 @@
             data.ui
                 .textBlocks
     */
-    var boxedClass = React.createClass(extendClassProto({
+    var boxedClass = React.createClass(makeSelectableProto({
         render: function() {
-            var bubbleUpEvent = this.bubbleUpEvent
+            var self = this
             var data = this.props.data
             var patternSel = this.props.patternSel
 
@@ -98,8 +100,7 @@
                         stroke={data.ui.stroke}
                         strokeWidth={data.ui.strokeW || 3}
                         fill={data.ui.fill || 'white'}
-                        onClick={bubbleUpEvent} className="clickable"
-                        ref="box" />
+                        ref="hiliteElm" />
             )
 
             /*
@@ -116,7 +117,7 @@
             ].map(function(childVal) {
                 var childList = ([].concat(childVal))
                     .map(function(childData, i) {
-                        return createInstance(bubbleUpEvent, childData, patternSel, i)
+                        return createNestedSelectableInstance(self, childData, i)
                     })
                 return childList
             })
@@ -149,10 +150,9 @@
 
         // below: UI-scoped types that do not come from parser
 
-        'textBlock': React.createClass(extendClassProto({
+        'textBlock': React.createClass({
             render: function() {
                 var data = this.props.data
-                var bubbleUpEvent = this.bubbleUpEvent
 
                 var txform = ['translate(', data.pos, ')'].join('')
 
@@ -160,7 +160,6 @@
                     return (
                         <text x={row.anchorPos[0]} y={row.anchorPos[1]} textAnchor={row.anchor}
                             fontFamily="monospace"
-                            onClick={bubbleUpEvent} className="clickable"
                             key={i}>
                             {row.text}
                         </text>
@@ -173,7 +172,7 @@
                     </g>
                 )
             }
-        })),
+        }),
 
         /*
             in this.props.path: {
@@ -193,7 +192,6 @@
         */
         'path': React.createClass({
             render: function() {
-                // TODO test
                 var data = this.props.data
                 var segms = data.d
                 var usesMarkerEnd = data.usesMarkerEnd !== false
@@ -201,70 +199,72 @@
 
                 var txform = ['translate(', (data.pos || [0,0]), ')'].join('')
 
-                function reflectedQuadra(from, to, isVertical) {
-                    var vector = [
-                        to[0] - from[0],
-                        to[1] - from[1]
-                    ]
-                    var quadraCtrlPt
-                    if (isVertical) {
-                        quadraCtrlPt = [
-                            from[0],
-                            from[1] + vector[1] / 4
+                var dStr = (function() {
+                    function reflectedQuadra(from, to, isVertical) {
+                        var vector = [
+                            to[0] - from[0],
+                            to[1] - from[1]
                         ]
-                    } else {
-                        quadraCtrlPt = [
-                            from[0] + vector[0] / 4,
-                            from[1]
+                        var quadraCtrlPt
+                        if (isVertical) {
+                            quadraCtrlPt = [
+                                from[0],
+                                from[1] + vector[1] / 4
+                            ]
+                        } else {
+                            quadraCtrlPt = [
+                                from[0] + vector[0] / 4,
+                                from[1]
+                            ]
+                        }
+                        var midPt = [
+                            from[0] + vector[0] / 2,
+                            from[1] + vector[1] / 2
                         ]
+                        return ['Q', quadraCtrlPt, midPt, 'T', to].join(' ')
                     }
-                    var midPt = [
-                        from[0] + vector[0] / 2,
-                        from[1] + vector[1] / 2
-                    ]
-                    return ['Q', quadraCtrlPt, midPt, 'T', to].join(' ')
-                }
 
-                if (usesMarkerEnd) {
-                    ;(function() {
-                        var end = segms.slice(-1)[0]
-                        if (! (end instanceof Array)) {
-                            console.warn('could not adjust path for marker. make sure last item is a coord.', data)
-                            return
-                        }
-                        segms = segms.slice() // clone so marker adjustment does not survive refresh
-                        end = end.slice()
-                        segms.splice(-1, 1, end)
-                        end[data.isVertical ? 1 : 0] -= surfaceData.markerLen
-                    })()
-                }
+                    if (usesMarkerEnd) {
+                        ;(function() {
+                            var end = segms.slice(-1)[0]
+                            if (! (end instanceof Array)) {
+                                console.warn('could not adjust path for marker. make sure last item is a coord.', data)
+                                return
+                            }
+                            segms = segms.slice() // clone so marker adjustment does not survive refresh
+                            end = end.slice()
+                            segms.splice(-1, 1, end)
+                            end[data.isVertical ? 1 : 0] -= surfaceData.markerLen
+                        })()
+                    }
 
-                var connected = segms.reduce(function(connected, segm, i) {
-                    var next = (function() {
-                        if (typeof segm === 'string') {
-                            // (coord or string or beginning of array) followed by string
-                            return segm
-                        }
-                        if (segms[i - 1] instanceof Array) {
-                            // coord followed by coord
-                            return reflectedQuadra(segms[i - 1], segm, data.isVertical)
-                        }
-                        if (i) {
-                            // string followed by coord
-                            return ['L', segm]
-                        }
-                        // beginning of array followed by coord
-                        return ['M', segm]
-                    })()
-                    return connected.concat(next)
-                }, [])
-                var pathStr = connected.join(' ')
+                    var connected = segms.reduce(function(connected, segm, i) {
+                        var next = (function() {
+                            if (typeof segm === 'string') {
+                                // (coord or string or beginning of array) followed by string
+                                return segm
+                            }
+                            if (segms[i - 1] instanceof Array) {
+                                // coord followed by coord
+                                return reflectedQuadra(segms[i - 1], segm, data.isVertical)
+                            }
+                            if (i) {
+                                // string followed by coord
+                                return ['L', segm]
+                            }
+                            // beginning of array followed by coord
+                            return ['M', segm]
+                        })()
+                        return connected.concat(next)
+                    }, [])
+                    return connected.join(' ')
+                })()
 
                 return (
                     <g transform={txform}>
-                        <path d={pathStr}
-                            markerEnd={usesMarkerEnd ? 'url(#marker-end-arrow)' : ''}
-                            markerMid={usesMarkerMid ? 'url(#marker-mid-cross)' : ''}
+                        <path d={dStr}
+                            markerEnd={usesMarkerEnd ? 'url(#marker-end-arrow)' : null}
+                            markerMid={usesMarkerMid ? 'url(#marker-mid-cross)' : null}
                             stroke={data.stroke || surfaceData.neighborArrowColor}
                             fill="none" />
                     </g>
@@ -272,15 +272,31 @@
             }
         })
     }
-    function createInstance(bubbleUpEvent, data, patternSel, key) {
+    function createInstance(handleSelect, data, patternSel, key) {
         var clazz = typeToClass[data.type] || boxedClass
         var instance = React.createElement(clazz, {
-            onEvents: bubbleUpEvent,
+            onBubbleUpSelect: handleSelect,
             data: data,
             patternSel: patternSel,
             key: key
         })
         return instance
+    }
+    function createNestedSelectableInstance(parentCompo, childData, key) {
+        if (! parentCompo.handleSelect) {
+            console.error('Cannot nest', parentCompo.props, childData)
+            throw [
+                'Because the parent component is not equipped to relay',
+                'the chaing of bubbled up select events, the child component',
+                'will not be selectable. While this is technically sensible,',
+                'it is not expected in this app, so something is wired wrong.'
+            ].join('')
+        }
+        return createInstance(
+            parentCompo.handleSelect,
+            childData,
+            parentCompo.props.patternSel,
+            key)
     }
 
     /*
@@ -291,9 +307,9 @@
             patternEditorMode: optional
         }
     */
-    var Surface = React.createClass(extendClassProto({
+    var Surface = React.createClass({
         handleSelect: function(pegrexEvt) {
-            this.props.onSelect(pegrexEvt.data.textLoc)
+            this.props.onSelect(pegrexEvt.textLoc)
         },
         render: function() {
             var tree = this.props.tree
@@ -344,7 +360,7 @@
                 </div>
             )
         }
-    }))
+    })
 
     reactClasses.Surface = Surface
 })(window.reactClasses = window.reactClasses || {})

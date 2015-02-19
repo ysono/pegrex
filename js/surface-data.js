@@ -68,6 +68,8 @@
                     {
                         dim: [n,n]
                         pos: [n,n]
+                        textLoc: [n,n] // from end of child before filler to beginning of child after.
+                            // unles parser is screwed up, the two nums should be equal.
                     }
                 ]
             } // assigned by setUiWithChildren
@@ -131,6 +133,13 @@
 
                     var filler = {
                         pos: toCoord(fillerPosPara, pad[dirOrtho][0])
+                    }
+                    if (children[i - 1].textLoc && children[i].textLoc) {
+                        // it's valid for child before or after to not have text loc. e.g. char range.
+                        filler.textLoc = [
+                            children[i - 1].textLoc[1],
+                            children[i].textLoc[0]
+                        ]
                     }
                     fillers.push(filler)
                     delayeds.push(function() {
