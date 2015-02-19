@@ -413,9 +413,20 @@
                 }
 
                 addNeighborArrows(data)
-                // data.ui.neighborArrows.forEach(function(arrow) {
+                data.ui.neighborArrows.forEach(function(arrow) {
                     // TODO use 'C' to avoid passing under someone alt's first or last term.
-                // })
+                    var beginPt = arrow.d[0]
+                    var endPt = arrow.d[1]
+                    var ctrlPt = arrow.fromLeft
+                        ? [beginPt[0],endPt[1]]
+                        : [endPt[0], beginPt[1]]
+                    arrow.d = [
+                        [
+                            'M', beginPt,
+                            'C', ctrlPt, ctrlPt, endPt
+                        ].join(' ')
+                    ]
+                })
 
                 return ui
             },
