@@ -8,6 +8,7 @@ For discrepancies noted below, a real-life example can be found in
 
 %lex
 
+%x ALT_BEGIN
 %x TERM
 %x TERM_GROUP
 %x TERM_GROUP_NONCAPTR
@@ -18,14 +19,23 @@ For discrepancies noted below, a real-life example can be found in
 
 %%
 
-<INITIAL>.                  this.begin('TERM'); this.unput(yytext); return
-<TERM><<EOF>>               return 'EOF'
+<INITIAL>.                  this.begin('ALT_BEGIN'); this.unput(yytext); return
 
 /* Disjunction */
+/*
+    An empty term has to be an actual token, or else text location of Disjunctions and
+        Alternatives would include the token that come before it.
+    E.g.
+        `a|b` -> second Alternative would have loc of (1,2) but ought to be (2,2)
+        (?=x|) -> nested Disjunction (2,5) but ought to be (3,5)
+            and its first Alternative (2,4) ditto (3,4)
+            and its second Alternative (4,5) ditto (5,5)
+*/
+<ALT_BEGIN>("")             this.popState(); this.begin('TERM'); return 'TERM_EMPTY'
 <TERM>[)]                   popTillOutOf(this, 'TERM_GROUP'); return 'TERM_GROUP_END'
 
 /* Alternative */
-<TERM>[|]                   return 'ALT_DELIM'
+<TERM>[|]                   this.begin('ALT_BEGIN'); return 'ALT_DELIM'
 
 /* Quantifier */
 <TERM>[*+?][?]?                         return 'ATOM_QUANT_SHORT'
@@ -34,9 +44,9 @@ For discrepancies noted below, a real-life example can be found in
 /* Assertion and Atom */
 <TERM>[(]                   this.begin('TERM_GROUP'); return 'TERM_GROUP_BEGIN'
 <TERM_GROUP>[?]             this.begin('TERM_GROUP_NONCAPTR'); return
-<TERM_GROUP>.               this.begin('TERM'); this.unput(yytext); return
-<TERM_GROUP_NONCAPTR>[=!]   this.begin('TERM'); return 'ASSERTN_LOOKFWD_FLAG'
-<TERM_GROUP_NONCAPTR>[:]    this.begin('TERM'); return 'ATOM_GROUP_NONCAPTR_BEGIN'
+<TERM_GROUP>.               this.begin('ALT_BEGIN'); this.unput(yytext); return
+<TERM_GROUP_NONCAPTR>[=!]   this.begin('ALT_BEGIN'); return 'ASSERTN_LOOKFWD_FLAG'
+<TERM_GROUP_NONCAPTR>[:]    this.begin('ALT_BEGIN'); return 'ATOM_GROUP_NONCAPTR_BEGIN'
 
 /* Assertion */
 <TERM>[$^]                  return 'ASSERTN_LB'
@@ -91,7 +101,7 @@ function popTillOutOf(lexer, state) {
 %%
 
 Pattern
-    : Disjunction EOF
+    : Disjunction
         {return yy.b.pattern($1)}
     ;
 Disjunction
@@ -109,11 +119,11 @@ Alternative
         {$$ = yy.b.withLoc(@1).alternative($1)}
     ;
 Term_s
-    : /* empty */
+    : TERM_EMPTY
         {$$ = []}
     | Term_s Term
         {$$ = $1.concat(yy.b.withLoc(@2).get($2) )}
-        /* the withLoc here takes care of all kinds of terms. no need to add individually. */
+        /* the withLoc here takes care of all kinds of terms. no need to add individually below. */
     ;
 Term
     : Assertion
@@ -134,7 +144,7 @@ Assertion
     | ASSERTN_WB
         {$$ = yy.b.assertionWB($1)}
     | TERM_GROUP_BEGIN ASSERTN_LOOKFWD_FLAG Disjunction TERM_GROUP_END
-        {$$ = yy.b.assertionLF($2, fixNestedDisjLoc($3,@2) )}
+        {$$ = yy.b.assertionLF($2, $3)}
     ;
 
 Atom
@@ -157,7 +167,7 @@ AtomEscape
     ;
 
 ClassAtom_s
-    : /* empty */
+    : %empty
         {$$ = []}
     | ClassAtom_s ClassAtom
         /* add loc so yy.b.charSet can use it */
@@ -191,27 +201,3 @@ CharacterEscapeOrChracterClassEscape
     | ESC_ETC
         {$$ = yy.b.specificCharEsc($1)}
     ;
-
-%%
-
-/*
-    Bug with jison ???
-    E.g. input 'a|x'
-        loc of '|' is (1,2)
-        loc of '|x' is (1,3) but ought to be (2,3)
-        loc of 'x' is (2,3)
-    E.g. '(?=x)'
-        locs of both the nested disj and its nested alt are (2,4) but ought to be (3,4)
-    Same issue with (?:x) and (x)
-    If the token is modified to match '(?==x)', then the loc starts with the first '=', right after the '?'
-    E.g. '(?=x|y)'
-        loc of the nested disj and its first alt is wrong b/c they wrongly include '='
-        loc of the second alt is wrong b/c alt wrongly includes '|'
-    And it's _not_ b/c yy.b.withLoc is overriding correct loc.
-    We don't have to stuff web doesn't make selectable. Normally disj and alt are both not selectable.
-    Hack to fix disj under a look-fwd assertion only.
-*/
-function fixNestedDisjLoc(disj, precedingLoc) {
-    disj.textLoc[0] = precedingLoc.last_column
-    return disj
-}
