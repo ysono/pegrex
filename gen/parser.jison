@@ -8,60 +8,44 @@ For discrepancies noted below, a real-life example can be found in
 
 %lex
 
-%s DISJ
-%s ALT
-%s TERM
-%s TERM_GROUP_NONCAPTR
-%s ESCAPED_IN_ATOM
-%s CLASS
-%s ESCAPED_IN_CLASS
-%s ESCAPED_NONDECI
+%x TERM
+%x TERM_GROUP
+%x TERM_GROUP_NONCAPTR
+%x ESCAPED_IN_ATOM
+%x CLASS
+%x ESCAPED_IN_CLASS
+%x ESCAPED_NONDECI
 
 %%
 
-<<EOF>>         return 'EOF'
-
-<INITIAL>.      this.begin('DISJ'); this.unput(yytext); return
+<INITIAL>.                  this.begin('TERM'); this.unput(yytext); return
+<TERM><<EOF>>               return 'EOF'
 
 /* Disjunction */
-<CLASS>[)]                  return 'CLASS_ATOM_ETC'
-<ESCAPED_IN_ATOM>[)]        this.popState(); return 'ESC_ETC'
-<ESCAPED_IN_CLASS>[)]       this.popState(); return 'ESC_ETC'
-[)]                         %{
-                                popTill(this, 'DISJ')
-                                this.popState()
-                                return 'CLOSE_PAREN'
-                            %}
-<DISJ>.                     this.begin('ALT'); this.unput(yytext); return  
+<TERM>[)]                   popTillOutOf(this, 'TERM_GROUP'); return 'TERM_GROUP_END'
 
 /* Alternative */
-<CLASS>[|]                  return 'CLASS_ATOM_ETC'
-<ESCAPED_IN_ATOM>[|]        this.popState(); return 'ESC_ETC'
-<ESCAPED_IN_CLASS>[|]       this.popState(); return 'ESC_ETC'
-[|]                         %{
-                                popTill(this, 'ALT')
-                                return 'ALT_DELIM'
-                            %}
-<ALT>.                      this.begin('TERM'); this.unput(yytext); return
+<TERM>[|]                   return 'ALT_DELIM'
 
 /* Quantifier */
 <TERM>[*+?][?]?                         return 'ATOM_QUANT_SHORT'
 <TERM>[{][0-9]+(?:[,][0-9]*)?[}][?]?    return 'ATOM_QUANT_NUM'
 
 /* Assertion and Atom */
-<TERM>[(][?]                this.begin('TERM_GROUP_NONCAPTR'); return 'ATOM_GROUP_NONCAPTR_BEGIN'
+<TERM>[(]                   this.begin('TERM_GROUP'); return 'TERM_GROUP_BEGIN'
+<TERM_GROUP>[?]             this.begin('TERM_GROUP_NONCAPTR'); return
+<TERM_GROUP>.               this.begin('TERM'); this.unput(yytext); return
+<TERM_GROUP_NONCAPTR>[=!]   this.begin('TERM'); return 'ASSERTN_LOOKFWD_FLAG'
+<TERM_GROUP_NONCAPTR>[:]    this.begin('TERM'); return 'ATOM_GROUP_NONCAPTR_BEGIN'
 
 /* Assertion */
 <TERM>[$^]                  return 'ASSERTN_LB'
 <TERM>[\\][bB]              return 'ASSERTN_WB'
-<TERM_GROUP_NONCAPTR>[=!]   this.popState(); this.begin('DISJ'); return 'ASSERTN_LF_BEGIN'
 
 /* Atom */
 <TERM>[\.]                  return 'ATOM_CHAR_ANY'
 <TERM>[\\]                  this.begin('ESCAPED_IN_ATOM'); return 'ESCAPE_PREFIX'
 <TERM>[\[][\^]?             this.begin('CLASS'); return 'CLASS_BEGIN'
-<TERM>[(]                   this.begin('DISJ'); return 'ATOM_GROUP_CAPTR' /* note yytext[1] can be a `)` */
-<TERM_GROUP_NONCAPTR>[:]    this.popState(); this.begin('DISJ'); return 'ATOM_GROUP_NONCAPTR'
 
 /* PatternCharacter */
 /* ecma forbids ^ $ \ . * + ? ( ) [ ] { } | */
@@ -93,7 +77,7 @@ For discrepancies noted below, a real-life example can be found in
 
 %%
 
-function popTill(lexer, state) {
+function popTillOutOf(lexer, state) {
     var st
     do {
         st = lexer.popState()
@@ -146,24 +130,23 @@ Quantifier
     ;
 Assertion
     : ASSERTN_LB
-        {$$ = yy.b.withLoc(@1).assertionLB($1)}
+        {$$ = yy.b.assertionLB($1)}
     | ASSERTN_WB
-        {$$ = yy.b.withLoc(@1).assertionWB($1)}
-    | ATOM_GROUP_NONCAPTR_BEGIN ASSERTN_LF_BEGIN Disjunction CLOSE_PAREN
-        {$$ = yy.b.withLoc(@1,@4).assertionLF($2, $3)}
+        {$$ = yy.b.assertionWB($1)}
+    | TERM_GROUP_BEGIN ASSERTN_LOOKFWD_FLAG Disjunction TERM_GROUP_END
+        {$$ = yy.b.assertionLF($2, fixNestedDisjLoc($3,@2) )}
     ;
 
 Atom
     : ATOM_CHAR_ANY
         {$$ = yy.b.anyChar()}
-    | ESCAPE_PREFIX AtomEscape
-        {$$ = yy.b.withLoc(@1,@2).get($2)}
+    | ESCAPE_PREFIX AtomEscape -> $2
     | CLASS_BEGIN ClassAtom_s CLASS_END
         {$$ = yy.b.charSet($1.length === 1, $2)}
-    | ATOM_GROUP_CAPTR Disjunction CLOSE_PAREN
+    | TERM_GROUP_BEGIN Disjunction TERM_GROUP_END
         {$$ = yy.b.group(true, $2)}
-    | ATOM_GROUP_NONCAPTR_BEGIN ATOM_GROUP_NONCAPTR Disjunction CLOSE_PAREN
-        {$$ = yy.b.withLoc(@1,@4).group(false, $3)}
+    | TERM_GROUP_BEGIN ATOM_GROUP_NONCAPTR_BEGIN Disjunction TERM_GROUP_END
+        {$$ = yy.b.group(false, $3)}
     | ATOM_ETC
         {$$ = yy.b.specificChar($1)}
     ;
@@ -181,8 +164,7 @@ ClassAtom_s
         {$$ = $1.concat( yy.b.withLoc(@2).get($2) )}
     ;
 ClassAtom
-    : ESCAPE_PREFIX ClassEscape
-        {$$ = yy.b.withLoc(@1,@2).get($2)}
+    : ESCAPE_PREFIX ClassEscape -> $2
     | CLASS_ATOM_ETC
         {$$ = yy.b.specificChar($1)}
     ;
@@ -209,3 +191,27 @@ CharacterEscapeOrChracterClassEscape
     | ESC_ETC
         {$$ = yy.b.specificCharEsc($1)}
     ;
+
+%%
+
+/*
+    Bug with jison ???
+    E.g. input 'a|x'
+        loc of '|' is (1,2)
+        loc of '|x' is (1,3) but ought to be (2,3)
+        loc of 'x' is (2,3)
+    E.g. '(?=x)'
+        locs of both the nested disj and its nested alt are (2,4) but ought to be (3,4)
+    Same issue with (?:x) and (x)
+    If the token is modified to match '(?==x)', then the loc starts with the first '=', right after the '?'
+    E.g. '(?=x|y)'
+        loc of the nested disj and its first alt is wrong b/c they wrongly include '='
+        loc of the second alt is wrong b/c alt wrongly includes '|'
+    And it's _not_ b/c yy.b.withLoc is overriding correct loc.
+    We don't have to stuff web doesn't make selectable. Normally disj and alt are both not selectable.
+    Hack to fix disj under a look-fwd assertion only.
+*/
+function fixNestedDisjLoc(disj, precedingLoc) {
+    disj.textLoc[0] = precedingLoc.last_column
+    return disj
+}
