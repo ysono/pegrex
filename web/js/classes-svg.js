@@ -40,6 +40,7 @@
             var textLoc = this.props.data.textLoc
 
             var amSelected = patternSel && textLoc
+                && textLoc[0] != textLoc[1]
                 && patternSel[0] <= textLoc[0]
                 && patternSel[1] >= textLoc[1]
             var hiliteElm = this.refs.hiliteElm.getDOMNode()
