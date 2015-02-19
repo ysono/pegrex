@@ -119,12 +119,12 @@ html, body {
 
 /* svg common */
 
-svg .clickable {
+svg .selectable {
     cursor: pointer;
 }
-svg[data-mode="add"] .clickable {
+svg[data-mode="add"] .selectable {
     cursor: crosshair;
 }
-svg[data-mode="delete"] .clickable {
+svg[data-mode="delete"] .selectable {
     cursor: crosshair;
 }
