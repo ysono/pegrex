@@ -122,6 +122,9 @@ html, body {
 svg .selectable {
     cursor: pointer;
 }
+svg .selectable>rect:hover {
+    fill: #FFE8B5;
+}
 svg[data-mode="add"] .selectable {
     cursor: crosshair;
 }
