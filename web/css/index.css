@@ -109,11 +109,17 @@ html, body {
     display: block;
 }
 
+.create-form-parent {
+    min-width: 30%;
+}
 .create-form-parent>* {
     display: inline-block;
 }
 .create-form input.error {
     background-color: red;
+}
+.create-form-preview {
+    float: right;
 }
 
 .palette>* {
