@@ -7,7 +7,6 @@
             {
                 label: 'Character',
                 builderArgIndex: 0,
-                pattern: '.',
                 validate: function(val) {
                     // TODO escapes
                     return val.length === 1
@@ -32,17 +31,17 @@
         */
     }
     /*
-        params is an obj, used as a map of
+        vals is an obj, used as a map of
             (index in args for builder) -> (val of arg)
     */
-    tokenCreator.create = function(type, params) {
+    tokenCreator.create = function(type, vals) {
         var builderName = typeToBuilderName[type]
-        var builderArgs = Object.keys(params).reduce(function(arr, index) {
-            arr[index] = params[index]
+        var builderArgs = Object.keys(vals).reduce(function(arr, index) {
+            arr[index] = vals[index]
             return arr
         }, [])
         var data = parser.yy.b[builderName].apply(parser.yy.b, builderArgs)
-        data.textLoc = [0, 0] // so that the whole thing is always selectable
+        data.textLoc = [0, 1] // so that the whole thing is always selectable
         surfaceData.addUiData(data)
         return data
     }

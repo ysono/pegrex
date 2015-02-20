@@ -109,6 +109,13 @@ html, body {
     display: block;
 }
 
+.create-form-parent>* {
+    display: inline-block;
+}
+.create-form input.error {
+    background-color: red;
+}
+
 .palette>* {
     display: inline-block;
     width: 100px;
