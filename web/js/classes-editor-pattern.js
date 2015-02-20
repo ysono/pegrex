@@ -16,11 +16,7 @@
                 paramsForCreate: tokenCreator.typeToParams[type]
             })
         },
-        handleCreate: function(inputs) {
-            var data = tokenCreator.create(
-                this.state.typeToCreate,
-                inputs)
-
+        handleCreate: function(data) {
             this.state.dataPerCell.push(data)
             this.setState({
                 dataPerCell: this.state.dataPerCell
@@ -46,7 +42,9 @@
                             <legend>Create</legend>
                             {createOptions}
                         </fieldset>
-                        <CreateForm params={this.state.paramsForCreate}
+                        <CreateForm
+                            typeToCreate={this.state.typeToCreate}
+                            params={this.state.paramsForCreate}
                             onSubmit={this.handleCreate} />
                     </div>
                     <Palette dataPerCell={this.state.dataPerCell}
@@ -56,44 +54,91 @@
         }
     })
     var CreateForm = React.createClass({
-        handleSubmit: function(e) {
-            e.preventDefault()
-            var refs = this.refs
-            var isValid = true
-            var payload = Object.keys(refs).reduce(function(payload, builderArgIndex) {
-                var ref = refs[builderArgIndex]
-                var val = ref.getDOMNode().value
-                if (! ref.props.validate(val)) {
-                    console.error('val', val, 'is not valid for arg #', builderArgIndex) // TODO show to user
-                    isValid = false
-                    return
-                }
-                payload[builderArgIndex] = val
-                return payload
-            }, {})
-            if (isValid) {
-                this.props.onSubmit(payload)
+        getInitialState: function() {
+            return {
+                allValid: false,
+                validity: {},
+                vals: {},
+                previewData: null
             }
         },
+        handleChange: function(builderArgIndex, isValid, val) {
+            var validity = this.state.validity
+            var vals = this.state.vals
+            validity[builderArgIndex] = isValid
+            vals[builderArgIndex] = val
+
+            var allValid = Object.keys(validity).every(function(ind) {
+                return validity[ind]
+            })
+            var previewData
+            if (allValid) {
+                previewData = tokenCreator.create(
+                    this.props.typeToCreate,
+                    vals)
+                // TODO validate
+            }
+
+            this.setState({
+                allValid: allValid,
+                validity: validity,
+                vals: vals,
+                previewData: previewData
+            })
+        },
+        handleSubmit: function(e) {
+            e.preventDefault()
+            this.props.onSubmit(this.state.previewData)
+        },
         render: function() {
-            var params = this.props.params
-            var inputCompos = params.map(function(param, i) {
-                return (
-                    <label key={i}>
-                        <span>{param.label}</span>
-                        <input type="text"
-                            pattern={param.pattern}
-                            validate={param.validate}
-                            ref={param.builderArgIndex} />
-                    </label>
-                )
+            var self = this
+            var inputCompos = this.props.params.map(function(param, i) {
+                return <CreateFormField param={param}
+                    onChange={self.handleChange}
+                    key={i} />
             })
             return (
-                <form onSubmit={this.handleSubmit}
-                    className="create-form">
-                    {inputCompos}
-                    <input type="submit" value="Create" />
-                </form>
+                <div className="create-form-parent">
+                    <form onSubmit={this.handleSubmit}
+                        className="create-form">
+                        {inputCompos}
+                        <input type="submit" value="Create"
+                            disabled={! this.state.allValid} />
+                    </form>
+                    <div className="create-form-preview">
+                        <p>Preview</p>
+                        <Cell data={this.state.previewData}
+                            onSelect={function() {}}
+                            ref="review" />
+                    </div>
+                </div>
+            )
+        }
+    })
+    var CreateFormField = React.createClass({
+        componentDidMount: function() {
+            this.handleChange()
+        },
+        handleChange: function() {
+            var input = this.refs.input.getDOMNode()
+            var isValid = this.props.param.validate(input.value)
+            input.classList[isValid ? 'remove' : 'add']('error')
+            this.props.onChange(
+                this.props.param.builderArgIndex,
+                isValid,
+                input.value
+            )
+        },
+        render: function() {
+            var param = this.props.param
+            // todo default value
+            return (
+                <label>
+                    <span>{param.label}</span>
+                    <input type="text"
+                        onChange={this.handleChange}
+                        ref="input" />
+                </label>
             )
         }
     })
@@ -106,7 +151,7 @@
         handleSelect: function(cell) {
             var text = tokenCreator.toString(cell.props.data)
             this.setState({
-                selectedCellIndex: cell.props.index
+                selectedCellIndex: cell.props.paletteIndex
             })
             this.props.onSelect(text)
         },
@@ -121,7 +166,7 @@
                     return <Cell data={dataPerCell[i]}
                         isSelected={self.state.selectedCellIndex === i}
                         onSelect={self.handleSelect}
-                        index={i} ref={i} key={i} />
+                        paletteIndex={i} ref={i} key={i} />
                 })
             return (
                 <div className="palette">
