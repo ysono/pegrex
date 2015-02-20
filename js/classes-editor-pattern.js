@@ -5,15 +5,12 @@
         getInitialState: function() {
             return {
                 typeToCreate: null,
-                paramsForCreate: [],
                 dataPerCell: []
             }
         },
         handleChangeTypeToCreate: function(e) {
-            var type = e.target.value
             this.setState({
-                typeToCreate: type,
-                paramsForCreate: tokenCreator.typeToParams[type]
+                typeToCreate: e.target.value
             })
         },
         handleCreate: function(data) {
@@ -44,7 +41,6 @@
                         </fieldset>
                         <CreateForm
                             typeToCreate={this.state.typeToCreate}
-                            params={this.state.paramsForCreate}
                             onSubmit={this.handleCreate} />
                     </div>
                     <Palette dataPerCell={this.state.dataPerCell}
@@ -54,45 +50,66 @@
         }
     })
     var CreateForm = React.createClass({
-        getInitialState: function() {
+        valsToPreviewData: function(allValid, type, vals) {
+            if (! allValid) { 
+                return null
+            }
+            return tokenCreator.create(type, vals)
+        },
+
+        typeToInitState: function(type) {
+            if (! type) {
+                return {
+                    allValid: false
+                }
+            }
+            var params = tokenCreator.typeToParams[type]
+            var allValid = ! params.length
             return {
-                allValid: false,
-                validity: {},
+                params: params,
+                allValid: allValid,
+                validities: params.reduce(function(map, param) {
+                    map[param.builderArgIndex] = false
+                    return map
+                }, {}),
                 vals: {},
-                previewData: null
+                previewData: this.valsToPreviewData(allValid, type, {})
             }
         },
+        getInitialState: function() {
+            return this.typeToInitState(this.props.typeToCreate)
+        },
+        componentWillReceiveProps: function(nextProps) {
+            this.setState(
+                this.typeToInitState(nextProps.typeToCreate))
+        },
+
         handleChange: function(builderArgIndex, isValid, val) {
-            var validity = this.state.validity
+            var validities = this.state.validities
             var vals = this.state.vals
-            validity[builderArgIndex] = isValid
+            validities[builderArgIndex] = isValid
             vals[builderArgIndex] = val
 
-            var allValid = Object.keys(validity).every(function(ind) {
-                return validity[ind]
+            var allValid = Object.keys(validities).every(function(ind) {
+                return validities[ind]
             })
-            var previewData
-            if (allValid) {
-                previewData = tokenCreator.create(
-                    this.props.typeToCreate,
-                    vals)
-                // TODO validate
-            }
 
             this.setState({
                 allValid: allValid,
-                validity: validity,
+                validities: validities,
                 vals: vals,
-                previewData: previewData
+                previewData: this.valsToPreviewData(allValid,
+                    this.props.typeToCreate, vals)
             })
         },
         handleSubmit: function(e) {
             e.preventDefault()
             this.props.onSubmit(this.state.previewData)
         },
+
         render: function() {
             var self = this
-            var inputCompos = this.props.params.map(function(param, i) {
+            var inputCompos = (this.state.params || []).map(function(param, i) {
                 return <CreateFormField param={param}
                     onChange={self.handleChange}
                     key={i} />
