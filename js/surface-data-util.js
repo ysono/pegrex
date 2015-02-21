@@ -4,6 +4,11 @@
     surfaceData.markerLen = 7
     surfaceData.neighborArrowColor = '#8a8a8a'
     surfaceData.fillForNegative = '#ccc'
+    surfaceData.selectableArrowHeight = surfaceData.markerLen * 3
+        // tall enough as a click target for 'add' action;
+        // not so tall as to block elements underneath, which can
+        // easily be done in nested disjunctions b/c these disjs
+        // use quadratic curves for their neighborArrows
 
     var typeToChildProp = {
         'Pattern': 'roots',
@@ -16,7 +21,7 @@
         'Range of Chars': 'range'
     }
     /*
-        Locate children for a generic component.
+        Locate children for a given component.
     */
     surfaceData.getChildVal = function(data) {
         var prop = typeToChildProp[data.type]
@@ -31,32 +36,25 @@
         // else return undefined
     }
 
-    // surfaceData.adjustForMarkerEnd = function(pt, isVertical) {
-    //     pt[isVertical ? 1 : 0] -= surfaceData.markerLen
-    //     return pt
-    // }
     surfaceData.reflectedQuadra = function(from, to, isVertical) {
         var vector = [
             to[0] - from[0],
             to[1] - from[1]
         ]
-        var quadraCtrlPt
-        if (isVertical) {
-            quadraCtrlPt = [
+        var ctrlPt = isVertical
+            ? [
                 from[0],
                 from[1] + vector[1] / 4
             ]
-        } else {
-            quadraCtrlPt = [
+            : [
                 from[0] + vector[0] / 4,
                 from[1]
             ]
-        }
         var midPt = [
             from[0] + vector[0] / 2,
             from[1] + vector[1] / 2
         ]
-        return ['Q', quadraCtrlPt, midPt, 'T', to].join(' ')
+        return ['Q', ctrlPt, midPt, 'T', to].join(' ')
     }
     /*
         If this cubic line ends with a marker, makes adjustment to
@@ -69,9 +67,9 @@
         Not supporting vertical marker end, b/c the app doesn't use
             a cubic line that ends vertically.
     */
-    surfaceData.cubic = function(ctrl, to, endsWithMarkerEnd) {
+    surfaceData.cubic = function(ctrl, to, endsWithMarker) {
         var segms = ['C', ctrl, ctrl]
-        if (endsWithMarkerEnd) {
+        if (endsWithMarker) {
             segms.push([
                 to[0] - surfaceData.markerLen - .01,
                 to[1]

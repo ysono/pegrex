@@ -226,7 +226,8 @@
                     onSelect: this.handleSelect,
                     patternSel: this.props.isSelected
                         ? [0, Infinity] // so that the whole thing is always selected
-                        : null
+                        : null,
+                    patternEditorMode: 'select'
                 })
                 : (
                     <div className="empty-surface" />

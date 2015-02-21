@@ -44,13 +44,18 @@
         },
         render: function() {
             var self = this
-            var radios = ['Select', 'Add', 'Delete'].map(function(label, i) {
-                var val = label.toLowerCase()
+            var options = {
+                'select': 'Select',
+                'add': 'Add/Replace',
+                'delete': 'Delete'
+            }
+            var radios = Object.keys(options).map(function(mode, i) {
+                var label = options[mode]
                 return (
                     <label key={i}>
                         <input type="radio" name="pattern-editor-mode"
-                            value={val}
-                            checked={self.props.patternEditorMode === val}
+                            value={mode}
+                            checked={self.props.patternEditorMode === mode}
                             onChange={self.handleChange} />
                         <span>{label}</span>
                     </label>

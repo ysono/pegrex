@@ -180,25 +180,33 @@
         var midY = parentUi.dim[1] / 2
         var leftBegin = [0, midY]
         var rightEnd = [parentUi.dim[0], midY]
-        parentUi.neighborArrows = children.length
+        var arrows = children.length
             ? children.reduce(function(allArrows, child, i) {
                 var childUi = child.ui
                 var childMidY = childUi.pos[1] + childUi.dim[1] / 2
                 allArrows.push({
                     type: 'path',
+                    // type: 'boxed path',
                     d: [
                         leftBegin,
                         [childUi.pos[0], childMidY]
                     ],
+                    textLoc: child.textLoc
+                        ? [child.textLoc[0], child.textLoc[0]]
+                        : null,
                     fromLeft: true,
                     childIndex: i
                 },
                 {
                     type: 'path',
+                    // type: 'boxed path',
                     d: [
                         [childUi.pos[0] + childUi.dim[0], childMidY],
                         rightEnd
                     ],
+                    textLoc: child.textLoc
+                        ? [child.textLoc[1], child.textLoc[1]]
+                        : null,
                     toRight: true,
                     childIndex: i
                 })
@@ -206,6 +214,7 @@
             }, [])
             : [{
                 type: 'path',
+                // type: 'boxed path',
                 d: [
                     leftBegin,
                     rightEnd
@@ -213,6 +222,19 @@
                 fromLeft: true,
                 toRight: true
             }]
+        // arrows.forEach(function(arrow) {
+        //     var begin = arrow.d[0]
+        //     var end = arrow.d[1]
+        //     arrow.dim = [
+        //         end[0] - begin[0],
+        //         Math.max(end[1] - begin[1], surfaceData.selectableArrowHeight)
+        //     ]
+        //     arrow.pos = [
+        //         Math.min(begin[0], end[0]),
+        //         Math.min(begin[1], end[1])
+        //     ]
+        // })
+        parentUi.neighborArrows = arrows
     }
 
     /*
@@ -327,8 +349,11 @@
 
                 // disj's neighborArrows ...
                 data.roots[0].ui.neighborArrows.forEach(function(arrow) {
-                    // remove markers from those funneling into the right terminus
-                    if (arrow.toRight) {
+                    if (arrow.fromLeft) {
+                        // debugger
+                        arrow.textLoc = [0,0]
+                    } else if (arrow.toRight) {
+                        // remove markers from those funneling into the right terminus
                         arrow.usesMarkerEnd = false
                     }
 
@@ -416,34 +441,18 @@
                     2,
                     'x',
                     arrowW,
-                    surfaceData.markerLen * 3
-                        // tall enough as a click target for 'add' action
-                        // not so tall as to block elements underneath, which can
-                        // easily be done in nested disjunctions
+                    surfaceData.selectableArrowHeight
                 )
                 ui.stroke = 'none'
                 ui.fill = 'none'
 
                 ui.fillers.forEach(function(filler) {
                     var midY = filler.dim[1] / 2
-
-                    // Want to make whole filler selectable. and add an arrow.
-                    // no type --> rendered by `boxedClass` class
-                    filler.type = undefined
-                    filler.ui = {
-                        pos: filler.pos,
-                        dim: filler.dim,
-                        fill: 'white', // can't be none, in order to change fill on hover
-                        // arbitrarily using neighborArrows; could be another prop
-                        // supported by `boxedClass`.
-                        neighborArrows: [{
-                            type: 'path',
-                            d: [
-                                [0, midY],
-                                [arrowW, midY]
-                            ]
-                        }]
-                    }
+                    filler.type = 'boxed path',
+                    filler.d = [
+                        [0, midY],
+                        [arrowW, midY]
+                    ]
                 })
                 return ui
             },
@@ -737,6 +746,7 @@
                         // Adding the compo to `data.possibilities`
                         //     rather than to `data.ui.textBlocks`
                         //     for the convenience of creating neighborArrows
+                        //     and for not having to add a prop for `surfaceData.getChildVal`
                         data.possibilities.push(tb)
                     })()
                 }
