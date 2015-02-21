@@ -159,6 +159,7 @@ html, body {
     display: inline-block;
     width: 8rem;
     height: 8rem;
+    margin: 2px;
     border: solid 1px;
     overflow: auto;
 }

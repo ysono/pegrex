@@ -40,37 +40,38 @@
             var patternSel = this.props.patternSel
             var textLoc = this.props.data.textLoc
 
+            if (! textLoc) {
+                return
+            }
+
             var textHasLen = textLoc
                 && textLoc[0] != textLoc[1]
             var amSelectable = mode
-                && (mode === 'add') !== textHasLen
+                && textLoc
+                && (mode === 'add' || textHasLen)
             var amSelected = patternSel
                 && textHasLen
                 && patternSel[0] <= textLoc[0]
                 && patternSel[1] >= textLoc[1]
 
             var hiliteElm = this.refs.hiliteElm.getDOMNode()
+            
             // don't make the root elm, the <g>, selectable b/c then hover of
             // its transparent children propagate.
             hiliteElm.classList[amSelectable ? 'add' : 'remove']('selectable')
+            hiliteElm[(amSelectable ? 'add' : 'remove') + 'EventListener']
+                ('click', this.handleSelect)
+
             if (amSelected) {
                 hiliteElm.setAttribute('filter', "url(#dropshadow)")
             } else {
                 hiliteElm.removeAttribute('filter')
             }
         }
-        /*
-            If `this` component is associated with a span of the pattern string,
-                then register `this`'s root element with `onClick={this.handleSelect}`
-                so clicking anywhere in the root element triggers selection.
-        */
-        proto.componentDidMount = function() {
-            if (this.props.data.textLoc) {
-                var rootElm = this.getDOMNode()
-                rootElm.addEventListener('click', this.handleSelect)
-                this.hiliteSelected()
-            }
-        }
+
+        proto.componentDidMount = proto.hiliteSelected
+        proto.componentDidUpdate = proto.hiliteSelected
+
         return proto
     }
 
@@ -132,8 +133,6 @@
                 return childList
             })
 
-            this.hiliteSelected()
-
             // data-type for aiding with debugging only; not used by program.
             return (
                 <g transform={txform} data-type={data.type}>
@@ -189,7 +188,37 @@
         })),
 
         /*
-            in this.props.path: {
+            Make a path with a box around it that can be selectable.
+
+            In addition to those required for 'path' class,
+            these props are required inside this.props.data: {
+                pos: [n,n]
+                dim: [n,n]
+            }
+        */
+        'boxed path': React.createClass(makeSelectableProto({
+            render: function() {
+                var data = this.props.data
+
+                var txform = ['translate(', data.pos, ')'].join('')
+
+                var pathData = Object.create(data)
+                pathData.pos = null
+
+                // rect fill has to be non-none to trigger hover
+                return (
+                    <g transform={txform}>
+                        <rect width={data.dim[0]} height={data.dim[1]}
+                            fill="white"
+                            ref="hiliteElm" />
+                        <typeToClass.path data={pathData} />
+                    </g>
+                )
+            }
+        })),
+
+        /*
+            in this.props.data: {
                 d: required -- array of (strings or [n,n]).
                     If using marker, last element must be [n,n], b/c it will be adjusted.
                     All coords are absolute.
@@ -204,7 +233,7 @@
                 stroke: optional, default surfaceData.neighborArrowColor
             }
         */
-        'path': React.createClass(makeSelectableProto({
+        'path': React.createClass({
             render: function() {
                 var data = this.props.data
                 var segms = data.d
@@ -263,7 +292,7 @@
                     </g>
                 )
             }
-        }))
+        })
     }
 
     function createNested(parentCompo, childData, key) {
@@ -292,7 +321,7 @@
             tree: required
             onSelect: required
             patternSel: optional
-            patternEditorMode: optional
+            patternEditorMode: required if selection is to be enabled.
         }
     */
     var Surface = React.createClass({
