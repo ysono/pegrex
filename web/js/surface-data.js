@@ -102,8 +102,7 @@
                 ;(function() {
                     var fillerPosPara = maxPosPara + intraMargin
 
-                    var filler = {
-                    }
+                    var filler = {}
                     if (children[i - 1].textLoc && children[i].textLoc) {
                         // it's valid for child before or after to not have text loc. e.g. char range.
                         filler.textLoc = [
@@ -608,7 +607,7 @@
                 })()
 
                 // if target is at the bottom and bottom arrow is looping,
-                //     neighborArrows in target would be pointing the wrong way,
+                //     neighborArrows in target would be pointing the wrong way
                 if (! data.quantifier.min && btmArrowStyle === 'loop') {
                     ;(function() {
                         var child = data.target
@@ -661,7 +660,7 @@
             'Assertion': function() {
                 var ui = setUiWithTextBlockOnly([data.assertion], data)
                 ui.stroke = '#f9f374'
-                ui.fill = 'Non-Word Boundary' === data.assertion ? surfaceData.fillForNegative : null
+                ui.fill = data.atWb === false ? surfaceData.fillForNegative : null
                 return ui
             },
 

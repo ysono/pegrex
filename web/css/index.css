@@ -10,12 +10,13 @@ html, body {
 /* under controls-parent */
 
 .texts-parent {
-    margin: 20px 1%;
+    margin: 1rem 1%;
     border: solid 1px;
     text-align: center;
 }
 .visuals-parent {
     position: relative;
+    min-height: 6rem; /* enough to cover pattern-editor-mode-picker and flags-editor */
 }
 
 /* under texts-parent */
@@ -83,49 +84,80 @@ html, body {
 }
 .flags-editor>*, .pattern-editor-mode-picker>* {
     display: block;
-    margin: 8px;
+    margin: .4rem;
 }
 
 .flags-editor {
     right: 0;
-    margin-right: 20px;
+    margin-right: 1.25rem;
 }
 
 .pattern-editor-mode-picker {
     left: 0;
-    margin-left: 20px;
+    margin-left: 1.25rem;
 }
 
 /* under pattern-editor-parent */
 
-.create-parent>* {
-    display: inline-block;
+.pattern-editor {
+    display: flex;
+    flex-direction: column;
 }
 
-.create-type {
-    width: 20%;
+.create-parent {
+    display: flex;
+    justify-content: center;
 }
+.create-parent>* {
+    margin: .6rem;
+}
+
 .create-type>* {
     display: block;
 }
 
-.create-form-parent {
-    min-width: 30%;
+.create-form {
+    display: flex;
 }
-.create-form-parent>* {
-    display: inline-block;
+.create-form>* {
+    margin: 0 .6rem;
 }
-.create-form input.error {
+.create-form-inputs {
+    position: relative;
+    min-width: 10rem;
+    border: dotted 1px;
+}
+.create-form-inputs>[type="submit"] {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+}
+.create-form-inputs>* {
+    display: block;
+}
+.create-form-inputs>label>* {
+    display: block;
+}
+.create-form-inputs input.error {
     background-color: red;
 }
-.create-form-preview {
-    float: right;
+.create-form-preview>p {
+    margin: 0;
+}
+.create-form-preview>.surface-parent {
+    min-width: 8rem;
+    max-height: 14rem;
+    overflow-y: auto;
 }
 
+.palette {
+    display: flex;
+    justify-content: center;
+}
 .palette>* {
     display: inline-block;
-    width: 100px;
-    height: 100px;
+    width: 8rem;
+    height: 8rem;
     border: solid 1px;
     overflow: auto;
 }
@@ -135,12 +167,12 @@ html, body {
 svg .selectable {
     cursor: pointer;
 }
-svg .selectable:hover {
+svg .selectable>rect:hover {
     fill: #eee;
 }
 svg[data-mode="add"] .selectable {
     cursor: crosshair;
 }
 svg[data-mode="delete"] .selectable {
-    cursor: crosshair;
+    cursor: cell;
 }

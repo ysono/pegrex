@@ -173,6 +173,7 @@ var specs = [
             {
                 type: 'Assertion',
                 assertion: 'Start of Line',
+                atBeg: true,
                 textLoc: [0,1]
             },
             {
@@ -208,6 +209,7 @@ var specs = [
             {
                 type: 'Assertion',
                 assertion: 'End of Line',
+                atBeg: false,
                 textLoc: [9,10]
             }
         ]

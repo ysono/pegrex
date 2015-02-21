@@ -123,6 +123,7 @@
             return {
                 type: 'Assertion',
                 assertion: (atBeg ? 'Start' : 'End') + ' of Line',
+                atBeg: atBeg,
                 hint: hint
             }
         },
@@ -134,11 +135,12 @@
                 'Matches the zero-length string between',
                 wc,
                 'and',
-                atWb ? wc : nwc
+                atWb ? nwc : wc
             ].join(' ') + '.'
             return {
                 type: 'Assertion',
                 assertion: (atWb ? '' : 'Non-') + 'Word Boundary',
+                atWb: atWb,
                 hint: hint
             }
         },
