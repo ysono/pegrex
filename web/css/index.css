@@ -154,11 +154,13 @@ html, body {
 .palette {
     display: flex;
     justify-content: center;
+    overflow-x: auto;
 }
 .palette>* {
     display: inline-block;
     width: 8rem;
     height: 8rem;
+    min-width: 6rem;
     margin: 2px;
     border: solid 1px;
     overflow: auto;

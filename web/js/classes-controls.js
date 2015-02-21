@@ -6,7 +6,6 @@
             return decodeURIComponent(window.location.hash.slice(1))
         },
         parse: function() {
-            // TODO test
             var hash = hashUtil.read()
             var commaIndex = hash.indexOf(',')
             if (commaIndex <= 0) { return }
@@ -18,7 +17,7 @@
                 flags: hash.slice(flagsIndex)
             }
         },
-        update: function(parts) {
+        update: function(parts, rememberPrev) {
             var hash = parts.pattern.length
                 + ','
                 + parts.pattern
@@ -26,7 +25,11 @@
             if (hash === hashUtil.read()) {
                 return
             }
-            window.location.replace('#' + encodeURIComponent(hash))
+            if (rememberPrev) {
+                window.location.hash = encodeURIComponent(hash)
+            } else {
+                window.location.replace('#' + encodeURIComponent(hash))
+            }
         }
     }
     
@@ -36,7 +39,8 @@
             flags, isFlagsValid,
             patternSel, hash,
             patternEditorMode
-            patternEditorText */
+            patternEditorText,
+            historyCount */
         getInitialState: function() {
             var state = hashUtil.parse() || {
                 pattern: '',
@@ -45,6 +49,7 @@
             this.prepStateForTextsChange(state)
             state.patternEditorMode = 'select'
             state.patternEditorText = null
+            state.historyCount = 0
             return state
         },
         componentDidMount: function() {
@@ -53,12 +58,12 @@
 
         /* helpers for hash */
 
-        updateHash: function(newState) {
+        updateHash: function(newState, rememberPrev) {
             newState.pattern = typeof newState.pattern === 'string'
                 ? newState.pattern : this.state.pattern
             newState.flags = typeof newState.flags === 'string'
                 ? newState.flags : this.state.flags
-            hashUtil.update(newState)
+            hashUtil.update(newState, rememberPrev)
         },
 
         /* helpers for texts change */
@@ -168,7 +173,8 @@
                             this.state.pattern, textLoc,
                             this.state.patternEditorText),
                         patternSel: [textLoc[0],
-                            textLoc[0] + this.state.patternEditorText.length]
+                            textLoc[0] + this.state.patternEditorText.length],
+                        historyCount : this.state.historyCount + 1
                     }
                 }
             } else if(mode === 'delete') {
@@ -176,13 +182,14 @@
                     newState = {
                         pattern: spliceStr(
                             this.state.pattern, textLoc),
-                        patternSel: [textLoc[0], textLoc[0]]
+                        patternSel: [textLoc[0], textLoc[0]],
+                        historyCount : this.state.historyCount + 1
                     }
                 }
             }
             if (newState) {
                 this.patternToTree(newState)
-                this.updateHash(newState)
+                this.updateHash(newState, true)
                 this.setState(newState)
             }
         },
@@ -204,6 +211,12 @@
             this.setState({
                 patternEditorMode: mode
             })
+        },
+        handlePatternEditorUndo: function() {
+            this.setState({
+                historyCount: this.state.historyCount - 1
+            })
+            window.history.back()
         },
 
         /* sets in state: patternEditorText */
@@ -237,7 +250,9 @@
                             onChange={this.handleFlagsEditorChange} />
                         <reactClasses.PatternEditorModePicker
                             patternEditorMode={this.state.patternEditorMode}
-                            onChange={this.handlePatternEditorModeChange} />
+                            historyCount={this.state.historyCount}
+                            onChange={this.handlePatternEditorModeChange}
+                            onUndo={this.handlePatternEditorUndo} />
                     </div>
                     <div className="pattern-editor-parent">
                         <reactClasses.PatternEditor

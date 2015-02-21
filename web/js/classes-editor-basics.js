@@ -61,9 +61,16 @@
                     </label>
                 )
             })
+            var canUndo = this.props.patternEditorMode !== 'select'
+                && this.props.historyCount > 0
             return (
                 <fieldset className="pattern-editor-mode-picker">
                     {radios}
+                    <button
+                        onClick={this.props.onUndo}
+                        disabled={! canUndo}>
+                        Undo
+                    </button>
                 </fieldset>
             )
         }
