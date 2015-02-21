@@ -168,6 +168,10 @@ html, body {
 
 svg .selectable {
     cursor: pointer;
+
+    /* enable hover on some elms that have to have fill="none",
+        like `rect`s in neighborArrows */
+    pointer-events: all;
 }
 svg .selectable:hover {
     fill: #eee;

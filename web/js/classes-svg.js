@@ -55,9 +55,8 @@
                 && patternSel[1] >= textLoc[1]
 
             var hiliteElm = this.refs.hiliteElm.getDOMNode()
-            
-            // don't make the root elm, the <g>, selectable b/c then hover of
-            // its transparent children propagate.
+            // don't make the root elm, the <g>, selectable b/c then hover and click
+            //     of its transparent children propagate.
             hiliteElm.classList[amSelectable ? 'add' : 'remove']('selectable')
             hiliteElm[(amSelectable ? 'add' : 'remove') + 'EventListener']
                 ('click', this.handleSelect)
@@ -69,7 +68,12 @@
             }
         }
 
-        proto.componentDidMount = proto.hiliteSelected
+        proto.componentDidMount = function() {
+            var rootElm = this.getDOMNode()
+            // data-type for aiding with debugging only; not used by program.
+            rootElm.setAttribute('data-type', this.props.data.type)
+            this.hiliteSelected()
+        }
         proto.componentDidUpdate = proto.hiliteSelected
 
         return proto
@@ -133,9 +137,8 @@
                 return childList
             })
 
-            // data-type for aiding with debugging only; not used by program.
             return (
-                <g transform={txform} data-type={data.type}>
+                <g transform={txform}>
                     {boxCompo}
                     {childCompos}
                 </g>
@@ -205,11 +208,10 @@
                 var pathData = Object.create(data)
                 pathData.pos = null
 
-                // rect fill has to be non-none to trigger hover
                 return (
                     <g transform={txform}>
                         <rect width={data.dim[0]} height={data.dim[1]}
-                            fill="white"
+                            fill="none"
                             ref="hiliteElm" />
                         <typeToClass.path data={pathData} />
                     </g>
