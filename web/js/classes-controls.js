@@ -43,7 +43,7 @@
             historyCount */
         getInitialState: function() {
             var state = hashUtil.parse() || {
-                pattern: '',
+                pattern: '(?:)',
                 flags: ''
             }
             this.prepStateForTextsChange(state)
