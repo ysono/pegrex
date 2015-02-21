@@ -178,17 +178,39 @@
         var parentUi = parentData.ui
 
         var midY = parentUi.dim[1] / 2
-        var leftBegin = [0, midY]
-        var rightEnd = [parentUi.dim[0], midY]
+        var onLeftEdge = [0, midY]
+        var onRightEdge = [parentUi.dim[0], midY]
+
+        function assignPosDim(arrow) {
+            var start = arrow.d[0]
+            var end = arrow.d[1]
+
+            var pos = [
+                Math.min(start[0], end[0]),
+                Math.min(start[1], end[1])
+            ]
+            var dim = [
+                Math.abs(end[0] - start[0]),
+                Math.abs(end[1] - start[1])
+            ]
+            function subtrPos(pt) {
+                return [
+                    pt[0] - pos[0],
+                    pt[1] - pos[1]
+                ]
+            }
+            arrow.type = 'boxed path'
+            arrow.pos = pos
+            arrow.dim = dim
+            arrow.d = [subtrPos(start), subtrPos(end)]
+        }
         var arrows = children.length
             ? children.reduce(function(allArrows, child, i) {
                 var childUi = child.ui
                 var childMidY = childUi.pos[1] + childUi.dim[1] / 2
                 allArrows.push({
-                    type: 'path',
-                    // type: 'boxed path',
                     d: [
-                        leftBegin,
+                        onLeftEdge,
                         [childUi.pos[0], childMidY]
                     ],
                     textLoc: child.textLoc
@@ -198,11 +220,9 @@
                     childIndex: i
                 },
                 {
-                    type: 'path',
-                    // type: 'boxed path',
                     d: [
                         [childUi.pos[0] + childUi.dim[0], childMidY],
-                        rightEnd
+                        onRightEdge
                     ],
                     textLoc: child.textLoc
                         ? [child.textLoc[1], child.textLoc[1]]
@@ -213,27 +233,14 @@
                 return allArrows
             }, [])
             : [{
-                type: 'path',
-                // type: 'boxed path',
                 d: [
-                    leftBegin,
-                    rightEnd
+                    onLeftEdge,
+                    onRightEdge
                 ],
                 fromLeft: true,
                 toRight: true
             }]
-        // arrows.forEach(function(arrow) {
-        //     var begin = arrow.d[0]
-        //     var end = arrow.d[1]
-        //     arrow.dim = [
-        //         end[0] - begin[0],
-        //         Math.max(end[1] - begin[1], surfaceData.selectableArrowHeight)
-        //     ]
-        //     arrow.pos = [
-        //         Math.min(begin[0], end[0]),
-        //         Math.min(begin[1], end[1])
-        //     ]
-        // })
+        arrows.forEach(assignPosDim)
         parentUi.neighborArrows = arrows
     }
 
