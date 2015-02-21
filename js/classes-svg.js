@@ -28,7 +28,7 @@
             Determines if this compo is (1) selectable and (2) selected, based on
                 the current mode, the current selected portion of the pattern string,
                 and the span of text that this compo is associated with.
-            Expresses these properties on the DOM, on the root elm and this.refs.hiliteElm.
+            Expresses these properties on the DOM, on this.refs.hiliteElm.
         */
         proto.hiliteSelected = function() {
             // `filter` attr is not supported by react, so manually assign.
@@ -42,19 +42,17 @@
 
             var textHasLen = textLoc
                 && textLoc[0] != textLoc[1]
-
             var amSelectable = mode
                 && (mode === 'add') !== textHasLen
-
             var amSelected = patternSel
                 && textHasLen
                 && patternSel[0] <= textLoc[0]
                 && patternSel[1] >= textLoc[1]
 
-            var rootElm = this.getDOMNode()
-            rootElm.classList[amSelectable ? 'add' : 'remove']('selectable')
-
             var hiliteElm = this.refs.hiliteElm.getDOMNode()
+            // don't make the root elm, the <g>, selectable b/c then hover of
+            // its transparent children propagate.
+            hiliteElm.classList[amSelectable ? 'add' : 'remove']('selectable')
             if (amSelected) {
                 hiliteElm.setAttribute('filter', "url(#dropshadow)")
             } else {
