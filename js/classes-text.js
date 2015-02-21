@@ -69,7 +69,8 @@
             return (
                 <fieldset className="literal">
                     <span className="prefix">/</span>
-                    <input type="text" ref="pattern" placeholder={'(?:)'}
+                    <input type="text" ref="pattern"
+                        placeholder={'For an empty match, use (?:)'}
                         value={this.props.pattern}
                         onChange={this.handleChange}
                         onSelect={this.handleSelect}
