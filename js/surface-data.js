@@ -1,36 +1,6 @@
 ;(function(surfaceData) {
     'use strict'
 
-    surfaceData.markerLen = 7
-    surfaceData.neighborArrowColor = '#8a8a8a'
-    var fillForNegative = '#ccc'
-
-    var typeToChildProp = {
-        'Pattern': 'roots',
-        'Disjunction': 'alternatives',
-        'Alternative': 'terms',
-        'Quantified': ['target', 'quantifier'],
-        'Grouped Assertion': 'grouped',
-        'Group': 'grouped',
-        'Set of Chars': 'possibilities',
-        'Range of Chars': 'range'
-    }
-    /*
-        Locate children for a generic component.
-    */
-    surfaceData.getChildVal = function(data) {
-        var prop = typeToChildProp[data.type]
-        if (typeof prop === 'string') {
-            return data[prop]
-        }
-        if (prop instanceof Array) {
-            return prop.reduce(function(vals, prop) {
-                return vals.concat(data[prop] || [])
-            }, [])
-        }
-        // else return undefined
-    }
-
     /*
         Center-aligns the given component's children.
         Determines overall dimensions and positions only.
@@ -86,9 +56,10 @@
         intraMargin, /* spacing between children and fillers */
         dirPara, /* 'x' or 'y'. direction of expansion. */
 
-        fillerDimPara /* optional, needed iff using fillers.
-            Dimension of fillers in the direction of expansion.
-            Their dimension in the other direction will equal to that of the largest child */
+        fillerDimPara, /* optional, needed iff using fillers.
+            Dimension of fillers in the direction of expansion. */
+        fillerDimOrtho /* optional even when using fillers.
+            If falsy, fillers will all take up as much space as the largest child. */
         ) {
 
         var dirOrtho = dirPara === 'x' ? 'y' : 'x'
@@ -132,7 +103,6 @@
                     var fillerPosPara = maxPosPara + intraMargin
 
                     var filler = {
-                        pos: toCoord(fillerPosPara, pad[dirOrtho][0])
                     }
                     if (children[i - 1].textLoc && children[i].textLoc) {
                         // it's valid for child before or after to not have text loc. e.g. char range.
@@ -143,7 +113,12 @@
                     }
                     fillers.push(filler)
                     delayeds.push(function() {
-                        filler.dim = toCoord(fillerDimPara, maxChildDimOrtho)
+                        var fillerPosOrtho = pad[dirOrtho][0] +
+                            (fillerDimOrtho
+                            ? (maxChildDimOrtho - fillerDimOrtho) / 2
+                            : 0)
+                        filler.pos = toCoord(fillerPosPara, fillerPosOrtho)
+                        filler.dim = toCoord(fillerDimPara, fillerDimOrtho || maxChildDimOrtho)
                     })
 
                     maxPosPara = fillerPosPara + fillerDimPara
@@ -351,11 +326,28 @@
                 // make the left terminus have higher z-index than disj
                 data.roots.push(data.roots.shift())
 
-                // remove markers from disj's neighborArrows funneling into the right terminus
+                // disj's neighborArrows ...
                 data.roots[0].ui.neighborArrows.forEach(function(arrow) {
+                    // remove markers from those funneling into the right terminus
                     if (arrow.toRight) {
                         arrow.usesMarkerEnd = false
                     }
+
+                    // convert to cubic so they don't become hidden under long Alternatives in the middle
+                    arrow.d = (function() {
+                        var beginPt = arrow.d[0]
+                        var endPt = arrow.d[1]
+                        var ctrlPt = arrow.fromLeft
+                            ? [beginPt[0],endPt[1]]
+                            : [endPt[0], beginPt[1]]
+                        return [
+                            [
+                                'M', beginPt,
+                                surfaceData.cubic(ctrlPt, endPt, arrow.usesMarkerEnd !== false)
+                            ].join(' '),
+                            endPt
+                        ]
+                    })()
                 })
 
                 return ui
@@ -413,20 +405,6 @@
                 }
 
                 addNeighborArrows(data)
-                data.ui.neighborArrows.forEach(function(arrow) {
-                    // TODO use 'C' to avoid passing under someone alt's first or last term.
-                    var beginPt = arrow.d[0]
-                    var endPt = arrow.d[1]
-                    var ctrlPt = arrow.fromLeft
-                        ? [beginPt[0],endPt[1]]
-                        : [endPt[0], beginPt[1]]
-                    arrow.d = [
-                        [
-                            'M', beginPt,
-                            'C', ctrlPt, ctrlPt, endPt
-                        ].join(' ')
-                    ]
-                })
 
                 return ui
             },
@@ -438,19 +416,25 @@
                     pad,
                     2,
                     'x',
-                    arrowW
+                    arrowW,
+                    surfaceData.markerLen * 3
+                        // tall enough as a click target for 'add' action
+                        // not so tall as to block elements underneath, which can
+                        // easily be done in nested disjunctions
                 )
                 ui.stroke = 'none'
                 ui.fill = 'none'
 
-                var midY = ui.dim[1] / 2 - pad.y[0]
                 ui.fillers.forEach(function(filler) {
-                    // Want to make whole filler selectable, and add an arrow.
+                    var midY = filler.dim[1] / 2
+
+                    // Want to make whole filler selectable. and add an arrow.
                     // no type --> rendered by `boxedClass` class
                     filler.type = undefined
                     filler.ui = {
                         pos: filler.pos,
                         dim: filler.dim,
+                        fill: 'white', // can't be none, in order to change fill on hover
                         // arbitrarily using neighborArrows; could be another prop
                         // supported by `boxedClass`.
                         neighborArrows: [{
@@ -567,13 +551,11 @@
                                     d: [
                                         [
                                             'M', overallLeftPt,
-                                            'C', leftCtrlPtForTopArrow, leftCtrlPtForTopArrow, offMidTopLeft,
+                                            surfaceData.cubic(leftCtrlPtForTopArrow, offMidTopLeft),
                                             arc(1, r, -r),
                                             'L', atMidTopRight,
                                             arc(1, r, r),
-                                            'C', rightCtrlPtForTopArrow, rightCtrlPtForTopArrow,
-                                                overallRightPt[0] - surfaceData.markerLen - .01, overallRightPt[1]
-                                                // here, hacking so marker points horizontally to the right.
+                                            surfaceData.cubic(rightCtrlPtForTopArrow, overallRightPt, true)
                                         ].join(' '),
                                         overallRightPt
                                     ]
@@ -673,13 +655,13 @@
                     ],
                     textBlocks: [textBlock],
                     stroke: '#f9f374',
-                    fill: /^Pos/.test(data.assertion) ? null : fillForNegative
+                    fill: /^Pos/.test(data.assertion) ? null : surfaceData.fillForNegative
                 }
             },
             'Assertion': function() {
                 var ui = setUiWithTextBlockOnly([data.assertion], data)
                 ui.stroke = '#f9f374'
-                ui.fill = 'Non-Word Boundary' === data.assertion ? fillForNegative : null
+                ui.fill = 'Non-Word Boundary' === data.assertion ? surfaceData.fillForNegative : null
                 return ui
             },
 
@@ -792,7 +774,7 @@
                     linkH
                 )
                 ui.stroke = '#f77'
-                ui.fill = data.inclusive ? null : fillForNegative
+                ui.fill = data.inclusive ? null : surfaceData.fillForNegative
 
                 var link = ui.fillers[0]
                 link.type = 'path'
@@ -808,20 +790,20 @@
             'Any Char': function() {
                 var ui = setUiWithTextBlockOnly([data.type], data)
                 ui.stroke = '#09d'
-                ui.fill = data.inclusive === false ? fillForNegative : null
+                ui.fill = data.inclusive === false ? surfaceData.fillForNegative : null
                 return ui
             },
             'Specific Char': function() {
                 var ui = setUiWithTextBlockOnly([data.display], data)
                 ui.stroke = '#09d'
-                ui.fill = data.inclusive === false ? fillForNegative : null
+                ui.fill = data.inclusive === false ? surfaceData.fillForNegative : null
                 return ui
             },
             'Reference': function() {
                 var ui = setUiWithTextBlockOnly(
                     [data.type, 'To #' + data.number], data)
                 ui.stroke = '#f9f374'
-                ui.fill = data.isBack ? null : fillForNegative
+                ui.fill = data.isBack ? null : surfaceData.fillForNegative
                 return ui
             }
         } // end of var map
