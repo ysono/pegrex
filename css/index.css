@@ -170,6 +170,9 @@ svg .selectable {
 svg .selectable>rect:hover {
     fill: #eee;
 }
+svg text, svg path {
+    pointer-events: none;
+}
 svg[data-mode="add"] .selectable {
     cursor: crosshair;
 }

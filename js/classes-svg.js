@@ -28,7 +28,7 @@
             Determines if this compo is (1) selectable and (2) selected, based on
                 the current mode, the current selected portion of the pattern string,
                 and the span of text that this compo is associated with.
-            Expresses these properties on the DOM, on this.refs.hiliteElm.
+            Expresses these properties on the DOM, on the root elm and this.refs.hiliteElm.
         */
         proto.hiliteSelected = function() {
             // `filter` attr is not supported by react, so manually assign.
@@ -298,7 +298,6 @@
         }
     */
     var Surface = React.createClass({
-        /* fn must be named handleSelect to work with `createNested` */
         handleSelect: function(pegrexEvt) {
             this.props.onSelect(pegrexEvt.textLoc)
         },
