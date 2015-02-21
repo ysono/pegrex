@@ -51,8 +51,10 @@
                 && patternSel[0] <= textLoc[0]
                 && patternSel[1] >= textLoc[1]
 
+            var rootElm = this.getDOMNode()
+            rootElm.classList[amSelectable ? 'add' : 'remove']('selectable')
+
             var hiliteElm = this.refs.hiliteElm.getDOMNode()
-            hiliteElm.classList[amSelectable ? 'add' : 'remove']('selectable')
             if (amSelected) {
                 hiliteElm.setAttribute('filter', "url(#dropshadow)")
             } else {
@@ -66,8 +68,8 @@
         */
         proto.componentDidMount = function() {
             if (this.props.data.textLoc) {
-                var thisRootNode = this.getDOMNode()
-                thisRootNode.addEventListener('click', this.handleSelect)
+                var rootElm = this.getDOMNode()
+                rootElm.addEventListener('click', this.handleSelect)
                 this.hiliteSelected()
             }
         }

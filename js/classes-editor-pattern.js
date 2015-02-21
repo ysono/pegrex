@@ -4,31 +4,29 @@
     var PatternEditor = React.createClass({
         getInitialState: function() {
             return {
-                typeToCreate: null,
+                tokenLabel: null,
                 dataPerCell: []
             }
         },
         handleChangeTypeToCreate: function(e) {
             this.setState({
-                typeToCreate: e.target.value
+                tokenLabel: e.target.value
             })
         },
         handleCreate: function(data) {
-            this.state.dataPerCell.push(data)
             this.setState({
-                dataPerCell: this.state.dataPerCell
+                dataPerCell: this.state.dataPerCell.concat(data)
             })
         },
         render: function() {
             var self = this
-            var typeToParams = tokenCreator.typeToParams
-            var createOptions = Object.keys(typeToParams).map(function(type) {
+            var createOptions = tokenCreator.tokenLabels.map(function(tokenLabel) {
                 return (
-                    <label key={type}>
+                    <label key={tokenLabel}>
                         <input type="radio" name="palette-editor-create-type"
-                            value={type}
+                            value={tokenLabel}
                             onChange={self.handleChangeTypeToCreate} />
-                        <span>{type}</span>
+                        <span>{tokenLabel}</span>
                     </label>
                 )
             })
@@ -40,58 +38,60 @@
                             {createOptions}
                         </fieldset>
                         <CreateForm
-                            typeToCreate={this.state.typeToCreate}
+                            tokenLabel={this.state.tokenLabel}
                             onSubmit={this.handleCreate} />
                     </div>
-                    <Palette dataPerCell={this.state.dataPerCell}
+                    <Palette tokenLabel={this.state.tokenLabel}
+                        dataPerCell={this.state.dataPerCell}
                         onSelect={this.props.onSelect} />
                 </div>
             )
         }
     })
     var CreateForm = React.createClass({
-        valsToPreviewData: function(allValid, type, vals) {
+        valsToPreviewData: function(allValid, tokenLabel, vals) {
             if (! allValid) { 
                 return null
             }
-            return tokenCreator.create(type, vals)
+            return tokenCreator.create(tokenLabel, vals)
         },
 
-        typeToInitState: function(type) {
-            if (! type) {
+        typeToInitState: function(tokenLabel) {
+            if (! tokenLabel) {
                 return {
                     allValid: false
                 }
             }
-            var params = tokenCreator.typeToParams[type]
+            var params = tokenCreator.getParams(tokenLabel)
             var allValid = ! params.length
             return {
                 params: params,
                 allValid: allValid,
-                validities: params.reduce(function(map, param) {
-                    map[param.builderArgIndex] = false
-                    return map
-                }, {}),
-                vals: {},
-                previewData: this.valsToPreviewData(allValid, type, {})
+                validities: params.map(function() {
+                    return false
+                }),
+                vals: [],
+                previewData: this.valsToPreviewData(allValid, tokenLabel, [])
             }
         },
         getInitialState: function() {
-            return this.typeToInitState(this.props.typeToCreate)
+            return this.typeToInitState(this.props.tokenLabel)
         },
         componentWillReceiveProps: function(nextProps) {
-            this.setState(
-                this.typeToInitState(nextProps.typeToCreate))
+            if (this.props.tokenLabel !== nextProps.tokenLabel) {
+                this.setState(
+                    this.typeToInitState(nextProps.tokenLabel))
+            }
         },
 
-        handleChange: function(builderArgIndex, isValid, val) {
+        handleChange: function(paramIndex, isValid, val) {
             var validities = this.state.validities
             var vals = this.state.vals
-            validities[builderArgIndex] = isValid
-            vals[builderArgIndex] = val
+            validities[paramIndex] = isValid
+            vals[paramIndex] = val
 
-            var allValid = Object.keys(validities).every(function(ind) {
-                return validities[ind]
+            var allValid = validities.every(function(validity) {
+                return validity
             })
 
             this.setState({
@@ -99,7 +99,7 @@
                 validities: validities,
                 vals: vals,
                 previewData: this.valsToPreviewData(allValid,
-                    this.props.typeToCreate, vals)
+                    this.props.tokenLabel, vals)
             })
         },
         handleSubmit: function(e) {
@@ -112,23 +112,22 @@
             var inputCompos = (this.state.params || []).map(function(param, i) {
                 return <CreateFormField param={param}
                     onChange={self.handleChange}
-                    key={i} />
+                    paramIndex={i} key={i} />
             })
             return (
-                <div className="create-form-parent">
-                    <form onSubmit={this.handleSubmit}
-                        className="create-form">
+                <form onSubmit={this.handleSubmit}
+                    className="create-form">
+                    <div className="create-form-inputs">
                         {inputCompos}
                         <input type="submit" value="Create"
                             disabled={! this.state.allValid} />
-                    </form>
+                    </div>
                     <div className="create-form-preview">
                         <p>Preview</p>
                         <Cell data={this.state.previewData}
-                            onSelect={function() {}}
-                            ref="review" />
+                            onSelect={function() {}} />
                     </div>
-                </div>
+                </form>
             )
         }
     })
@@ -136,25 +135,47 @@
         componentDidMount: function() {
             this.handleChange()
         },
-        handleChange: function() {
-            var input = this.refs.input.getDOMNode()
-            var isValid = this.props.param.validate(input.value)
+        handleChange: function(e) {
+            var input = this.refs.validatableInput
+                ? this.refs.validatableInput.getDOMNode()
+                : e && e.target
+            if (! input) {
+                return
+            }
+            var isValid = this.props.param.validate
+                ? this.props.param.validate(input.value)
+                : true
             input.classList[isValid ? 'remove' : 'add']('error')
             this.props.onChange(
-                this.props.param.builderArgIndex,
+                this.props.paramIndex,
                 isValid,
                 input.value
             )
         },
         render: function() {
+            var self = this
             var param = this.props.param
-            // todo default value
+            var inputCompo = param.choices
+                ? Object.keys(param.choices).map(function(choiceLabel) {
+                    var choiceVal = param.choices[choiceLabel]
+                    return (
+                        <label>
+                            <input type="radio"
+                                name={'pallette-editor-create-param-' + self.props.paramIndex}
+                                value={choiceVal}
+                                onChange={self.handleChange} />
+                            <span>{choiceLabel}</span>
+                        </label>
+                    )
+                })
+                : (
+                    <input type="text" onChange={self.handleChange}
+                        ref="validatableInput" />
+                )
             return (
                 <label>
                     <span>{param.label}</span>
-                    <input type="text"
-                        onChange={this.handleChange}
-                        ref="input" />
+                    {inputCompo}
                 </label>
             )
         }
@@ -166,9 +187,10 @@
             }
         },
         handleSelect: function(cell) {
-            var text = tokenCreator.toString(cell.props.data)
+            var text = tokenCreator.toString(
+                this.props.tokenLabel, cell.props.data)
             this.setState({
-                selectedCellIndex: cell.props.paletteIndex
+                selectedCellIndex: cell.props.cellIndex
             })
             this.props.onSelect(text)
         },
@@ -183,7 +205,7 @@
                     return <Cell data={dataPerCell[i]}
                         isSelected={self.state.selectedCellIndex === i}
                         onSelect={self.handleSelect}
-                        paletteIndex={i} ref={i} key={i} />
+                        cellIndex={i} ref={i} key={i} />
                 })
             return (
                 <div className="palette">

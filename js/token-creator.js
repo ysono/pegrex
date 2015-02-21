@@ -1,62 +1,130 @@
 ;(function(tokenCreator) {
     'use strict'
 
-    tokenCreator.typeToParams = {
-        'Any Char': [],
-        'Specific Char': [
-            {
-                label: 'Character',
-                builderArgIndex: 0,
-                validate: function(val) {
-                    // TODO escapes
-                    return val.length === 1
-                }
-            }
-        ]
-    }
-
-    var typeToBuilderName = {
-        'Any Char': 'anyChar',
-        'Specific Char': 'specificChar',
-
-        // 'Set of Chars': 'charSet',
-        // 'Pre-Defined Set of Chars': 'charSetPreDefn',
-
-        // 'Line Boundary': 'assertionLB',
-        // 'Word Boundary': 'assertionWB',
-        // 'Look-Forward': 'assertionLF',
-
-        /* TODO Quantified, Quantifier, Group, charSetRange,
-            specificCharEsc including decimals
-        */
-    }
-    /*
-        vals is an obj, used as a map of
-            (index in args for builder) -> (val of arg)
-    */
-    tokenCreator.create = function(type, vals) {
-        var builderName = typeToBuilderName[type]
-        var builderArgs = Object.keys(vals).reduce(function(arr, index) {
-            arr[index] = vals[index]
-            return arr
-        }, [])
-        var data = parser.yy.b[builderName].apply(parser.yy.b, builderArgs)
-        data.textLoc = [0, 1] // so that the whole thing is always selectable
-        surfaceData.addUiData(data)
-        return data
-    }
-
-    var tokenToString = {
-        'Any Char': function() {
-            return '.'
-        },
-        'Specific Char': function(data) {
-            return data.display
+    function creatorSimple(builderName) {
+        return function(args) {
+            return parser.yy.b[builderName].apply(parser.yy.b, args)
         }
     }
-    tokenCreator.toString = function(data) {
-        var fn = tokenToString[data.type]
-        return fn(data)
+
+    function validatorTextLen(len) {
+        return function(val) {
+            return val.length === len
+        }
+    }
+
+    // TODO
+    // Range of Chars
+    // 'Set of Chars': 'charSet',
+    // 'Look-Forward': 'assertionLF',
+    // Quantified, Quantifier, Group,
+    var tokenInfo = {
+        'Line Boundary': {
+            params: [
+                {
+                    label: 'At',
+                    choices: {
+                        'Beginning': '^',
+                        'End': '$'
+                    }
+                }
+            ],
+            create: creatorSimple('assertionLB'),
+            toString: function(data) {
+                return data.atBeg ? '^' : '$'
+            }
+        },
+        'Word Boundary': {
+            params: [
+                {
+                    label: 'At a boundary',
+                    choices: {
+                        'Yes': '\\b',
+                        'No': '\\B'
+                    }
+                }
+            ],
+            create: creatorSimple('assertionWB'),
+            toString: function(data) {
+                return '\\' + (data.atWb ? 'b' : 'B')
+            }
+        },
+        // 'Range of Chars': {
+        //     params: [
+        //         {
+        //             label: 'From',
+        //             validate: validatorTextLen(1)
+        //         },
+        //         {
+        //             label: 'To',
+        //             validate: validatorTextLen(1)
+        //         }
+        //     ],
+        //     create: creatorSimple('charSetRange'),
+        //     toString: function(vals) {
+        //         return vals[0] + '-' + vals[1]
+        //     }
+        // },
+        'Pre-defined set of Chars': {
+            params: [
+                {
+                    label: 'Selection',
+                    choices: {
+                        'Decimal': 'd',
+                        'Non-Decimal': 'D',
+                        'Whitespace': 's',
+                        'Non-Whitespace': 'S',
+                        'Word Char': 'w',
+                        'Non-Word Char': 'W'
+                    }
+                }
+            ],
+            create: creatorSimple('charSetPreDefn'),
+            toString: function(data) {
+                return data.predefined.display
+            }
+        },
+        'Any Char': {
+            params: [],
+            create: creatorSimple('anyChar'),
+            toString: function() {
+                return '.'
+            }
+        },
+        'Specific Char': {
+            params: [
+                {
+                    label: 'Character',
+                    validate: function(val) {
+                        // TODO escapes including octal
+                        return val.length === 1
+                    }
+                }
+            ],
+            create: creatorSimple('specificChar'),
+            toString: function(data) {
+                return data.display
+            }
+        }
+    }
+    tokenCreator.tokenLabels = Object.keys(tokenInfo)
+    tokenCreator.getParams = function(tokenLabel) {
+        return tokenInfo[tokenLabel].params
+    }
+    tokenCreator.create = function(tokenLabel, vals) {
+        var data
+        try {
+            data = tokenInfo[tokenLabel].create(vals)
+            data.textLoc = [0, 1] // so that the whole thing is always selectable
+            surfaceData.addUiData(data)
+        } catch(e) {
+            console.error(tokenLabel, vals)
+            throw 'token creation failed for ' + tokenLabel
+        }
+        return data
+    }
+    tokenCreator.toString = function(tokenLabel, data) {
+        return tokenInfo[tokenLabel].toString(data)
     }
 
 })(window.tokenCreator = window.tokenCreator || {})
