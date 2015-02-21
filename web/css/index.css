@@ -148,6 +148,7 @@ html, body {
     min-width: 8rem;
     max-height: 14rem;
     overflow-y: auto;
+    border: dotted 1px;
 }
 
 .palette {
@@ -167,11 +168,11 @@ html, body {
 svg .selectable {
     cursor: pointer;
 }
-svg .selectable>rect:hover {
+svg .selectable:hover {
     fill: #eee;
 }
 svg text, svg path {
-    pointer-events: none;
+    pointer-events: none; /* prevent flicker on hover. */
 }
 svg[data-mode="add"] .selectable {
     cursor: crosshair;
