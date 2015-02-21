@@ -44,7 +44,6 @@
             // info: if blur was for clicking on svg, blur fires before re-focus, so it works
 
             // need to handle blur b/c otherwise infinite loop
-            // TODO test
             var elm = e.target
             var patternSel = e.type === 'blur'
                 ? null
