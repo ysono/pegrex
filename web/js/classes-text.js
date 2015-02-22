@@ -53,8 +53,10 @@
         render: function() {
             if (this.props.patternSel) {
                 ;(function(input, range) {
-                    // input.focus() // TODO ff requires it to change seln, but this makes the <input> steal focus and flicker.
+                    var origFocus = document.activeElement
+                    input.focus() // ff requires it to change seln
                     input.setSelectionRange.apply(input, range)
+                    origFocus.focus()
                 })(this.refs.pattern.getDOMNode(), this.props.patternSel)
             }
 

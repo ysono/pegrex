@@ -358,7 +358,8 @@
                 data.roots[0].ui.neighborArrows.forEach(function(arrow) {
                     if (arrow.fromLeft) {
                         // debugger
-                        arrow.textLoc = [0,0]
+                        // TODO add on neighborArrows
+                        // arrow.textLoc = [0,0]
                     } else if (arrow.toRight) {
                         // remove markers from those funneling into the right terminus
                         arrow.usesMarkerEnd = false
@@ -695,9 +696,10 @@
                     }
                 }
 
-                var pad = {h: 0, v: 0}
+                var pad = {h: 8, v: 8}
                 var cUi = setUiByType(data.grouped)
                 cUi.pos = [pad.h, pad.v]
+                cUi.stroke = '#FFF0DB'
 
                 var ui = data.ui = {
                     dim: [
