@@ -351,7 +351,7 @@
         }
     })
 
-    var SvgDefs = React.createClass({
+    var SurfaceMetadata = React.createClass({
         render: function() {
             var markerEndArrow = '\
                 <marker id="marker-end-arrow" \
@@ -389,5 +389,5 @@
     })
 
     reactClasses.Surface = Surface
-    reactClasses.SvgDefs = SvgDefs
+    reactClasses.SurfaceMetadata = SurfaceMetadata
 })(window.reactClasses = window.reactClasses || {})

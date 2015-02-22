@@ -181,29 +181,6 @@
         var onLeftEdge = [0, midY]
         var onRightEdge = [parentUi.dim[0], midY]
 
-        function assignPosDim(arrow) {
-            var start = arrow.d[0]
-            var end = arrow.d[1]
-
-            var pos = [
-                Math.min(start[0], end[0]),
-                Math.min(start[1], end[1])
-            ]
-            var dim = [
-                Math.abs(end[0] - start[0]),
-                Math.abs(end[1] - start[1])
-            ]
-            function subtrPos(pt) {
-                return [
-                    pt[0] - pos[0],
-                    pt[1] - pos[1]
-                ]
-            }
-            arrow.type = 'boxed path'
-            arrow.pos = pos
-            arrow.dim = dim
-            arrow.d = [subtrPos(start), subtrPos(end)]
-        }
         var arrows = children.length
             ? children.reduce(function(allArrows, child, i) {
                 var childUi = child.ui
@@ -240,7 +217,38 @@
                 fromLeft: true,
                 toRight: true
             }]
-        arrows.forEach(assignPosDim)
+        arrows.forEach(function(arrow) {
+            // boxed path needs pos and dim
+
+            var start = arrow.d[0]
+            var end = arrow.d[1]
+
+            var pos = [
+                Math.min(start[0], end[0]),
+                Math.min(start[1], end[1])
+            ]
+            var dim = [
+                Math.abs(end[0] - start[0]),
+                Math.abs(end[1] - start[1])
+            ]
+            if (dim[1] < surfaceData.selectableArrowHeight) {
+                // otherwise flat arrow wouldn't be selectable
+                pos[1] -= ( (surfaceData.selectableArrowHeight - dim[1]) / 2 )
+                dim[1] = surfaceData.selectableArrowHeight
+            }
+
+            function subtrPos(pt) {
+                // create new arr, not mod.
+                return [
+                    pt[0] - pos[0],
+                    pt[1] - pos[1]
+                ]
+            }
+            arrow.type = 'boxed path'
+            arrow.pos = pos
+            arrow.dim = dim
+            arrow.d = [subtrPos(start), subtrPos(end)]
+        })
         parentUi.neighborArrows = arrows
     }
 
