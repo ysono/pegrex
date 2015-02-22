@@ -55,9 +55,14 @@
                 && patternSel[1] >= textLoc[1]
 
             var hiliteElm = this.refs.hiliteElm.getDOMNode()
+
             // don't make the root elm, the <g>, selectable b/c then hover and click
             //     of its transparent children propagate.
-            hiliteElm.classList[amSelectable ? 'add' : 'remove']('selectable')
+            try {
+                hiliteElm.classList.toggle('selectable', amSelectable)
+            } catch(e) {
+                // screw you ie i ain't polyfilling
+            }
             hiliteElm[(amSelectable ? 'add' : 'remove') + 'EventListener']
                 ('click', this.handleSelect)
 

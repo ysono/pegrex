@@ -117,7 +117,7 @@
             }))
         },
         handleSubmit: function(e) {
-            e.preventDefault()
+            (e.preventDefault) ? e.preventDefault() : e.returnValue = false
             this.props.onSubmit(this.state.previewData)
         },
 
@@ -177,7 +177,11 @@
             // radios don't have validate fn
             var isValid = ! this.props.param.validate
                 || this.props.param.validate(value)
-            input.classList[isValid ? 'remove' : 'add']('error')
+            try {
+                input.classList.toggle('error', ! isValid)
+            } catch(e) {
+                // screw you ie i ain't polyfilling
+            }
             this.props.onChange(
                 this.props.paramIndex,
                 isValid,
