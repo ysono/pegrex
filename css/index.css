@@ -138,15 +138,18 @@ html, body {
 .create-form-inputs>label>* {
     display: block;
 }
-.create-form-inputs input.error {
-    background-color: #FF6666;
+.create-form-inputs .error {
+    background-color: #F0A9A1;
     color: #fff;
 }
-.create-form-inputs .droppable {
+.create-form-inputs .component-droppable {
     min-width: 6rem;
     min-height: 1rem;
     border: solid 1px;
     cursor: pointer;
+}
+.create-form-inputs .component-droppable:hover {
+    background-color: #eee;
 }
 .create-form-preview {
     width: 14rem;

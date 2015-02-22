@@ -5,7 +5,7 @@
         getInitialState: function() {
             return {
                 tokenLabel: null,
-                dataPerCell: [],
+                datasInPalette: [], // bad latin but w/e
                 selData: null
             }
         },
@@ -16,7 +16,7 @@
         },
         handleCreate: function(data) {
             this.setState({
-                dataPerCell: this.state.dataPerCell.concat(data)
+                datasInPalette: this.state.datasInPalette.concat(data)
             })
         },
         handlePaletteSelect: function(selData) {
@@ -45,19 +45,20 @@
                             <legend>Create</legend>
                             {createOptions}
                         </fieldset>
-                        <CreateForm
+                        <Form
                             tokenLabel={this.state.tokenLabel}
                             selData={this.state.selData}
                             onSubmit={this.handleCreate} />
                     </div>
                     <Palette
-                        dataPerCell={this.state.dataPerCell}
+                        datasInPalette={this.state.datasInPalette}
                         onSelect={this.handlePaletteSelect} />
                 </div>
             )
         }
     })
-    var CreateForm = React.createClass({
+
+    var Form = React.createClass({
         getInitialState: function() {
             return this.typeToInitState(this.props.tokenLabel)
         },
@@ -82,14 +83,15 @@
             }
             var params = tokenCreator.getParams(tokenLabel)
             var allValid = ! params.length
+            var vals = []
             return {
                 params: params,
                 allValid: allValid,
                 validities: params.map(function() {
                     return false
                 }),
-                vals: [], // will be sparse array
-                previewData: this.valsToPreviewData(allValid, tokenLabel, [])
+                vals: vals, // will be sparse array
+                previewData: this.valsToPreviewData(allValid, tokenLabel, vals)
             }
         },
 
@@ -98,11 +100,9 @@
             var vals = this.state.vals
             validities[paramIndex] = isValid
             vals[paramIndex] = val
-
             var allValid = validities.every(function(validity) {
                 return validity
             })
-
             this.setState({
                 allValid: allValid,
                 validities: validities,
@@ -118,14 +118,14 @@
 
         render: function() {
             var self = this
-            var inputCompos = (this.state.params || []).map(function(param, i) {
-                return <CreateFormField
-                    param={param}
-                    tokenLabel={self.props.tokenLabel}
-                    selData={self.props.selData}
-                    onChange={self.handleChange}
-                    paramIndex={i} key={i} />
-            })
+            var inputCompos = this.state.params &&
+                this.state.params.map(function(param, i) {
+                    return <FormField
+                        param={param}
+                        selData={self.props.selData}
+                        onChange={self.handleChange}
+                        paramIndex={i} key={i} />
+                })
             return (
                 <form onSubmit={this.handleSubmit}
                     className="create-form">
@@ -136,40 +136,37 @@
                     </div>
                     <div className="create-form-preview">
                         <p>Preview</p>
-                        <Cell data={this.state.previewData}
-                            onSelect={function() {}} />
+                        <Cell data={this.state.previewData} />
                     </div>
                 </form>
             )
         }
     })
-    var CreateFormField = React.createClass({
+    var FormField = React.createClass({
         componentDidMount: function() {
-            if (this.refs.validatableInput) {
-                this.validate(
-                    this.refs.validatableInput.getDOMNode())
-            }
+            this.withValidatableInput(this.validateElm)
         },
         shouldComponentUpdate: function(nextProps) {
-            return this.props.tokenLabel !== nextProps.tokenLabel
+            // both obj ref equality
+            return this.props.param !== nextProps.param
+                || this.props.selData !== nextProps.selData
         },
-        handlePasteCompo: function(e) {
-            if (! this.props.selData) {
-                return
+        componentDidUpdate: function() {
+            // we could reset validatableInput val here, iff param changed, not if selData changed.
+            this.withValidatableInput(this.validateElm)
+        },
+
+        withValidatableInput: function(fn) {
+            // radios won't have a validatableInput
+            var validatableInput = this.refs.validatableInput
+                && this.refs.validatableInput.getDOMNode()
+            if (validatableInput) {
+                fn(validatableInput)
             }
-            var surface = React.createElement(reactClasses.Surface, {
-                    tree: this.props.selData,
-                    onSelect: function() {}, // not selectable
-                    patternSel: undefined, // visually not selectable
-                    patternEditorMode: undefined // no pointer
-                })
-            var container = e.target
-            // container.appendChild(surface.getDOMNode()) // TODO
-            container.value = this.props.selData // using value prop on non-input elm.
-            this.validate(container)
         },
-        validate: function(input) {
-            var value = input.value
+
+        validate: function(input, value) {
+            // radios don't have validate fn
             var isValid = ! this.props.param.validate
                 || this.props.param.validate(value)
             input.classList[isValid ? 'remove' : 'add']('error')
@@ -179,9 +176,13 @@
                 value
             )
         },
-        handleChange: function(e) {
-            this.validate(e.target)
+        validateElm: function(input) {
+            this.validate(input, input.value)
         },
+        handleChange: function(e) {
+            this.validateElm(e.target)
+        },
+
         render: function() {
             var self = this
             var param = this.props.param
@@ -199,15 +200,25 @@
                         </label>
                     )
                 })
-            } else if (param.paramType === 'component') {
-                // TODO droppable
-                inputCompo = <div onClick={this.handlePasteCompo}
-                    className="droppable" />
-            } else if (typeof param.validate === 'function') {
-                inputCompo = <input type="text" onChange={this.handleChange}
-                    ref="validatableInput" />
+            } else {
+                if (typeof param.validate !== 'function') {
+                    console.error('param doesn\'t have a validator', param)
+                } else {
+                    if (param.paramType === 'component') {
+                        // mosue nav?
+                        inputCompo =
+                            <FormFieldDroppable
+                                param={this.props.param}
+                                selData={this.props.selData}
+                                onValidate={this.validate} />
+                    } else if (typeof param.validate === 'function') {
+                        inputCompo = <input type="text"
+                            onChange={this.handleChange}
+                            ref="validatableInput" />
+                    }
+                }
+                
             }
-            // else param is coded w insufficient info
             return (
                 <label>
                     <span>{param.label}</span>
@@ -216,30 +227,63 @@
             )
         }
     })
+    var FormFieldDroppable = React.createClass({
+        getInitialState: function() {
+            return {
+                droppedData: null
+            }
+        },
+        componentDidMount: function() {
+            this.validate()
+        },
+        componentDidUpdate: function() {
+            this.validate()
+        },
+        validate: function() {
+            this.props.onValidate(this.getDOMNode(), this.state.droppedData)
+        },
+        handlePasteCompo: function(e) {
+            if (! this.props.selData) {
+                return
+            }
+            this.setState({
+                droppedData: this.props.selData
+            })
+            this.validate()
+        },
+        render: function() {
+            return <div onClick={this.handlePasteCompo}
+                    className="component-droppable">
+                    <Cell data={this.state.droppedData} />
+                </div>
+        }
+    })
+
     var Palette = React.createClass({
         getInitialState: function() {
             return {
-                selectedCellIndex: null // TODO what if cell is deleted? might have to move this to parent
+                selectedCellIndex: null // TODO what if cell is deleted? use a unique id.
             }
         },
         handleSelect: function(cell) {
             this.setState({
-                selectedCellIndex: cell.props.cellIndex
+                selectedCellIndex: cell.props.cellIndexInPalette
             })
             this.props.onSelect(cell.props.data)
         },
         render: function() {
             var self = this
             var minNumCells = 10
-            var dataPerCell = this.props.dataPerCell
+            var datasInPalette = this.props.datasInPalette
             var cells = Array.apply(null, {
-                    length: Math.max(minNumCells, dataPerCell.length)
+                    length: Math.max(minNumCells, datasInPalette.length)
                 })
                 .map(function(foo, i) {
-                    return <Cell data={dataPerCell[i]}
+                    return <Cell
+                        data={datasInPalette[i]}
                         isSelected={self.state.selectedCellIndex === i}
                         onSelect={self.handleSelect}
-                        cellIndex={i} key={i} />
+                        cellIndexInPalette={i} key={i} />
                 })
             return (
                 <div className="palette">
@@ -248,12 +292,38 @@
             )
         }
     })
+
+    /*
+        in props ~= {
+            data: required
+            isSelected: required iff in palette
+            onSelect: required iff in palette
+            cellIndexInPalette: required iff in palette
+        }
+    */
     var Cell = React.createClass({
         handleSelect: function() {
-            this.props.onSelect(this)
+            if (this.props.onSelect) {
+                this.props.onSelect(this)
+            }
+        },
+        shouldComponentUpdate: function() {
+            // never re-render already rendered cells in palette
+            // always re-render in fields and preview
+            if (this.props.cellIndexInPalette === 'number'
+                && this.props.data) {
+                return false
+            }
+            return true
         },
         render: function() {
+            // add ui data individually per cell b/c otherwise `data.ui` will
+            // get overridden if the compo is embedded (as a field for another compo).
             var data = this.props.data
+            if (data) {
+                data = Object.create(data)
+                surfaceData.addUiData(data)
+            }
             return data
                 ? React.createElement(reactClasses.Surface, {
                     tree: data,
