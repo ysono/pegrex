@@ -58,12 +58,19 @@
 
         /* helpers for hash */
 
+        /* modifies `newState`. caller must call setState after updateHash. */
         updateHash: function(newState, rememberPrev) {
             newState.pattern = typeof newState.pattern === 'string'
                 ? newState.pattern : this.state.pattern
             newState.flags = typeof newState.flags === 'string'
                 ? newState.flags : this.state.flags
             hashUtil.update(newState, rememberPrev)
+
+            if (rememberPrev) {
+                newState.historyCount = this.state.historyCount + 1
+            } else {
+                newState.historyCount = 0
+            }
         },
 
         /* helpers for texts change */
@@ -120,6 +127,7 @@
             var parts = hashUtil.parse()
             var newState = this.prepStateForTextsChange(parts)
             if (newState) {
+                newState.historyCount = 0
                 this.setState(newState)
             }
         },
@@ -173,8 +181,7 @@
                             this.state.pattern, textLoc,
                             this.state.patternEditorText),
                         patternSel: [textLoc[0],
-                            textLoc[0] + this.state.patternEditorText.length],
-                        historyCount : this.state.historyCount + 1
+                            textLoc[0] + this.state.patternEditorText.length]
                     }
                 }
             } else if(mode === 'delete') {
@@ -182,8 +189,7 @@
                     newState = {
                         pattern: spliceStr(
                             this.state.pattern, textLoc),
-                        patternSel: [textLoc[0], textLoc[0]],
-                        historyCount : this.state.historyCount + 1
+                        patternSel: [textLoc[0], textLoc[0]]
                     }
                 }
             }
@@ -229,6 +235,7 @@
         render: function() {
             return (
                 <div className="controls-parent">
+                    <reactClasses.SvgDefs />
                     <reactClasses.Texts
                         pattern={this.state.pattern}
                         flags={this.state.flags}
