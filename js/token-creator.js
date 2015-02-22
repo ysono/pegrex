@@ -25,7 +25,6 @@
     }
 
     // TODO
-    // Range of Chars
     // 'Set of Chars': 'charSet',
     // 'Look-Forward': 'assertionLF',
     // Quantified, Quantifier, Group,
@@ -123,11 +122,10 @@
             data.textLoc = [0, 1] // so that the whole thing is always selectable
             // not using `surfaceData.addUiData`, b/c `data.ui` will get
             //     overridden if embedded.
+            return data
         } catch(e) {
-            console.error(tokenLabel, vals)
-            throw 'token creation failed for ' + tokenLabel
+            return e
         }
-        return data
     }
 
 
