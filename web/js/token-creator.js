@@ -121,7 +121,8 @@
         try {
             data = createInfo[tokenLabel].create(vals)
             data.textLoc = [0, 1] // so that the whole thing is always selectable
-            surfaceData.addUiData(data)
+            // not using `surfaceData.addUiData`, b/c `data.ui` will get
+            //     overridden if embedded.
         } catch(e) {
             console.error(tokenLabel, vals)
             throw 'token creation failed for ' + tokenLabel

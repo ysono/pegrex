@@ -379,7 +379,7 @@
                     </feMerge> \
                 </filter>'
             return (
-                <svg>
+                <svg width="0" height="0" style={{position: 'absolute'}}>
                     <defs dangerouslySetInnerHTML={{
                         __html: markerEndArrow + markerMidCross + dropshadow
                     }}></defs>
