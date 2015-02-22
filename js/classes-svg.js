@@ -340,6 +340,19 @@
                 childCompo = createNested(this, tree)
             }
 
+            return (
+                <div className="surface-parent">
+                    <svg width={svgDim[0]} height={svgDim[1]}
+                        data-mode={this.props.patternEditorMode}>
+                        {childCompo}
+                    </svg>
+                </div>
+            )
+        }
+    })
+
+    var SvgDefs = React.createClass({
+        render: function() {
             var markerEndArrow = '\
                 <marker id="marker-end-arrow" \
                     viewBox="0 0 10 10" refX="0" refY="5" markerWidth="{0}" markerHeight="{0}" orient="auto" fill="{1}"> \
@@ -365,20 +378,16 @@
                         <feMergeNode in="SourceGraphic"/> \
                     </feMerge> \
                 </filter>'
-
             return (
-                <div className="surface-parent">
-                    <svg width={svgDim[0]} height={svgDim[1]}
-                        data-mode={this.props.patternEditorMode}>
-                        <defs dangerouslySetInnerHTML={{
-                            __html: markerEndArrow + markerMidCross + dropshadow
-                        }}></defs>
-                        {childCompo}
-                    </svg>
-                </div>
+                <svg>
+                    <defs dangerouslySetInnerHTML={{
+                        __html: markerEndArrow + markerMidCross + dropshadow
+                    }}></defs>
+                </svg>
             )
         }
     })
 
     reactClasses.Surface = Surface
+    reactClasses.SvgDefs = SvgDefs
 })(window.reactClasses = window.reactClasses || {})
