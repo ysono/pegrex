@@ -5,29 +5,21 @@
     var numCapturedGroups = 0
 
     var builders = {
-        withLoc: function(begin, end) {
-            function assign(o) {
-                if (o instanceof Array) {
-                    // The concept of location is valid with one token only.
-                    // Not an error if token can be an array or an obj
-                    // namely ClassEscape
-                    return o
-                }
-                o.textLoc = [
-                    begin.first_column,
-                    (end || begin).last_column
-                ]
-                return o
+        withLoc: function(loc, arg, builderName) {
+            var token = builderName
+                ? builders[builderName](arg)
+                : arg
+            if (token instanceof Array) {
+                // The concept of location is valid with one token only.
+                // Not an error if token can be an array or an obj
+                // namely ClassEscape
+                return token
             }
-            var augmented = Object.keys(builders).reduce(function(map, key) {
-                map[key] = function() {
-                    var token = builders[key].apply(builders, arguments)
-                    return assign(token)
-                }
-                return map
-            }, {})
-            augmented.get = assign
-            return augmented
+            token.textLoc = [
+                loc.first_column,
+                loc.last_column
+            ]
+            return token
         },
 
         pattern: function(disj) {

@@ -87,7 +87,7 @@ case 1:
 return yy.b.pattern($$[$0])
 break;
 case 2:
-this.$ = yy.b.withLoc(_$[$0]).disjunction($$[$0])
+this.$ = yy.b.withLoc(_$[$0], $$[$0], 'disjunction')
 break;
 case 3:
 this.$ = [$$[$0]]
@@ -96,18 +96,18 @@ case 4:
 this.$ = $$[$0-2].concat($$[$0])
 break;
 case 5:
-this.$ = yy.b.withLoc(_$[$0]).alternative($$[$0])
+this.$ = yy.b.withLoc(_$[$0], $$[$0], 'alternative')
 break;
 case 6: case 24:
 this.$ = []
 break;
-case 7:
-this.$ = $$[$0-1].concat(yy.b.withLoc(_$[$0]).get($$[$0]) )
+case 7: case 25:
+this.$ = $$[$0-1].concat( yy.b.withLoc(_$[$0], $$[$0]) )
 break;
 case 10:
  this.$ = yy.b.quantified(
-            yy.b.withLoc(_$[$0-1]).get($$[$0-1]),
-            yy.b.withLoc(_$[$0]).quantifier($$[$0]) ) 
+            yy.b.withLoc(_$[$0-1], $$[$0-1]),
+            yy.b.withLoc(_$[$0], $$[$0], 'quantifier') ) 
 break;
 case 13:
 this.$ = yy.b.assertionLB($$[$0])
@@ -138,9 +138,6 @@ this.$ = yy.b.specificChar($$[$0])
 break;
 case 22:
 this.$ = yy.b.decimalsEscMaybeRefPlaceholder(_$[$0], $$[$0])
-break;
-case 25:
-this.$ = $$[$0-1].concat( yy.b.withLoc(_$[$0]).get($$[$0]) )
 break;
 case 28:
 this.$ = yy.b.decimalsEsc(_$[$0], $$[$0])
@@ -733,29 +730,21 @@ if (typeof module !== 'undefined' && require.main === module) {
     var numCapturedGroups = 0
 
     var builders = {
-        withLoc: function(begin, end) {
-            function assign(o) {
-                if (o instanceof Array) {
-                    // The concept of location is valid with one token only.
-                    // Not an error if token can be an array or an obj
-                    // namely ClassEscape
-                    return o
-                }
-                o.textLoc = [
-                    begin.first_column,
-                    (end || begin).last_column
-                ]
-                return o
+        withLoc: function(loc, arg, builderName) {
+            var token = builderName
+                ? builders[builderName](arg)
+                : arg
+            if (token instanceof Array) {
+                // The concept of location is valid with one token only.
+                // Not an error if token can be an array or an obj
+                // namely ClassEscape
+                return token
             }
-            var augmented = Object.keys(builders).reduce(function(map, key) {
-                map[key] = function() {
-                    var token = builders[key].apply(builders, arguments)
-                    return assign(token)
-                }
-                return map
-            }, {})
-            augmented.get = assign
-            return augmented
+            token.textLoc = [
+                loc.first_column,
+                loc.last_column
+            ]
+            return token
         },
 
         pattern: function(disj) {

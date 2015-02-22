@@ -106,7 +106,7 @@ Pattern
     ;
 Disjunction
     : Alternative_s
-        {$$ = yy.b.withLoc(@1).disjunction($1)}
+        {$$ = yy.b.withLoc(@1, $1, 'disjunction')}
     ;
 Alternative_s
     : Alternative
@@ -116,13 +116,13 @@ Alternative_s
     ;
 Alternative
     : Term_s
-        {$$ = yy.b.withLoc(@1).alternative($1)}
+        {$$ = yy.b.withLoc(@1, $1, 'alternative')}
     ;
 Term_s
     : TERM_EMPTY
         {$$ = []}
     | Term_s Term
-        {$$ = $1.concat(yy.b.withLoc(@2).get($2) )}
+        {$$ = $1.concat( yy.b.withLoc(@2, $2) )}
         /* the withLoc here takes care of all kinds of terms. no need to add individually below. */
     ;
 Term
@@ -131,8 +131,8 @@ Term
     | Atom Quantifier
         /* Add loc to $1 so yy.b.quantified can use it. */
         {{ $$ = yy.b.quantified(
-            yy.b.withLoc(@1).get($1),
-            yy.b.withLoc(@2).quantifier($2) ) }}
+            yy.b.withLoc(@1, $1),
+            yy.b.withLoc(@2, $2, 'quantifier') ) }}
     ;
 Quantifier
     : ATOM_QUANT_SHORT
@@ -171,7 +171,7 @@ ClassAtom_s
         {$$ = []}
     | ClassAtom_s ClassAtom
         /* add loc so yy.b.charSet can use it */
-        {$$ = $1.concat( yy.b.withLoc(@2).get($2) )}
+        {$$ = $1.concat( yy.b.withLoc(@2, $2) )}
     ;
 ClassAtom
     : ESCAPE_PREFIX ClassEscape -> $2
