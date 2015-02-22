@@ -235,7 +235,6 @@
         render: function() {
             return (
                 <div className="controls-parent">
-                    <reactClasses.SvgDefs />
                     <reactClasses.Texts
                         pattern={this.state.pattern}
                         flags={this.state.flags}
@@ -245,6 +244,7 @@
                         onChange={this.handleTextsChange}
                         onSelect={this.handleTextsSelect} />
                     <div className="visuals-parent">
+                        <reactClasses.SurfaceMetadata />
                         <reactClasses.Surface
                             tree={this.state.tree}
                             flags={this.state.flags}
