@@ -87,8 +87,9 @@
                 greedy: ! matched[4]
             }
             if (result.min > result.max) {
-                throw 'In a Quantifier, min must be <= to max. Invalid pair: '
-                    + [result.min, result.max]
+                throw new Error(
+                    'In a Quantifier, min must be <= to max. Invalid pair: '
+                    + [result.min, result.max])
             }
             return result
         },
@@ -163,8 +164,9 @@
 
         charSetRange: function(from, to) {
             if (from.display > to.display) {
-                throw 'In a Range of Chars, the beginning char must be <= to the ending char.'
-                    + ' Invalid pair: ' + [from.display, to.display]
+                throw new Error(
+                    'In a Range of Chars, the beginning char must be <= to the ending char.'
+                    + ' Invalid pair: ' + [from.display, to.display])
             }
             return {
                 type: 'Range of Chars',

@@ -59,6 +59,8 @@
     })
 
     var Form = React.createClass({
+        /* props of state:
+            params, allValid, validities, vals, previewData, overallErrorMsg */
         getInitialState: function() {
             return this.typeToInitState(this.props.tokenLabel)
         },
@@ -69,11 +71,19 @@
             }
         },
 
-        valsToPreviewData: function(allValid, tokenLabel, vals) {
-            if (! allValid) { 
-                return null
+        valsToPreviewData: function(tokenLabel, state) {
+            var data = state.allValid
+                ? tokenCreator.create(tokenLabel, state.vals)
+                : null
+            if (data instanceof Error) {
+                state.previewData = null
+                state.overallErrorMsg = data.message
+                    || 'The inputs are not valid as a whole.'
+            } else {
+                state.previewData = data
+                state.overallErrorMsg = null
             }
-            return tokenCreator.create(tokenLabel, vals)
+            return state
         },
         typeToInitState: function(tokenLabel) {
             if (! tokenLabel) {
@@ -82,17 +92,14 @@
                 }
             }
             var params = tokenCreator.getParams(tokenLabel)
-            var allValid = ! params.length
-            var vals = []
-            return {
+            return this.valsToPreviewData(tokenLabel, {
                 params: params,
-                allValid: allValid,
+                allValid: ! params.length,
                 validities: params.map(function() {
                     return false
                 }),
-                vals: vals, // will be sparse array
-                previewData: this.valsToPreviewData(allValid, tokenLabel, vals)
-            }
+                vals: []
+            })
         },
 
         handleChange: function(paramIndex, isValid, val) {
@@ -100,16 +107,14 @@
             var vals = this.state.vals
             validities[paramIndex] = isValid
             vals[paramIndex] = val
-            var allValid = validities.every(function(validity) {
-                return validity
-            })
-            this.setState({
-                allValid: allValid,
+
+            this.setState(this.valsToPreviewData(this.props.tokenLabel, {
+                allValid: validities.every(function(validity) {
+                    return validity
+                }),
                 validities: validities,
-                vals: vals,
-                previewData: this.valsToPreviewData(allValid,
-                    this.props.tokenLabel, vals)
-            })
+                vals: vals
+            }))
         },
         handleSubmit: function(e) {
             e.preventDefault()
@@ -133,6 +138,9 @@
                         {inputCompos}
                         <input type="submit" value="Create"
                             disabled={! this.state.allValid} />
+                        <p ref="overallError" className="error">
+                            {this.state.overallErrorMsg}
+                        </p>
                     </div>
                     <div className="create-form-preview">
                         <p>Preview</p>
@@ -144,7 +152,7 @@
     })
     var FormField = React.createClass({
         componentDidMount: function() {
-            this.withValidatableInput(this.validateElm)
+            this.withValidatableInput(this.validateAndPropagateElm)
         },
         shouldComponentUpdate: function(nextProps) {
             // both obj ref equality
@@ -153,7 +161,7 @@
         },
         componentDidUpdate: function() {
             // we could reset validatableInput val here, iff param changed, not if selData changed.
-            this.withValidatableInput(this.validateElm)
+            this.withValidatableInput(this.validateAndPropagateElm)
         },
 
         withValidatableInput: function(fn) {
@@ -165,7 +173,7 @@
             }
         },
 
-        validate: function(input, value) {
+        validateAndPropagate: function(input, value) {
             // radios don't have validate fn
             var isValid = ! this.props.param.validate
                 || this.props.param.validate(value)
@@ -176,11 +184,11 @@
                 value
             )
         },
-        validateElm: function(input) {
-            this.validate(input, input.value)
+        validateAndPropagateElm: function(input) {
+            this.validateAndPropagate(input, input.value)
         },
         handleChange: function(e) {
-            this.validateElm(e.target)
+            this.validateAndPropagateElm(e.target)
         },
 
         render: function() {
@@ -210,7 +218,7 @@
                             <FormFieldDroppable
                                 param={this.props.param}
                                 selData={this.props.selData}
-                                onValidate={this.validate} />
+                                onValidateAndPropagate={this.validateAndPropagate} />
                     } else if (typeof param.validate === 'function') {
                         inputCompo = <input type="text"
                             onChange={this.handleChange}
@@ -234,22 +242,24 @@
             }
         },
         componentDidMount: function() {
-            this.validate()
+            this.validateAndPropagate()
         },
         componentDidUpdate: function() {
-            this.validate()
+            this.validateAndPropagate()
         },
-        validate: function() {
-            this.props.onValidate(this.getDOMNode(), this.state.droppedData)
+        validateAndPropagate: function() {
+            this.props.onValidateAndPropagate(this.getDOMNode(), this.state.droppedData)
         },
         handlePasteCompo: function(e) {
             if (! this.props.selData) {
                 return
             }
             this.setState({
-                droppedData: this.props.selData
+                // need to clone so selData can be used multiple times
+                //     in parent's previewData, without having its .ui overridden.
+                droppedData: Object.create(this.props.selData)
             })
-            this.validate()
+            this.validateAndPropagate()
         },
         render: function() {
             return <div onClick={this.handlePasteCompo}
