@@ -56,7 +56,11 @@
                     var origFocus = document.activeElement
                     input.focus() // ff requires it to change seln
                     input.setSelectionRange.apply(input, range)
-                    origFocus.focus()
+                    try {
+                        origFocus.focus()
+                    } catch(e) {
+                        // ie doesn't support focusing on svg elm. do nothing.
+                    }
                 })(this.refs.pattern.getDOMNode(), this.props.patternSel)
             }
 
