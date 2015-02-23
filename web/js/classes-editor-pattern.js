@@ -327,7 +327,7 @@
         shouldComponentUpdate: function() {
             // never re-render already rendered cells in palette
             // always re-render in fields and preview
-            if (this.props.cellIndexInPalette === 'number'
+            if (typeof this.props.cellIndexInPalette !== 'number'
                 && this.props.data) {
                 return false
             }
