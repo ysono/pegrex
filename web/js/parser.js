@@ -925,8 +925,6 @@ if (typeof module !== 'undefined' && require.main === module) {
                 items.push(builders.charSetAnyOtherChar())
             }
 
-            // custom char set can contain predefined char set.
-            // max level of nesting is 1.
             var toggleInclusive = {
                 'Any Other Char': function(inclusive, aoc) {
                     aoc.inclusive = ! inclusive
@@ -941,7 +939,8 @@ if (typeof module !== 'undefined' && require.main === module) {
                     })
                 },
                 'Set of Chars': function(inclusive, s) {
-                    // nested set is a predefined set.
+                    // custom char set can contain nested predefined char set.
+                    // max level of nesting is 1.
                     var flipped = inclusive === s.inclusive
                     s.inclusive = flipped
                     s.possibilities.forEach(function(p) {
