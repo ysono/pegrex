@@ -26,39 +26,37 @@
     }
 
     // TODO
-    // 'Set of Chars': 'charSet',
     // 'Look-Forward': 'assertionLF',
     // Quantified, Quantifier, Group,
 
-    // the keys of createInfo are referred to as `tokenLabel`s and don't have
-    //     to match a component `type` given by the parser. E.g. pre-defined
-    //     `Set of Chars` is created differently from custom `Set of Chars`.
-    var createInfo = {
-        'Line Boundary': {
+    // `tokenLabel`s don't have to match a component `type` given by the parser.
+    //     E.g. pre-defined `Set of Chars` is created differently from
+    //         custom `Set of Chars`.
+    var createInfoList = [
+        {
+            tokenLabel: 'Specific Char',
             params: [
                 {
-                    label: 'At',
-                    choices: {
-                        'Beginning': '^',
-                        'End': '$'
+                    label: 'Character',
+                    validate: function(val) {
+                        try {
+                            var term = parseOneTerm(val)
+                            return term.type === 'Specific Char'
+                        } catch(e) {
+                            return false
+                        }
                     }
                 }
             ],
-            create: simpleCreator('assertionLB')
-        },
-        'Word Boundary': {
-            params: [
-                {
-                    label: 'At a boundary',
-                    choices: {
-                        'Yes': '\\b',
-                        'No': '\\B'
-                    }
-                }
-            ],
-            create: simpleCreator('assertionWB')
-        },
-        'Range of Chars': {
+            create: function(vals) {
+                return parseOneTerm(vals[0])
+            }
+        },{
+            tokenLabel: 'Any Char',
+            params: [],
+            create: simpleCreator('anyChar')
+        },{
+            tokenLabel: 'Range of Chars',
             params: [
                 {
                     label: 'From',
@@ -72,8 +70,8 @@
                 }
             ],
             create: simpleCreator('charSetRange')
-        },
-        'Set of Chars': {
+        },{
+            tokenLabel: 'Set of Chars',
             params: [
                 {
                     label: 'Inclusive',
@@ -93,8 +91,8 @@
                 var items = vals.slice(1)
                 return parser.yy.b.charSet(inclusive, items)
             }
-        },
-        'Pre-Defined Set of Chars': {
+        },{
+            tokenLabel: 'Pre-Defined Set of Chars',
             params: [
                 {
                     label: 'Selection',
@@ -109,38 +107,46 @@
                 }
             ],
             create: simpleCreator('charSetPreDefn')
-        },
-        'Any Char': {
-            params: [],
-            create: simpleCreator('anyChar')
-        },
-        'Specific Char': {
+        },{
+            tokenLabel: 'Line Boundary',
             params: [
                 {
-                    label: 'Character',
-                    validate: function(val) {
-                        try {
-                            var term = parseOneTerm(val)
-                            return term.type === 'Specific Char'
-                        } catch(e) {
-                            return false
-                        }
+                    label: 'At',
+                    choices: {
+                        'Beginning': '^',
+                        'End': '$'
                     }
                 }
             ],
-            create: function(vals) {
-                return parseOneTerm(vals[0])
-            }
+            create: simpleCreator('assertionLB')
+        },{
+            tokenLabel: 'Word Boundary',
+            params: [
+                {
+                    label: 'At a boundary',
+                    choices: {
+                        'Yes': '\\b',
+                        'No': '\\B'
+                    }
+                }
+            ],
+            create: simpleCreator('assertionWB')
         }
-    }
-    tokenCreator.tokenLabels = Object.keys(createInfo)
+    ]
+    var createInfoMap = createInfoList.reduce(function(map, createInfo) {
+        map[createInfo.tokenLabel] = createInfo
+        return map
+    }, {})
+    tokenCreator.tokenLabels = createInfoList.map(function(createInfo) {
+        return createInfo.tokenLabel
+    })
     tokenCreator.getParams = function(tokenLabel) {
-        return createInfo[tokenLabel].params
+        return createInfoMap[tokenLabel].params
     }
     tokenCreator.create = function(tokenLabel, vals) {
         var data
         try {
-            data = createInfo[tokenLabel].create(vals)
+            data = createInfoMap[tokenLabel].create(vals)
             data.textLoc = [0, 1] // so that the whole thing is always selectable
             // not calling `surfaceData.addUiData`. Do it just before rendering.
             return data

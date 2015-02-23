@@ -306,7 +306,8 @@
             var minNumCells = 5
             var datasInPalette = this.props.datasInPalette
             var cells = Array.apply(null, {
-                    length: Math.max(minNumCells, datasInPalette.length)
+                    // +1 so there is always an empty cell
+                    length: Math.max(minNumCells, datasInPalette.length + 1)
                 })
                 .map(function(foo, i) {
                     return <Cell
