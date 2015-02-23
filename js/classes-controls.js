@@ -44,7 +44,7 @@
                     // isPatternValid could be internalized in Texts class,
                     //     but keeping it consistent with isFlagsValid.
                 flags, isFlagsValid
-                (hash), historyCount
+                (hash), historyCount, rememberHistoryCount
                     // Synced with pattern and flags, hash is treated as if a state.
                 patternSel
                 patternEditorMode
@@ -136,7 +136,11 @@
             var parts = hashUtil.parse()
             var newState = this.prepStateForTextsChange(parts)
             if (newState) {
-                newState.historyCount = 0
+                if (this.state.rememberHistoryCount) {
+                    newState.rememberHistoryCount = false
+                } else {
+                    newState.historyCount = 0
+                }
                 this.setState(newState)
             }
         },
@@ -229,6 +233,7 @@
         },
         handlePatternEditorUndo: function() {
             this.setState({
+                rememberHistoryCount: true,
                 historyCount: this.state.historyCount - 1
             })
             window.history.back()

@@ -378,11 +378,7 @@
 
                 // disj's neighborArrows ...
                 data.roots[0].ui.neighborArrows.forEach(function(arrow) {
-                    if (arrow.fromLeft) {
-                        // debugger
-                        // TODO add on neighborArrows
-                        // arrow.textLoc = [0,0]
-                    } else if (arrow.toRight) {
+                    if (arrow.toRight) {
                         // remove markers from those funneling into the right terminus
                         arrow.usesMarkerEnd = false
                     }
