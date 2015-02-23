@@ -180,6 +180,14 @@ html, body {
     border: solid 1px;
     overflow: auto;
 }
+.pelette-cell {
+    position: relative;
+}
+.pelette-cell>.del {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+}
 
 /* svg common */
 
