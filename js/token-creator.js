@@ -7,9 +7,10 @@
         }
     }
 
-    function typeValidator(type) {
+    function typeValidator(types) {
         return function(compoData) {
-            return compoData && compoData.type === type
+            return compoData &&
+                ([].concat(types)).indexOf(compoData.type) >= 0
         }
     }
 
@@ -71,6 +72,27 @@
                 }
             ],
             create: simpleCreator('charSetRange')
+        },
+        'Set of Chars': {
+            params: [
+                {
+                    label: 'Inclusive',
+                    choices: {
+                        'Yes': 'true',
+                        'No': 'false'
+                    }
+                },
+                {
+                    label: 'Possibility',
+                    paramType: 'component',
+                    validate: typeValidator(['Specific Char', 'Range of Chars'])
+                }
+            ],
+            create: function(vals) {
+                var inclusive = vals[0] === 'true'
+                var items = vals.slice(1)
+                return parser.yy.b.charSet(inclusive, items)
+            }
         },
         'Pre-Defined Set of Chars': {
             params: [
@@ -145,8 +167,17 @@
             if (data.predefined) {
                 return data.predefined.display
             }
-            return '[' + ']'
-            // TODO
+            return '['
+                + (data.inclusive ? '' : '^')
+                + data.possibilities
+                    .filter(function(p) {
+                        return p.type !== 'Any Other Char'
+                    })
+                    .map(function(p) {
+                        return toStringers[p.type](p)
+                    })
+                    .join(',')
+                + ']'
         },
         'Any Char': function() {
             return '.'
