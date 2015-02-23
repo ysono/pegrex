@@ -879,10 +879,15 @@ if (typeof module !== 'undefined' && require.main === module) {
             }
         },
 
+        charSetAnyOtherChar: function() {
+            return {
+                type: 'Any Other Char'
+            }
+        },
         charSetRange: function(from, to) {
             if (from.display > to.display) {
                 throw new Error(
-                    'In a Range of Chars, the beginning char must be <= to the ending char.'
+                    'The beginning char must be <= to the ending char.'
                     + ' Invalid pair: ' + [from.display, to.display])
             }
             return {
@@ -894,7 +899,6 @@ if (typeof module !== 'undefined' && require.main === module) {
             }
         },
         charSet: function(inclusive, items, predefined) {
-
             // TODO test: start with ^, ^-, -^, -, [\d-x]
             
             // convert some of 'Specific Char's to 'Range of Chars'.
@@ -908,9 +912,7 @@ if (typeof module !== 'undefined' && require.main === module) {
                     && prevItem.type === 'Specific Char'
                     && nextItem && nextItem.type === 'Specific Char') {
 
-                    replacement = builders.charSetRange(
-                        prevItem,
-                        nextItem)
+                    replacement = builders.charSetRange(prevItem, nextItem)
                     items.splice(i - 1, 3, replacement)
 
                     // On the next loop, want i to point to 2 elms ahead of replacement.
@@ -919,9 +921,16 @@ if (typeof module !== 'undefined' && require.main === module) {
                 }
             }
 
-            // predefined can contain {specific char, char range}
-            // custom can contain {specific char, char range, predefined char set}
+            if (! inclusive) {
+                items.push(builders.charSetAnyOtherChar())
+            }
+
+            // custom char set can contain predefined char set.
+            // max level of nesting is 1.
             var toggleInclusive = {
+                'Any Other Char': function(inclusive, aoc) {
+                    aoc.inclusive = ! inclusive
+                },
                 'Specific Char': function(inclusive, sc) {
                     sc.inclusive = inclusive
                 },

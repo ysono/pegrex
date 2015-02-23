@@ -214,6 +214,14 @@
                     onLeftEdge,
                     onRightEdge
                 ],
+                textLoc: (function(pTextLoc) {
+                    if (pTextLoc[0] === pTextLoc[1]) {
+                        // eg parent is an empty alt
+                        return pTextLoc
+                    }
+                    // eg parent is an empty char set
+                    return [pTextLoc[0] + 1, pTextLoc[0] + 1]
+                })(parentData.textLoc),
                 fromLeft: true,
                 toRight: true
             }]
@@ -335,9 +343,15 @@
 
         Result is
         data ~= {
-            etc: ... // non-ui data may be modified
-            someSingleChild: // assigned e.g. by calling setUiByType
-            someArrayOfChildren: // assigned e.g. by calling setUiWithChildren
+            etc: ... // direct children of `data` are _never_ modified.
+                Only `data.ui` is assigned.
+                This keeps the assining of UI data idempotent.
+                Hence `addUiData` can be applied multiple times to cloned
+                (Object.create) copies of the same parser output to produce
+                different environment-dependent ui data (e.g. pos and surfaceDim).
+            childOrChildren:  ... // If there are any child or children, their
+                `.ui` are also assigned. Usually this is done by recursively
+                calling setUiByType or setUiWithChildren, respectively.
             ui: {
                 dim: [n,n]
                 etc: ...
@@ -405,10 +419,6 @@
                 var pad = {x: [30,30], y: [10,10]}
                 var hrH = 30
 
-                // modifying parser output here!!
-                data.alternatives = data.alternatives.filter(function(alt) {
-                    return alt.terms.length
-                })
                 var ui = setUiWithChildren(
                     data,
                     pad,
@@ -417,7 +427,6 @@
                     hrH
                 )
                 ui.stroke = 'none'
-                ui.fill = 'none'
 
                 var hrY = hrH / 2
                 ui.fillers.forEach(function(hr) {
@@ -449,7 +458,8 @@
                 return ui
             },
             'Alternative': function() {
-                var pad = {x: [0,0], y: [0,0]}
+                var padV = surfaceData.selectableArrowHeight / 2
+                var pad = {x: [6,6], y: [padV,padV]}
                 var arrowW = 25
                 var ui = setUiWithChildren(
                     data,
@@ -683,7 +693,7 @@
                 }
             },
             'Assertion': function() {
-                var ui = setUiWithTextBlockOnly([data.assertion], data)
+                var ui = setUiWithTextBlockOnly(data.assertion.split(' '), data)
                 ui.stroke = '#f9f374'
                 ui.fill = data.atWb === false ? surfaceData.fillForNegative : null
                 return ui
@@ -737,54 +747,29 @@
                     'y'
                 )
                 ui.stroke = '#b7a'
-
-                if (! data.inclusive) {
-                    ;(function() {
-                        // Add the 'Any Other' block
-                        var tb = {
-                            // no type --> rendered by `boxedClass` class
-                            type: undefined,
-                            inclusive: true
-                        }
-                        var tbUi = setUiWithTextBlockOnly([
-                            'Any', 'Other'
-                        ], tb)
-                        tbUi.pos = [
-                            (ui.dim[0] - tbUi.dim[0]) / 2,
-                            ui.dim[1] - pad.y[1] + intraMargin
-                        ]
-                        tbUi.stroke = '#888'
-                        tbUi.strokeW = 1
-
-                        // looks like 'Other' is short enough that we don't have to readjust parent ui width
-                        ui.dim[1] += (intraMargin + tbUi.dim[1])
-
-                        // modifying parser output here!!
-                        // Adding the compo to `data.possibilities`
-                        //     rather than to `data.ui.textBlocks`
-                        //     for the convenience of creating neighborArrows
-                        //     and for not having to add a prop for `surfaceData.getChildVal`
-                        data.possibilities.push(tb)
-                    })()
-                }
+                
+                data.possibilities.forEach(function(p) {
+                    // make nested sets transparent to avoid hiding parent's neighborArrows
+                    if (p.type === 'Set of Chars') {
+                        p.ui.fill = 'none'
+                    }
+                })
 
                 addNeighborArrows(data)
                 ui.neighborArrows.forEach(function(arrow) {
+                    var child
                     arrow.usesMarkerEnd = false // b/c it looks cluttered
 
-                    if (typeof arrow.childIndex === 'number') {
-                        var child = data.possibilities[arrow.childIndex]
+                    if (arrow.fromLeft && arrow.toRight) {
+                        // This is an inclusive Set of Chars with zero possibilities.
+                        // Nothing to do.
+                    } else {
+                        child = data.possibilities[arrow.childIndex]
                         // don't cross out line going to nested set, which is a predefined set
-                        //     b/c it has "Any Other" as whitelist
-                        if (child && child.type !== 'Set of Chars') {
+                        //     b/c it can have "Any Other" as whitelist
+                        if (child.type !== 'Set of Chars') {
                             arrow.usesMarkerMid = ! child.inclusive
                         }
-                    } else {
-                        // arrow.childIndex is undefined
-                        // b/c there is only one arrow
-                        // b/c there is zero child
-                        // b/c this is an inclusive Set of Chars with zero possibilities.
-                        // Then, nothing to do.
                     }
                 })
 
@@ -830,6 +815,13 @@
                     [data.type, 'To #' + data.number], data)
                 ui.stroke = '#f9f374'
                 ui.fill = data.isBack ? null : surfaceData.fillForNegative
+                return ui
+            },
+            'Any Other Char': function() {
+                var ui = setUiWithTextBlockOnly(['Any', 'Other'], data)
+                ui.stroke = '#888'
+                ui.strokeW = 1
+                ui.fill = data.inclusive === false ? surfaceData.fillForNegative : null
                 return ui
             }
         } // end of var map

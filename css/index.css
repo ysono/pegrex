@@ -16,7 +16,7 @@ html, body {
 }
 .visuals-parent {
     position: relative;
-    min-height: 6rem; /* enough to cover pattern-editor-mode-picker and flags-editor */
+    min-height: 7.5rem; /* enough to cover pattern-editor-mode-picker and flags-editor */
 }
 
 /* under texts-parent */
@@ -122,9 +122,10 @@ html, body {
 .create-form>* {
     margin: 0 .6rem;
 }
+
 .create-form-inputs {
     position: relative;
-    width: 12rem;
+    width: 14rem;
     border: dotted 1px;
 }
 .create-form-inputs>[type="submit"] {
@@ -143,14 +144,16 @@ html, body {
     color: #fff;
 }
 .create-form-inputs .component-droppable {
-    min-width: 6rem;
-    min-height: 1rem;
     border: solid 1px;
     cursor: pointer;
 }
-.create-form-inputs .component-droppable:hover {
+.create-form-inputs .component-droppable:not(.error):hover {
     background-color: #eee;
 }
+.create-form-inputs p {
+    margin: 4px;
+}
+
 .create-form-preview {
     width: 14rem;
     border: dotted 1px;
@@ -165,7 +168,7 @@ html, body {
 
 .palette {
     display: flex;
-    justify-content: center;
+    justify-content: center; /* note, center messes up scrolling */
     overflow-x: auto;
 }
 .palette>* {

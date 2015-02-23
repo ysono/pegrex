@@ -167,10 +167,9 @@
 
         /*
             below: UI-scoped types that do not come from parser
-            They use makeSelectableProto so as to not disrupt underlying elements'
-                selectability.
         */
 
+        // make textBlock selectable to prevent flicker of mouse cursor
         'textBlock': React.createClass(makeSelectableProto({
             render: function() {
                 var data = this.props.data
