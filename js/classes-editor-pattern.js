@@ -26,6 +26,12 @@
             var selText = tokenCreator.toString(selData)
             this.props.onSelect(selText)
         },
+        handlePaletteDelete: function(index) {
+            this.state.datasInPalette.splice(index, 1)
+            this.setState({
+                datasInPalette: this.state.datasInPalette
+            })
+        },
         render: function() {
             var self = this
             var createOptions = tokenCreator.tokenLabels.map(function(tokenLabel) {
@@ -42,7 +48,8 @@
                 <div className="pattern-editor">
                     <Palette
                         datasInPalette={this.state.datasInPalette}
-                        onSelect={this.handlePaletteSelect} />
+                        onSelect={this.handlePaletteSelect}
+                        onDelete={this.handlePaletteDelete} />
                     <div className="create-parent">
                         <fieldset className="create-type">
                             <legend>Create</legend>
@@ -279,18 +286,24 @@
     var Palette = React.createClass({
         getInitialState: function() {
             return {
-                selectedCellIndex: null // TODO what if cell is deleted? use a unique id.
+                selCellIndex: null
             }
         },
         handleSelect: function(cell) {
             this.setState({
-                selectedCellIndex: cell.props.cellIndexInPalette
+                selCellIndex: cell.props.cellIndex
             })
             this.props.onSelect(cell.props.data)
         },
+        handleDelete: function(cell) {
+            this.setState({
+                selCellIndex: null
+            })
+            this.props.onDelete(cell.cellIndex)
+        },
         render: function() {
             var self = this
-            var minNumCells = 10
+            var minNumCells = 5
             var datasInPalette = this.props.datasInPalette
             var cells = Array.apply(null, {
                     length: Math.max(minNumCells, datasInPalette.length)
@@ -298,9 +311,10 @@
                 .map(function(foo, i) {
                     return <Cell
                         data={datasInPalette[i]}
-                        isSelected={self.state.selectedCellIndex === i}
+                        isSelected={self.state.selCellIndex === i}
                         onSelect={self.handleSelect}
-                        cellIndexInPalette={i} key={i} />
+                        onDelete={self.handleDelete}
+                        cellIndex={i} key={i} />
                 })
             return (
                 <div className="palette">
@@ -313,9 +327,12 @@
     /*
         in props ~= {
             data: required
-            isSelected: required iff in palette
-            onSelect: required iff in palette
-            cellIndexInPalette: required iff in palette
+
+            // below are required iff in palette
+            isSelected
+            cellIndex
+            onSelect
+            onDelete
         }
     */
     var Cell = React.createClass({
@@ -324,32 +341,35 @@
                 this.props.onSelect(this)
             }
         },
-        shouldComponentUpdate: function() {
-            // never re-render already rendered cells in palette
-            // always re-render in fields and preview
-            if (typeof this.props.cellIndexInPalette !== 'number'
-                && this.props.data) {
-                return false
+        handleDelete: function() {
+            if (this.props.onDelete) {
+                this.props.onDelete(this)
             }
-            return true
         },
         render: function() {
-            // add ui data individually per cell b/c otherwise `data.ui` will
-            // get overridden if the compo is embedded (as a field for another compo).
             var data = this.props.data
             if (data) {
+                // add ui data individually per cell b/c otherwise `data.ui` will
+                // get overridden if the compo is embedded (as a field for another compo).
                 data = Object.create(data)
                 surfaceData.addUiData(data)
             }
+            var deleteBtn = this.props.onDelete
+                ? <button onClick={this.handleDelete} className="del">X</button>
+                : null
             return data
-                ? React.createElement(reactClasses.Surface, {
-                    tree: data,
-                    onSelect: this.handleSelect,
-                    patternSel: this.props.isSelected
-                        ? [0, Infinity] // so that the whole thing is always selected
-                        : null,
-                    patternEditorMode: 'select'
-                })
+                ? (
+                    <div className="pelette-cell">
+                        <reactClasses.Surface
+                            tree={data}
+                            onSelect={this.handleSelect}
+                            patternSel={this.props.isSelected
+                                ? [0, Infinity]
+                                : null}
+                            patternEditorMode="select" />
+                        {deleteBtn}
+                    </div>
+                )
                 : (
                     <div className="empty-surface" />
                 )
