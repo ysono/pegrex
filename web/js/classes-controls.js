@@ -34,13 +34,22 @@
     }
     
     var Controls = React.createClass({
-        /* props of state:
-            pattern, tree, isPatternValid,
-            flags, isFlagsValid,
-            patternSel, hash,
-            patternEditorMode
-            patternEditorText,
-            historyCount */
+        /*
+            props of state:
+                pattern, tree, isPatternValid
+                    // Last 2 are always derived from pattern.
+                    // It's useful for Surface to receive tree as a prop
+                    //     and not be tied to pattern.
+                    //     See how Cell class in Palette uses Surface.
+                    // isPatternValid could be internalized in Texts class,
+                    //     but keeping it consistent with isFlagsValid.
+                flags, isFlagsValid
+                (hash), historyCount
+                    // Synced with pattern and flags, hash is treated as if a state.
+                patternSel
+                patternEditorMode
+                patternEditorText
+        */
         getInitialState: function() {
             var state = hashUtil.parse() || {
                 pattern: '(?:)',
@@ -58,7 +67,7 @@
 
         /* helpers for hash */
 
-        /* modifies `newState`. caller must call setState after updateHash. */
+        /* modifies arg `newState`. caller must call setState after updateHash. */
         updateHash: function(newState, rememberPrev) {
             newState.pattern = typeof newState.pattern === 'string'
                 ? newState.pattern : this.state.pattern

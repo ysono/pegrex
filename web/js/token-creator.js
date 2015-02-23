@@ -120,8 +120,7 @@
         try {
             data = createInfo[tokenLabel].create(vals)
             data.textLoc = [0, 1] // so that the whole thing is always selectable
-            // not using `surfaceData.addUiData`, b/c `data.ui` will get
-            //     overridden if embedded.
+            // not calling `surfaceData.addUiData`. Do it just before rendering.
             return data
         } catch(e) {
             return e

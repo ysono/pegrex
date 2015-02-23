@@ -40,6 +40,9 @@
             })
             return (
                 <div className="pattern-editor">
+                    <Palette
+                        datasInPalette={this.state.datasInPalette}
+                        onSelect={this.handlePaletteSelect} />
                     <div className="create-parent">
                         <fieldset className="create-type">
                             <legend>Create</legend>
@@ -50,9 +53,6 @@
                             selData={this.state.selData}
                             onSubmit={this.handleCreate} />
                     </div>
-                    <Palette
-                        datasInPalette={this.state.datasInPalette}
-                        onSelect={this.handlePaletteSelect} />
                 </div>
             )
         }
@@ -62,12 +62,12 @@
         /* props of state:
             params, allValid, validities, vals, previewData, overallErrorMsg */
         getInitialState: function() {
-            return this.typeToInitState(this.props.tokenLabel)
+            return this.tokenLabelToInitState(this.props.tokenLabel)
         },
         componentWillReceiveProps: function(nextProps) {
             if (this.props.tokenLabel !== nextProps.tokenLabel) {
                 this.setState(
-                    this.typeToInitState(nextProps.tokenLabel))
+                    this.tokenLabelToInitState(nextProps.tokenLabel))
             }
         },
 
@@ -85,7 +85,7 @@
             }
             return state
         },
-        typeToInitState: function(tokenLabel) {
+        tokenLabelToInitState: function(tokenLabel) {
             if (! tokenLabel) {
                 return {
                     allValid: false
@@ -117,7 +117,7 @@
             }))
         },
         handleSubmit: function(e) {
-            (e.preventDefault) ? e.preventDefault() : e.returnValue = false
+            e.preventDefault()
             this.props.onSubmit(this.state.previewData)
         },
 
@@ -137,7 +137,7 @@
                     <div className="create-form-inputs">
                         {inputCompos}
                         <input type="submit" value="Create"
-                            disabled={! this.state.allValid} />
+                            disabled={! this.state.previewData} />
                         <p ref="overallError" className="error">
                             {this.state.overallErrorMsg}
                         </p>
@@ -266,9 +266,12 @@
             this.validateAndPropagate()
         },
         render: function() {
+            var content = this.state.droppedData
+                ? <Cell data={this.state.droppedData} />
+                : <p className="error">Click on palette to select; click here to drop.</p>
             return <div onClick={this.handlePasteCompo}
                     className="component-droppable">
-                    <Cell data={this.state.droppedData} />
+                    {content}
                 </div>
         }
     })
