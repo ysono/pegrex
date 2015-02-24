@@ -69,13 +69,25 @@
         /* props of state:
             params, allValid, validities, vals, previewData, overallErrorMsg */
         getInitialState: function() {
-            return this.tokenLabelToInitState(this.props.tokenLabel)
+            return {
+                params: [],
+            }
         },
         componentWillReceiveProps: function(nextProps) {
-            if (this.props.tokenLabel !== nextProps.tokenLabel) {
-                this.setState(
-                    this.tokenLabelToInitState(nextProps.tokenLabel))
+            if (this.props.tokenLabel === nextProps.tokenLabel) {
+                return
             }
+            // reset state to a clean slate for the tokenLabel
+            var params = tokenCreator.getParams(nextProps.tokenLabel)
+            var newState = this.valsToPreviewData(nextProps.tokenLabel, {
+                params: params,
+                allValid: ! params.length,
+                validities: params.map(function() {
+                    return false
+                }), // make dense so allValid can be correctly derived.
+                vals: [] // sparse array
+            })
+            this.setState(newState)
         },
 
         valsToPreviewData: function(tokenLabel, state) {
@@ -92,37 +104,20 @@
             }
             return state
         },
-        tokenLabelToInitState: function(tokenLabel) {
-            if (! tokenLabel) {
-                return {
-                    allValid: false
-                }
-            }
-            var params = tokenCreator.getParams(tokenLabel)
-            return this.valsToPreviewData(tokenLabel, {
-                params: params,
-                allValid: ! params.length,
-                validities: params.map(function() {
-                    return false
-                }),
-                vals: []
+
+        handleChange: function(fieldProps, elm) {
+            var isValid = ! fieldProps.param.validate
+                || fieldProps.param.validate(elm.value)
+            elm.classList.toggle('error', ! isValid)
+                // not ie does not read second arg as a flag
+
+            this.state.validities[fieldProps.paramIndex] = isValid
+            this.state.vals[fieldProps.paramIndex] = elm.value
+            this.state.allValid = this.state.validities.every(function(validity) {
+                return validity
             })
-        },
-
-        handleChange: function(fieldProps, isValid, val) {
-            var paramIndex =fieldProps.paramIndex
-            var validities = this.state.validities
-            var vals = this.state.vals
-            validities[paramIndex] = isValid
-            vals[paramIndex] = val
-
-            this.setState(this.valsToPreviewData(this.props.tokenLabel, {
-                allValid: validities.every(function(validity) {
-                    return validity
-                }),
-                validities: validities,
-                vals: vals
-            }))
+            this.setState(
+                this.valsToPreviewData(this.props.tokenLabel, this.state) )
         },
         handleSubmit: function(e) {
             e.preventDefault()
@@ -133,9 +128,13 @@
             var self = this
             var inputCompos = this.state.params &&
                 this.state.params.map(function(param, i) {
-                    var clazz = param.mult ? FormFieldMult : FormField
+                    // TODO mult
+                    var clazz = param.choices ? FormFieldRadio
+                        : param.paramType === 'component' ? FormFieldDroppable
+                        : FormFieldText
                     return React.createElement(clazz, {
                         param: param,
+                        val: self.state.vals[i] || param.default || '',
                         selData: self.props.selData,
                         onChange: self.handleChange,
                         paramIndex: i,
@@ -150,8 +149,7 @@
                         <input type="submit" value="Create"
                             disabled={! this.state.previewData} />
                         <p ref="overallError" className="error">
-                            {this.state.overallErrorMsg}
-                        </p>
+                            {this.state.overallErrorMsg}</p>
                     </div>
                     <div className="create-form-preview">
                         <p>Preview</p>
@@ -161,138 +159,111 @@
             )
         }
     })
-    var FormFieldMult = React.createClass({
-        getInitialState: function() {
-            return {
-                singleVals: [''], // set the initial count of mult fields: 1
-                singleValidities: []
-            }
-        },
-        handleChange: function(singleFieldProps, isValid, val) {
-            var multIndex = singleFieldProps.multIndex
-            this.state.singleValidities[multIndex] = isValid
-            this.state.singleVals[multIndex] = val
-            this.setState({
-                singleValidities: this.state.singleValidities,
-                singleVals: this.state.singleVals
-            })
-            var allValid = this.state.singleValidities.every(function(validity) {
-                return validity
-            })
-            this.props.onChange(
-                this.props,
-                allValid,
-                this.state.singleVals)
-        },
-        render: function() {
-            var self = this
-            var fields = this.state.singleVals.map(function(val, i) {
-                return <div key={i}>
-                        <FormField
-                            param={self.props.param}
-                            selData={self.props.selData}
-                            onChange={self.handleChange}
-                            multIndex={i} />
-                        <button type="button" className="mult">minus</button>
-                    </div>
-            })
-            return (
-                <div>
-                    <button type="button" className="mult">+</button>
-                    {fields}
-                </div>
-            )
-        }
-    })
-    var FormField = React.createClass({
+    // var FormFieldMult = React.createClass({
+    //     getInitialState: function() {
+    //         return {
+    //             singleVals: [null], // set the initial count of mult fields: 1
+    //             singleValidities: []
+    //         }
+    //     },
+    //     handleChange: function(singleFieldProps, isValid, val) {
+    //         var multIndex = singleFieldProps.multIndex
+    //         this.state.singleValidities[multIndex] = isValid
+    //         this.state.singleVals[multIndex] = val
+
+    //         this.setState({
+    //             singleValidities: this.state.singleValidities,
+    //             singleVals: this.state.singleVals
+    //         })
+
+    //         var allValid = this.state.singleValidities.every(function(validity) {
+    //             return validity
+    //         })
+    //         this.props.onChange(
+    //             this.props,
+    //             allValid,
+    //             this.state.singleVals)
+    //     },
+    //     handleAddMult: function() {
+    //         this.setState({
+    //             singleVals: this.state.singleVals.concat(null)
+    //         })
+    //     },
+    //     handleDelMult: function(e) {
+    //         var multIndex = Number(e.target.getAttribute('data-mult-index'))
+    //         console.info('deleting mult index', multIndex)
+    //         this.state.singleValidities.splice(multIndex, 1)
+    //         this.state.singleVals.splice(multIndex, 1)
+    //         this.setState({
+    //             singleValidities: this.state.singleValidities,
+    //             singleVals: this.state.singleVals
+    //         })
+    //         // e.props.multIndex
+    //     },
+    //     render: function() {
+    //         var self = this
+    //         var fields = this.state.singleVals.map(function(foo, i) {
+    //             return <div key={i}>
+    //                     <FormField
+    //                         param={self.props.param}
+    //                         paramIndex={self.props.paramIndex}
+    //                         selData={self.props.selData}
+    //                         onChange={self.handleChange}
+    //                         multIndex={i} />
+    //                     <button type="button" className="mult"
+    //                         onClick={self.handleDelMult}
+    //                         data-mult-index={i}>-</button>
+    //                 </div>
+    //         })
+    //         debugger
+    //         return <div>
+    //                 <button type="button" className="mult"
+    //                     onClick={this.handleAddMult}>+</button>
+    //                 {fields}
+    //             </div>
+    //     }
+    // })
+    var FormFieldText = React.createClass({
         componentDidMount: function() {
-            this.withValidatableInput(function(input) {
-                input.value = this.props.param.default || ''
-            }.bind(this))
-            this.withValidatableInput(this.validateAndPropagateElm)
-        },
-        shouldComponentUpdate: function(nextProps) {
-            // both obj ref equality
-            return this.props.param !== nextProps.param
-                || this.props.selData !== nextProps.selData
-        },
-        componentDidUpdate: function() {
-            // we could reset validatableInput val here, iff param changed, not if selData changed.
-            this.withValidatableInput(this.validateAndPropagateElm)
-        },
-
-        withValidatableInput: function(fn) {
-            // radios won't have a validatableInput
-            var validatableInput = this.refs.validatableInput
-                && this.refs.validatableInput.getDOMNode()
-            if (validatableInput) {
-                fn(validatableInput)
-            }
-        },
-
-        validateAndPropagate: function(input, value) {
-            // radios don't have validate fn
-            var isValid = ! this.props.param.validate
-                || this.props.param.validate(value)
-            try {
-                input.classList.toggle('error', ! isValid)
-            } catch(e) {
-                // screw you ie i ain't polyfilling
-            }
-            this.props.onChange(
-                this.props,
-                isValid,
-                value)
-        },
-        validateAndPropagateElm: function(input) {
-            this.validateAndPropagate(input, input.value)
+            this.handleChange()
         },
         handleChange: function(e) {
-            this.validateAndPropagateElm(e.target)
+            var input = e ? e.target : this.refs.input.getDOMNode()
+            this.props.onChange(this.props, input)
         },
-
+        render: function() {
+            return <label>
+                <span>{this.props.param.label}</span>
+                <input type="text"
+                    value={this.props.val}
+                    onChange={this.handleChange}
+                    ref="input" />
+            </label>
+        }
+    })
+    var FormFieldRadio = React.createClass({
+        handleChange: function(e) {
+            var input = e.target
+            this.props.onChange(this.props, input)
+        },
         render: function() {
             var self = this
-            var param = this.props.param
-            var inputCompo = (function() {
-                if (param.choices) {
-                    return Object.keys(param.choices).map(function(choiceLabel) {
-                        var choiceVal = param.choices[choiceLabel]
-                        return (
-                            <label key={choiceVal}>
-                                <input type="radio"
-                                    name={'pattern-editor-create-param-' + self.props.paramIndex}
-                                    value={choiceVal}
-                                    onChange={self.handleChange} />
-                                <span>{choiceLabel}</span>
-                            </label>
-                        )
-                    })
-                } else {
-                    if (typeof param.validate !== 'function') {
-                        console.error('param doesn\'t have a validator', param)
-                    } else {
-                        if (param.paramType === 'component') {
-                            // mosue nav?
-                            return <FormFieldDroppable
-                                param={param}
-                                selData={self.props.selData}
-                                onValidateAndPropagate={self.validateAndPropagate} />
-                        } else if (typeof param.validate === 'function') {
-                            return <input type="text"
-                                onChange={self.handleChange}
-                                ref="validatableInput" />
-                        }
-                    }
-                    
-                }
-            })()
-            return (
-                <label>
-                    <span>{param.label}</span>
-                    {inputCompo}
+            var choices = this.props.param.choices
+            var radios = Object.keys(choices).map(function(choiceLabel) {
+                var choiceVal = choices[choiceLabel]
+                return <label key={choiceVal}>
+                    <input type="radio"
+                        name={'pattern-editor-create-param-' + self.props.paramIndex}
+                        value={choiceVal}
+                        checked={self.props.val === choiceVal}
+                        onChange={self.handleChange} />
+                    <span>{choiceLabel}</span>
                 </label>
-            )
+            })
+            return <label>
+                <span>{this.props.param.label}</span>
+                {radios}
+            </label>
         }
     })
     var FormFieldDroppable = React.createClass({
@@ -301,34 +272,27 @@
                 droppedData: null
             }
         },
-        componentDidMount: function() {
-            this.validateAndPropagate()
-        },
-        componentDidUpdate: function() {
-            this.validateAndPropagate()
-        },
-        validateAndPropagate: function() {
-            this.props.onValidateAndPropagate(this.getDOMNode(), this.state.droppedData)
-        },
         handlePasteCompo: function(e) {
-            if (! this.props.selData) {
-                return
-            }
+            // mocking <input>. All that matters is `value` prop.
+            var input = this.refs.input.getDOMNode()
+            input.value = this.props.selData
             this.setState({
-                // need to clone so selData can be used multiple times
-                //     in parent's previewData, without having its .ui overridden.
-                droppedData: Object.create(this.props.selData)
+                droppedData: this.props.selData
             })
-            this.validateAndPropagate()
+            this.props.onChange(this.props, input)
         },
         render: function() {
-            var content = this.state.droppedData
+            var pastedCompo = this.state.droppedData
                 ? <Cell data={this.state.droppedData} />
                 : <p className="error">Click on palette to copy; click here to paste.</p>
-            return <div onClick={this.handlePasteCompo}
-                    className="component-droppable">
-                    {content}
+            return <label>
+                <span>{this.props.param.label}</span>
+                <div onClick={this.handlePasteCompo}
+                    className="component-droppable"
+                    ref="input">
+                    {pastedCompo}
                 </div>
+            </label>
         }
     })
 
@@ -366,11 +330,9 @@
                         onDelete={self.handleDelete}
                         cellIndex={i} key={i} />
                 })
-            return (
-                <div className="palette">
+            return <div className="palette">
                     {cells}
                 </div>
-            )
         }
     })
 
@@ -420,9 +382,7 @@
                         {deleteBtn}
                     </div>
                 )
-                : (
-                    <div className="empty-surface" />
-                )
+                : <div className="empty-surface" />
         }
     })
 

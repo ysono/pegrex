@@ -8,9 +8,10 @@
     }
 
     function parserTypeValidator(types) {
+        types = [].concat(types)
         return function(compoData) {
             return compoData &&
-                ([].concat(types)).indexOf(compoData.type) >= 0
+                types.indexOf(compoData.type) >= 0
         }
     }
     function numValidator(isInfAllowed) {
