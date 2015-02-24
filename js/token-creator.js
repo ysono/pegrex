@@ -7,10 +7,18 @@
         }
     }
 
-    function typeValidator(types) {
+    function parserTypeValidator(types) {
         return function(compoData) {
             return compoData &&
                 ([].concat(types)).indexOf(compoData.type) >= 0
+        }
+    }
+    function numValidator(isInfAllowed) {
+        return function(val) {
+            return (isInfAllowed && val === 'Infinity')
+                || (
+                    ! isNaN(val) && ! isNaN(Number(val)) && ! isNaN(parseInt(val))
+                )
         }
     }
 
@@ -27,7 +35,7 @@
 
     // TODO
     // 'Look-Forward': 'assertionLF',
-    // Quantified, Quantifier, Group,
+    // Group,
 
     // `tokenLabel`s don't have to match a component `type` given by the parser.
     //     E.g. pre-defined `Set of Chars` is created differently from
@@ -61,12 +69,11 @@
                 {
                     label: 'From',
                     paramType: 'component',
-                    validate: typeValidator('Specific Char')
-                },
-                {
+                    validate: parserTypeValidator('Specific Char')
+                },{
                     label: 'To',
                     paramType: 'component',
-                    validate: typeValidator('Specific Char')
+                    validate: parserTypeValidator('Specific Char')
                 }
             ],
             create: simpleCreator('charSetRange')
@@ -79,11 +86,10 @@
                         'Yes': 'true',
                         'No': 'false'
                     }
-                },
-                {
+                },{
                     label: 'Possibility',
                     paramType: 'component',
-                    validate: typeValidator(['Specific Char', 'Range of Chars'])
+                    validate: parserTypeValidator(['Specific Char', 'Range of Chars'])
                 }
             ],
             create: function(vals) {
@@ -107,6 +113,43 @@
                 }
             ],
             create: simpleCreator('charSetPreDefn')
+        },{
+            tokenLabel: 'Repetition',
+            params: [
+                {
+                    label: 'Component being repeated',
+                    paramType: 'component',
+                    validate: function(val) {
+                        if (! val) { return false }
+                        // has to be a term. not assertion, alt, disj, pattern.
+                        return ['Assertion', 'Grouped Assertion'].indexOf(val.type) < 0
+                    }
+                },{
+                    label: 'Minimal occurrence',
+                    validate: numValidator()
+                },{
+                    label: 'Maximal occurrence',
+                    validate: numValidator(true),
+                    default: 'Infinity'
+                },{
+                    label: 'Greedy',
+                    choices: {
+                        'Yes': 'true',
+                        'No': 'false'
+                    }
+                }
+            ],
+            create: function(vals) {
+                var qrStr = '{' + vals[1] + ','
+                    + (vals[2] === 'Infinity' ? '' : vals[2])
+                    + '}'
+                    + (vals[3] === 'true' ? '' : '?')
+                var qr = parser.yy.b.quantifier(qrStr)
+                qr.textLoc = [0,1]
+                var qd = parser.yy.b.quantified(vals[0], qr)
+                qd.qrStr = qrStr // save for use by toStringer later. Modifying parser output.
+                return qd
+            }
         },{
             tokenLabel: 'Line Boundary',
             params: [
@@ -151,6 +194,7 @@
             // not calling `surfaceData.addUiData`. Do it just before rendering.
             return data
         } catch(e) {
+            console.error(e.stack, e)
             return e
         }
     }
@@ -158,12 +202,11 @@
 
     // keys are parser `type`s.
     var toStringers = {
-        'Assertion': function(data) {
-            if (data.hasOwnProperty('atBeg')) {
-                return data.atBeg ? '^' : '$'
-            } else if (data.hasOwnProperty('atWb')) {
-                return '\\' + (data.atWb ? 'b' : 'B')
-            }
+        'Specific Char': function(data) {
+            return data.display
+        },
+        'Any Char': function() {
+            return '.'
         },
         'Range of Chars': function(data) {
             return data.range[0].display + '-'
@@ -185,12 +228,18 @@
                     .join(',')
                 + ']'
         },
-        'Any Char': function() {
-            return '.'
+        'Quantified': function(data) {
+            debugger
+            var t = toStringers[data.target.type](data.target)
+            return t + data.qrStr
         },
-        'Specific Char': function(data) {
-            return data.display
-        }
+        'Assertion': function(data) {
+            if (data.hasOwnProperty('atBeg')) {
+                return data.atBeg ? '^' : '$'
+            } else if (data.hasOwnProperty('atWb')) {
+                return '\\' + (data.atWb ? 'b' : 'B')
+            }
+        },
     }
     tokenCreator.toString = function(data) {
         return toStringers[data.type](data)

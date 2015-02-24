@@ -159,6 +159,9 @@
     })
     var FormField = React.createClass({
         componentDidMount: function() {
+            this.withValidatableInput(function(input) {
+                input.value = this.props.param.default || ''
+            }.bind(this))
             this.withValidatableInput(this.validateAndPropagateElm)
         },
         shouldComponentUpdate: function(nextProps) {
