@@ -109,7 +109,8 @@
             })
         },
 
-        handleChange: function(paramIndex, isValid, val) {
+        handleChange: function(fieldProps, isValid, val) {
+            var paramIndex =fieldProps.paramIndex
             var validities = this.state.validities
             var vals = this.state.vals
             validities[paramIndex] = isValid
@@ -132,11 +133,14 @@
             var self = this
             var inputCompos = this.state.params &&
                 this.state.params.map(function(param, i) {
-                    return <FormField
-                        param={param}
-                        selData={self.props.selData}
-                        onChange={self.handleChange}
-                        paramIndex={i} key={i} />
+                    var clazz = param.mult ? FormFieldMult : FormField
+                    return React.createElement(clazz, {
+                        param: param,
+                        selData: self.props.selData,
+                        onChange: self.handleChange,
+                        paramIndex: i,
+                        key: i
+                    })
                 })
             return (
                 <form onSubmit={this.handleSubmit}
@@ -154,6 +158,49 @@
                         <Cell data={this.state.previewData} />
                     </div>
                 </form>
+            )
+        }
+    })
+    var FormFieldMult = React.createClass({
+        getInitialState: function() {
+            return {
+                singleVals: [''], // set the initial count of mult fields: 1
+                singleValidities: []
+            }
+        },
+        handleChange: function(singleFieldProps, isValid, val) {
+            var multIndex = singleFieldProps.multIndex
+            this.state.singleValidities[multIndex] = isValid
+            this.state.singleVals[multIndex] = val
+            this.setState({
+                singleValidities: this.state.singleValidities,
+                singleVals: this.state.singleVals
+            })
+            var allValid = this.state.singleValidities.every(function(validity) {
+                return validity
+            })
+            this.props.onChange(
+                this.props,
+                allValid,
+                this.state.singleVals)
+        },
+        render: function() {
+            var self = this
+            var fields = this.state.singleVals.map(function(val, i) {
+                return <div key={i}>
+                        <FormField
+                            param={self.props.param}
+                            selData={self.props.selData}
+                            onChange={self.handleChange}
+                            multIndex={i} />
+                        <button type="button" className="mult">minus</button>
+                    </div>
+            })
+            return (
+                <div>
+                    <button type="button" className="mult">+</button>
+                    {fields}
+                </div>
             )
         }
     })
@@ -193,10 +240,9 @@
                 // screw you ie i ain't polyfilling
             }
             this.props.onChange(
-                this.props.paramIndex,
+                this.props,
                 isValid,
-                value
-            )
+                value)
         },
         validateAndPropagateElm: function(input) {
             this.validateAndPropagate(input, input.value)
@@ -208,39 +254,39 @@
         render: function() {
             var self = this
             var param = this.props.param
-            var inputCompo
-            if (param.choices) {
-                inputCompo = Object.keys(param.choices).map(function(choiceLabel) {
-                    var choiceVal = param.choices[choiceLabel]
-                    return (
-                        <label key={choiceVal}>
-                            <input type="radio"
-                                name={'pattern-editor-create-param-' + self.props.paramIndex}
-                                value={choiceVal}
-                                onChange={self.handleChange} />
-                            <span>{choiceLabel}</span>
-                        </label>
-                    )
-                })
-            } else {
-                if (typeof param.validate !== 'function') {
-                    console.error('param doesn\'t have a validator', param)
+            var inputCompo = (function() {
+                if (param.choices) {
+                    return Object.keys(param.choices).map(function(choiceLabel) {
+                        var choiceVal = param.choices[choiceLabel]
+                        return (
+                            <label key={choiceVal}>
+                                <input type="radio"
+                                    name={'pattern-editor-create-param-' + self.props.paramIndex}
+                                    value={choiceVal}
+                                    onChange={self.handleChange} />
+                                <span>{choiceLabel}</span>
+                            </label>
+                        )
+                    })
                 } else {
-                    if (param.paramType === 'component') {
-                        // mosue nav?
-                        inputCompo =
-                            <FormFieldDroppable
-                                param={this.props.param}
-                                selData={this.props.selData}
-                                onValidateAndPropagate={this.validateAndPropagate} />
-                    } else if (typeof param.validate === 'function') {
-                        inputCompo = <input type="text"
-                            onChange={this.handleChange}
-                            ref="validatableInput" />
+                    if (typeof param.validate !== 'function') {
+                        console.error('param doesn\'t have a validator', param)
+                    } else {
+                        if (param.paramType === 'component') {
+                            // mosue nav?
+                            return <FormFieldDroppable
+                                param={param}
+                                selData={self.props.selData}
+                                onValidateAndPropagate={self.validateAndPropagate} />
+                        } else if (typeof param.validate === 'function') {
+                            return <input type="text"
+                                onChange={self.handleChange}
+                                ref="validatableInput" />
+                        }
                     }
+                    
                 }
-                
-            }
+            })()
             return (
                 <label>
                     <span>{param.label}</span>
@@ -278,7 +324,7 @@
         render: function() {
             var content = this.state.droppedData
                 ? <Cell data={this.state.droppedData} />
-                : <p className="error">Click on palette to select; click here to drop.</p>
+                : <p className="error">Click on palette to copy; click here to paste.</p>
             return <div onClick={this.handlePasteCompo}
                     className="component-droppable">
                     {content}

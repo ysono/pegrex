@@ -38,8 +38,6 @@
     // Group,
 
     // `tokenLabel`s don't have to match a component `type` given by the parser.
-    //     E.g. pre-defined `Set of Chars` is created differently from
-    //         custom `Set of Chars`.
     var createInfoList = [
         {
             tokenLabel: 'Specific Char',
@@ -88,13 +86,14 @@
                     }
                 },{
                     label: 'Possibility',
+                    mult: true,
                     paramType: 'component',
                     validate: parserTypeValidator(['Specific Char', 'Range of Chars'])
                 }
             ],
             create: function(vals) {
                 var inclusive = vals[0] === 'true'
-                var items = vals.slice(1)
+                var items = vals[1].slice() // clone so 'Any Other Char' isn't persisted in form states
                 return parser.yy.b.charSet(inclusive, items)
             }
         },{
@@ -194,7 +193,7 @@
             // not calling `surfaceData.addUiData`. Do it just before rendering.
             return data
         } catch(e) {
-            console.error(e.stack, e)
+            console.error(e.stack)
             return e
         }
     }
@@ -229,7 +228,6 @@
                 + ']'
         },
         'Quantified': function(data) {
-            debugger
             var t = toStringers[data.target.type](data.target)
             return t + data.qrStr
         },
