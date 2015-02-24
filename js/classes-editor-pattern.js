@@ -348,7 +348,7 @@
             this.setState({
                 selCellIndex: null
             })
-            this.props.onDelete(cell.cellIndex)
+            this.props.onDelete(cell.props.cellIndex)
         },
         render: function() {
             var self = this
