@@ -546,7 +546,7 @@
                     ]
                     qUi.pos = [
                         (myW - qUi.dim[0]) / 2,
-                        Math.max(maxChildY, qUi.dim[1]) + intraMargin
+                        Math.max(maxChildY, qUi.dim[1]+ intraMargin) + intraMargin
                         // Reason for Math.max: want the quantifier to be
                         // below the mid vertical point b/c otherwise
                         // e.g. `x*` is so narrow horizontally that

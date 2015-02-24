@@ -153,6 +153,11 @@ html, body {
 .create-form-inputs p {
     margin: 4px;
 }
+.create-form-inputs .mult {
+    float: right;
+    position: relative;
+    top: -1rem;
+}
 
 .create-form-preview {
     width: 14rem;
