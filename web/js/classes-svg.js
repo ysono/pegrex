@@ -59,7 +59,7 @@
             // don't make the root elm, the <g>, selectable b/c then hover and click
             //     of its transparent children propagate.
             hiliteElm.classList.toggle('selectable', amSelectable)
-                // not ie does not read second arg as a flag
+                // note: ie does not read second arg as a flag
             hiliteElm[(amSelectable ? 'add' : 'remove') + 'EventListener']
                 ('click', this.handleSelect)
 
