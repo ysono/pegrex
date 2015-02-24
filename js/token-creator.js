@@ -84,7 +84,8 @@
                     choices: {
                         'Yes': 'true',
                         'No': 'false'
-                    }
+                    },
+                    default: 'true'
                 },{
                     label: 'Possibility',
                     mult: true,
@@ -121,8 +122,9 @@
                     paramType: 'component',
                     validate: function(val) {
                         if (! val) { return false }
-                        // has to be a term. not assertion, alt, disj, pattern.
-                        return ['Assertion', 'Grouped Assertion'].indexOf(val.type) < 0
+                        // has to be a term. is there a better way to get the list?
+                        return ['Assertion', 'Grouped Assertion', 'Range of Chars', 'Any Other Char']
+                            .indexOf(val.type) < 0
                     }
                 },{
                     label: 'Minimal occurrence',
@@ -136,7 +138,8 @@
                     choices: {
                         'Yes': 'true',
                         'No': 'false'
-                    }
+                    },
+                    default: 'true'
                 }
             ],
             create: function(vals) {
@@ -191,7 +194,6 @@
         try {
             data = createInfoMap[tokenLabel].create(vals)
             data.textLoc = [0, 1] // so that the whole thing is always selectable
-            // not calling `surfaceData.addUiData`. Do it just before rendering.
             return data
         } catch(e) {
             console.error(e.stack)

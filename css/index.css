@@ -136,7 +136,7 @@ html, body {
 .create-form-inputs>* {
     display: block;
 }
-.create-form-inputs>label>* {
+.create-form-inputs label {
     display: block;
 }
 .create-form-inputs .error {
@@ -157,6 +157,14 @@ html, body {
     float: right;
     position: relative;
     top: -1rem;
+
+    /* below: mock a button */
+    width: 1rem;
+    height: 1rem;
+    text-align: center;
+    border: solid 1px;
+    background-color: white;
+    cursor: pointer;
 }
 
 .create-form-preview {

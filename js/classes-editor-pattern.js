@@ -1,6 +1,19 @@
 ;(function(reactClasses) {
     'use strict'
 
+    /*
+    important! keep all tokens in state in their pure form output by creator.
+    always clone (Object.create is sufficient) before modifying it.
+
+    The states in question are (in the chronological order of population)
+        previewData, datasInPalette[i], selData
+    The operations in question are
+        drawing by Cell -> adds `.ui`
+        previewData passes selData as a parameter towards creating previewData
+            -> anything can happen, including adding of `.ui` and
+                changes to non-`.ui`, such as toggling of `.inclusive`
+    */
+
     var PatternEditor = React.createClass({
         getInitialState: function() {
             return {
@@ -79,45 +92,50 @@
             }
             // reset state to a clean slate for the tokenLabel
             var params = tokenCreator.getParams(nextProps.tokenLabel)
-            var newState = this.valsToPreviewData(nextProps.tokenLabel, {
+            this.compileVals(nextProps.tokenLabel, {
                 params: params,
-                allValid: ! params.length,
                 validities: params.map(function() {
                     return false
-                }), // make dense so allValid can be correctly derived.
+                }), // make dense array so allValid can be correctly derived.
                 vals: [] // sparse array
             })
+        },
+
+        compileVals: function(tokenLabel, newState) {
+            newState.allValid = newState.validities.every(function(validity) {
+                return validity
+            })
+            var data = newState.allValid
+                ? tokenCreator.create(tokenLabel, newState.vals)
+                : null
+            if (data instanceof Error) {
+                newState.previewData = null
+                newState.overallErrorMsg = data.message
+                    || 'The inputs are not valid as a whole.'
+            } else {
+                newState.previewData = data
+                newState.overallErrorMsg = null
+            }
             this.setState(newState)
         },
 
-        valsToPreviewData: function(tokenLabel, state) {
-            var data = state.allValid
-                ? tokenCreator.create(tokenLabel, state.vals)
-                : null
-            if (data instanceof Error) {
-                state.previewData = null
-                state.overallErrorMsg = data.message
-                    || 'The inputs are not valid as a whole.'
-            } else {
-                state.previewData = data
-                state.overallErrorMsg = null
-            }
-            return state
-        },
-
-        handleChange: function(fieldProps, elm) {
+        validateSingle: function(fieldProps, elm) {
             var isValid = ! fieldProps.param.validate
                 || fieldProps.param.validate(elm.value)
             elm.classList.toggle('error', ! isValid)
-                // not ie does not read second arg as a flag
-
+                // note: ie does not read second arg as a flag
+            return isValid
+        },
+        handleSingleChange: function(fieldProps, elm) {
+            var isValid = this.validateSingle(fieldProps, elm)
             this.state.validities[fieldProps.paramIndex] = isValid
             this.state.vals[fieldProps.paramIndex] = elm.value
-            this.state.allValid = this.state.validities.every(function(validity) {
-                return validity
-            })
-            this.setState(
-                this.valsToPreviewData(this.props.tokenLabel, this.state) )
+            this.compileVals(this.props.tokenLabel, this.state)
+        },
+        handleMultChange: function(paramIndex, singleVals, isValid) {
+            this.state.validities[paramIndex] = isValid
+            this.state.vals[paramIndex] = singleVals
+            this.compileVals(this.props.tokenLabel, this.state)
         },
         handleSubmit: function(e) {
             e.preventDefault()
@@ -126,26 +144,48 @@
 
         render: function() {
             var self = this
-            var inputCompos = this.state.params &&
+            var fieldCompos = this.state.params &&
                 this.state.params.map(function(param, i) {
-                    // TODO mult
-                    var clazz = param.choices ? FormFieldRadio
+                    var fieldClass = param.choices ? FormFieldRadio
                         : param.paramType === 'component' ? FormFieldDroppable
                         : FormFieldText
-                    return React.createElement(clazz, {
+                    var fieldPropsProto = {
                         param: param,
-                        val: self.state.vals[i] || param.default || '',
                         selData: self.props.selData,
-                        onChange: self.handleChange,
-                        paramIndex: i,
-                        key: i
-                    })
+                        paramIndex: i
+                    }
+                    var fieldPropValDefault = param.default || ''
+
+                    /* required in props: val, onChange */
+                    function getSingleFieldCompo(props) {
+                        Object.keys(fieldPropsProto).forEach(function(key) {
+                            props[key] = fieldPropsProto[key]
+                        })
+                        props.val = props.val || fieldPropValDefault
+                        return React.createElement(fieldClass, props)
+                    }
+
+                    var fieldCompo = param.mult
+                        ? <FormFieldMult
+                            getSingleFieldCompo={getSingleFieldCompo}
+                            validateSingle={self.validateSingle}
+                            onMultChange={self.handleMultChange}
+                            paramIndex={i} />
+                        : getSingleFieldCompo({
+                            val: self.state.vals[i],
+                            onChange: self.handleSingleChange,
+                            key: i
+                        })
+                    return <label key={i}>
+                        <span>{param.label}</span>
+                        {fieldCompo}
+                    </label>
                 })
             return (
                 <form onSubmit={this.handleSubmit}
                     className="create-form">
                     <div className="create-form-inputs">
-                        {inputCompos}
+                        {fieldCompos}
                         <input type="submit" value="Create"
                             disabled={! this.state.previewData} />
                         <p ref="overallError" className="error">
@@ -159,70 +199,76 @@
             )
         }
     })
-    // var FormFieldMult = React.createClass({
-    //     getInitialState: function() {
-    //         return {
-    //             singleVals: [null], // set the initial count of mult fields: 1
-    //             singleValidities: []
-    //         }
-    //     },
-    //     handleChange: function(singleFieldProps, isValid, val) {
-    //         var multIndex = singleFieldProps.multIndex
-    //         this.state.singleValidities[multIndex] = isValid
-    //         this.state.singleVals[multIndex] = val
+    var FormFieldMult = React.createClass({
+        getInitialState: function() {
+            return this.getResetState()
+        },
+        componentWillReceiveProps: function(nextProps) {
+            if (this.props.param !== nextProps.param) {
+                this.setState(this.getResetState())
+            }
+        },
+        getResetState: function() {
+            return {
+                singleVals: [null], // size is 1. val null is not significant.
+                singleValidities: [false], // is false ok as the default?
+                allValid: false
+            }
+        },
 
-    //         this.setState({
-    //             singleValidities: this.state.singleValidities,
-    //             singleVals: this.state.singleVals
-    //         })
+        validateAll: function() {
+            var allValid = this.state.singleValidities.every(function(validity) {
+                return validity
+            })
+            this.setState({
+                singleVals: this.state.singleVals,
+                singleValidities: this.state.singleValidities,
+                allValid: allValid
+            })
+            this.props.onMultChange(this.props.paramIndex,
+                this.state.singleVals, allValid)
+        },
+        handleSingleChange: function(fieldProps, input) {
+            var isValid = this.props.validateSingle(fieldProps, input)
+            this.state.singleVals[fieldProps.multIndex] = input.value
+            this.state.singleValidities[fieldProps.multIndex] = isValid
+            this.validateAll()
+        },
+        handleAddMult: function() {
+            this.state.singleVals.push(null)
+            this.state.singleValidities.push(false)
+            this.validateAll()
+        },
+        handleDelMult: function(multIndex) {
+            this.state.singleVals.splice(multIndex, 1)
+            this.state.singleValidities.splice(multIndex, 1)
+            this.validateAll()
+        },
 
-    //         var allValid = this.state.singleValidities.every(function(validity) {
-    //             return validity
-    //         })
-    //         this.props.onChange(
-    //             this.props,
-    //             allValid,
-    //             this.state.singleVals)
-    //     },
-    //     handleAddMult: function() {
-    //         this.setState({
-    //             singleVals: this.state.singleVals.concat(null)
-    //         })
-    //     },
-    //     handleDelMult: function(e) {
-    //         var multIndex = Number(e.target.getAttribute('data-mult-index'))
-    //         console.info('deleting mult index', multIndex)
-    //         this.state.singleValidities.splice(multIndex, 1)
-    //         this.state.singleVals.splice(multIndex, 1)
-    //         this.setState({
-    //             singleValidities: this.state.singleValidities,
-    //             singleVals: this.state.singleVals
-    //         })
-    //         // e.props.multIndex
-    //     },
-    //     render: function() {
-    //         var self = this
-    //         var fields = this.state.singleVals.map(function(foo, i) {
-    //             return <div key={i}>
-    //                     <FormField
-    //                         param={self.props.param}
-    //                         paramIndex={self.props.paramIndex}
-    //                         selData={self.props.selData}
-    //                         onChange={self.handleChange}
-    //                         multIndex={i} />
-    //                     <button type="button" className="mult"
-    //                         onClick={self.handleDelMult}
-    //                         data-mult-index={i}>-</button>
-    //                 </div>
-    //         })
-    //         debugger
-    //         return <div>
-    //                 <button type="button" className="mult"
-    //                     onClick={this.handleAddMult}>+</button>
-    //                 {fields}
-    //             </div>
-    //     }
-    // })
+        render: function() {
+            var self = this
+            var singleFieldCompos = this.state.singleVals.map(function(singleVal, i) {
+                var singleFieldCompo = self.props.getSingleFieldCompo({
+                    val: singleVal,
+                    onChange: self.handleSingleChange,
+                    multIndex: i
+                })
+                return <span key={i}>
+                    {singleFieldCompo}
+                    <div className="mult"
+                        onClick={function() {
+                            self.handleDelMult(i)
+                        }}>-</div>
+                </span>
+            })
+            return <div>
+                <div className="mult" onClick={this.handleAddMult}>+</div>
+                {singleFieldCompos}
+            </div>
+            // for +/-, mock a button b/c a <botton> or <button type="button">
+            //     would be associated with its parent <label>
+        }
+    })
     var FormFieldText = React.createClass({
         componentDidMount: function() {
             this.handleChange()
@@ -232,13 +278,10 @@
             this.props.onChange(this.props, input)
         },
         render: function() {
-            return <label>
-                <span>{this.props.param.label}</span>
-                <input type="text"
-                    value={this.props.val}
-                    onChange={this.handleChange}
-                    ref="input" />
-            </label>
+            return <input type="text"
+                value={this.props.val}
+                onChange={this.handleChange}
+                ref="input" />
         }
     })
     var FormFieldRadio = React.createClass({
@@ -260,10 +303,9 @@
                     <span>{choiceLabel}</span>
                 </label>
             })
-            return <label>
-                <span>{this.props.param.label}</span>
+            return <div>
                 {radios}
-            </label>
+            </div>
         }
     })
     var FormFieldDroppable = React.createClass({
@@ -275,24 +317,22 @@
         handlePasteCompo: function(e) {
             // mocking <input>. All that matters is `value` prop.
             var input = this.refs.input.getDOMNode()
-            input.value = this.props.selData
+            // important to clone! do not taint selData.
+            input.value = Object.create(this.props.selData)
             this.setState({
                 droppedData: this.props.selData
             })
             this.props.onChange(this.props, input)
         },
         render: function() {
-            var pastedCompo = this.state.droppedData
+            var droppedCompo = this.state.droppedData
                 ? <Cell data={this.state.droppedData} />
                 : <p className="error">Click on palette to copy; click here to paste.</p>
-            return <label>
-                <span>{this.props.param.label}</span>
-                <div onClick={this.handlePasteCompo}
-                    className="component-droppable"
-                    ref="input">
-                    {pastedCompo}
-                </div>
-            </label>
+            return <div onClick={this.handlePasteCompo}
+                className="component-droppable"
+                ref="input">
+                {droppedCompo}
+            </div>
         }
     })
 
@@ -331,13 +371,13 @@
                         cellIndex={i} key={i} />
                 })
             return <div className="palette">
-                    {cells}
-                </div>
+                {cells}
+            </div>
         }
     })
 
     /*
-        in props ~= {
+        in props {
             data: required
 
             // below are required iff in palette
@@ -361,8 +401,8 @@
         render: function() {
             var data = this.props.data
             if (data) {
-                // add ui data individually per cell b/c otherwise `data.ui` will
-                // get overridden if the compo is embedded (as a field for another compo).
+                // important to clone! do not taint data, which can come from
+                //     (previewData or datasInPalette[i] or selData)
                 data = Object.create(data)
                 surfaceData.addUiData(data)
             }
