@@ -805,7 +805,7 @@ if (typeof module !== 'undefined' && require.main === module) {
             }
             if (result.min > result.max) {
                 throw new Error(
-                    'In a Quantifier, min must be <= to max. Invalid pair: '
+                    'Min must be <= to max. Invalid pair: '
                     + [result.min, result.max])
             }
             return result

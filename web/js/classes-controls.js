@@ -46,9 +46,12 @@
                 flags, isFlagsValid
                 (hash), historyCount, rememberHistoryCount
                     // Synced with pattern and flags, hash is treated as if a state.
-                patternSel
+                patternSel, selToken
+                    // these selections are separate concepts and hence not kept in sync.
+                    // patternSel is a sel of text range; latter targets an exact token.
+                    // selToken is for pasting into pattern editor, and it must be a
+                    //     parser token, not one of UI data objs.
                 patternEditorMode
-                patternEditorText
         */
         getInitialState: function() {
             var state = hashUtil.parse() || {
@@ -57,7 +60,6 @@
             }
             this.prepStateForTextsChange(state)
             state.patternEditorMode = 'select'
-            state.patternEditorText = null
             state.historyCount = 0
             return state
         },
@@ -106,7 +108,6 @@
             })
             parts.isFlagsValid = isValid
         },
-        /* for optimization, reads from state: pattern, flag */
         /* returns undefined if no texts change occurred. */
         prepStateForTextsChange: function(newState) {
             var didChange = false
@@ -115,6 +116,8 @@
             } else {
                 this.patternToTree(newState)
                 newState.patternSel = null // do not force cursor/selection to stay in the same location
+                newState.selToken = null // selToken doesn't need to be cleared if it's on palette,
+                    // but not sure if it's easy to figure this out.
                 didChange = true
             }
             if (this.state && this.state.flags === newState.flags) {
@@ -131,7 +134,6 @@
 
         /* events from hash */
 
-        /* sets in state: (pattern, tree, isPatternValid), (flags, isFlagsValid), patternSel */
         handleHashChange: function() {
             var parts = hashUtil.parse()
             var newState = this.prepStateForTextsChange(parts)
@@ -147,7 +149,6 @@
 
         /* events from texts */
 
-        /* sets in state: (pattern, tree, isPatternValid), (flags, isFlagsValid), patternSel, hash */
         handleTextsChange: function(parts) {
             var newState = this.prepStateForTextsChange(parts)
             if (newState) {
@@ -155,7 +156,6 @@
                 this.setState(newState)
             }
         },
-        /* sets in state: patternSel */
         handleTextsSelect: function(patternSel) {
             this.setState({
                 patternSel: patternSel
@@ -164,37 +164,37 @@
 
         /* events from surface */
 
-        /* reads from state: patternEditorMode */
-        /* in select mode, sets in state: patternSel */
-        /* in add mode, reads in state: patternEditorText
-            sets in state: (pattern, tree, isPatternValid), patternSel, hash */
-        /* in delete mode, reads from state: pattern
-            sets in state: (pattern, tree, isPatternValid), patternSel, hash */
-        handleSurfaceSelect: function(textLoc) {
+        handleSurfaceSelect: function(data) {
+            var textLoc = data.textLoc
+
+            var mode = this.state.patternEditorMode
+            var newState
+
+            if (mode === 'select') {
+                newState = {
+                    patternSel: textLoc
+                }
+                if (data.type) {
+                    newState.selToken = data
+                }
+                this.setState(newState)
+                return
+            }
+
             function spliceStr(str, range, replacement) {
                 return str.slice(0, range[0])
                     + (replacement || '')
                     + str.slice(range[1])
             }
-
-            // handles all events. handle different types here.
-            var mode = this.state.patternEditorMode
-            if (mode === 'select') {
-                this.setState({
-                    patternSel: textLoc
-                })
-                return
-            }
-
-            var newState
+            var selTokenText
             if(mode === 'add') {
-                if (this.state.patternEditorText && textLoc) {
+                if (this.state.selToken && textLoc) {
+                    selTokenText = tokenCreator.toString(this.state.selToken)
                     newState = {
                         pattern: spliceStr(
-                            this.state.pattern, textLoc,
-                            this.state.patternEditorText),
+                            this.state.pattern, textLoc, selTokenText),
                         patternSel: [textLoc[0],
-                            textLoc[0] + this.state.patternEditorText.length]
+                            textLoc[0] + selTokenText.length]
                     }
                 }
             } else if(mode === 'delete') {
@@ -215,7 +215,6 @@
 
         /* events from editors */
 
-        /* sets in state: (flags, isFlagsValid), hash */
         handleFlagsEditorChange: function(flags) {
             var newState = {
                 flags: flags
@@ -225,7 +224,6 @@
             this.setState(newState)
         },
 
-        /* sets in state: patternEditorMode */
         handlePatternEditorModeChange: function(mode) {
             this.setState({
                 patternEditorMode: mode
@@ -239,10 +237,9 @@
             window.history.back()
         },
 
-        /* sets in state: patternEditorText */
-        handlePatternEditorSelect: function(text) {
+        handlePatternEditorSelect: function(selToken) {
             this.setState({
-                patternEditorText: text
+                selToken: selToken
             })
         },
 
@@ -263,6 +260,7 @@
                             tree={this.state.tree}
                             flags={this.state.flags}
                             patternSel={this.state.patternSel}
+                            selToken={this.state.selToken}
                             patternEditorMode={this.state.patternEditorMode}
                             onSelect={this.handleSurfaceSelect} />
                         <reactClasses.FlagsEditor
@@ -277,6 +275,7 @@
                     </div>
                     <div className="pattern-editor-parent">
                         <reactClasses.PatternEditor
+                            selToken={this.state.selToken}
                             onSelect={this.handlePatternEditorSelect} />
                     </div>
                 </div>

@@ -5,3 +5,5 @@ pushd gen
 cat yy.js >> parser.js
 cp parser.js ../web/js
 popd
+
+# todo complie lodash
