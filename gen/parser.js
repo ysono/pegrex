@@ -72,12 +72,12 @@
   }
 */
 var parser = (function(){
-var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,6],$V1=[1,20],$V2=[1,7,20],$V3=[1,7,16,17,18,20,21,22,24,28],$V4=[1,7,14,15,16,17,18,20,21,22,24,28],$V5=[1,28],$V6=[1,29],$V7=[1,30],$V8=[1,31],$V9=[1,32],$Va=[1,33],$Vb=[22,26,33],$Vc=[1,7,14,15,16,17,18,20,21,22,24,26,28,33];
+var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,6],$V1=[1,20],$V2=[1,7,20],$V3=[1,7,16,17,18,20,21,22,24,29],$V4=[1,7,14,15,16,17,18,20,21,22,24,29],$V5=[1,28],$V6=[1,29],$V7=[1,30],$V8=[1,31],$V9=[1,32],$Va=[1,33],$Vb=[1,7,14,15,16,17,18,20,21,22,24,27,29,34],$Vc=[22,27,34];
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"Pattern":3,"Disjunction":4,"Alternative_s":5,"Alternative":6,"ALT_DELIM":7,"Term_s":8,"TERM_EMPTY":9,"Term":10,"Assertion":11,"Atom":12,"Quantifier":13,"ATOM_QUANT_SHORT":14,"ATOM_QUANT_NUM":15,"ASSERTN_LB":16,"ASSERTN_WB":17,"TERM_GROUP_BEGIN":18,"ASSERTN_LOOKFWD_FLAG":19,"TERM_GROUP_END":20,"ATOM_CHAR_ANY":21,"ESCAPE_PREFIX":22,"AtomEscape":23,"CLASS_BEGIN":24,"ClassAtom_s":25,"CLASS_END":26,"ATOM_GROUP_NONCAPTR_BEGIN":27,"ATOM_ETC":28,"ATOM_ESCAPE_DECIMALS":29,"CharacterEscapeOrChracterClassEscape":30,"ClassAtom":31,"ClassEscape":32,"CLASS_ATOM_ETC":33,"CLASS_ATOM_ESCAPE_DECIMALS":34,"CLASS_ATOM_ESCAPE_BS":35,"ESC_DECI":36,"ESC_CTRL":37,"ESC_HEX4":38,"ESC_HEX2":39,"ESC_CLASS":40,"ESC_ETC":41,"$accept":0,"$end":1},
-terminals_: {2:"error",7:"ALT_DELIM",9:"TERM_EMPTY",14:"ATOM_QUANT_SHORT",15:"ATOM_QUANT_NUM",16:"ASSERTN_LB",17:"ASSERTN_WB",18:"TERM_GROUP_BEGIN",19:"ASSERTN_LOOKFWD_FLAG",20:"TERM_GROUP_END",21:"ATOM_CHAR_ANY",22:"ESCAPE_PREFIX",24:"CLASS_BEGIN",26:"CLASS_END",27:"ATOM_GROUP_NONCAPTR_BEGIN",28:"ATOM_ETC",29:"ATOM_ESCAPE_DECIMALS",33:"CLASS_ATOM_ETC",34:"CLASS_ATOM_ESCAPE_DECIMALS",35:"CLASS_ATOM_ESCAPE_BS",36:"ESC_DECI",37:"ESC_CTRL",38:"ESC_HEX4",39:"ESC_HEX2",40:"ESC_CLASS",41:"ESC_ETC"},
-productions_: [0,[3,1],[4,1],[5,1],[5,3],[6,1],[8,1],[8,2],[10,1],[10,1],[10,2],[13,1],[13,1],[11,1],[11,1],[11,4],[12,1],[12,2],[12,3],[12,3],[12,4],[12,1],[23,1],[23,1],[25,0],[25,2],[31,2],[31,1],[32,1],[32,1],[32,1],[30,1],[30,1],[30,1],[30,1],[30,1],[30,1]],
+symbols_: {"error":2,"Pattern":3,"Disjunction":4,"Alternative_s":5,"Alternative":6,"ALT_DELIM":7,"Term_s":8,"TERM_EMPTY":9,"Term":10,"Assertion":11,"Atom":12,"Quantifier":13,"ATOM_QUANT_SHORT":14,"ATOM_QUANT_NUM":15,"ASSERTN_LB":16,"ASSERTN_WB":17,"TERM_GROUP_BEGIN":18,"ASSERTN_LOOKFWD_FLAG":19,"TERM_GROUP_END":20,"ATOM_CHAR_ANY":21,"ESCAPE_PREFIX":22,"AtomEscape":23,"CLASS_BEGIN":24,"CLASS_EMPTY":25,"ClassAtom_s":26,"CLASS_END":27,"ATOM_GROUP_NONCAPTR_BEGIN":28,"ATOM_ETC":29,"ATOM_ESCAPE_DECIMALS":30,"CharacterEscapeOrChracterClassEscape":31,"ClassAtom":32,"ClassEscape":33,"CLASS_ATOM_ETC":34,"CLASS_ATOM_ESCAPE_DECIMALS":35,"CLASS_ATOM_ESCAPE_BS":36,"ESC_DECI":37,"ESC_CTRL":38,"ESC_HEX4":39,"ESC_HEX2":40,"ESC_CLASS":41,"ESC_ETC":42,"$accept":0,"$end":1},
+terminals_: {2:"error",7:"ALT_DELIM",9:"TERM_EMPTY",14:"ATOM_QUANT_SHORT",15:"ATOM_QUANT_NUM",16:"ASSERTN_LB",17:"ASSERTN_WB",18:"TERM_GROUP_BEGIN",19:"ASSERTN_LOOKFWD_FLAG",20:"TERM_GROUP_END",21:"ATOM_CHAR_ANY",22:"ESCAPE_PREFIX",24:"CLASS_BEGIN",25:"CLASS_EMPTY",27:"CLASS_END",28:"ATOM_GROUP_NONCAPTR_BEGIN",29:"ATOM_ETC",30:"ATOM_ESCAPE_DECIMALS",34:"CLASS_ATOM_ETC",35:"CLASS_ATOM_ESCAPE_DECIMALS",36:"CLASS_ATOM_ESCAPE_BS",37:"ESC_DECI",38:"ESC_CTRL",39:"ESC_HEX4",40:"ESC_HEX2",41:"ESC_CLASS",42:"ESC_ETC"},
+productions_: [0,[3,1],[4,1],[5,1],[5,3],[6,1],[8,1],[8,2],[10,1],[10,1],[10,2],[13,1],[13,1],[11,1],[11,1],[11,4],[12,1],[12,2],[12,4],[12,3],[12,4],[12,1],[23,1],[23,1],[26,0],[26,2],[32,2],[32,1],[33,1],[33,1],[33,1],[31,1],[31,1],[31,1],[31,1],[31,1],[31,1]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
@@ -125,7 +125,7 @@ case 17: case 26:
 this.$ = $$[$0];
 break;
 case 18:
-this.$ = yy.b.charSet($$[$0-2].length === 1, $$[$0-1])
+this.$ = yy.b.charSet(_$[$0-1], $$[$0-3].length === 1, $$[$0-1])
 break;
 case 19:
 this.$ = yy.b.group(true, $$[$0-1])
@@ -150,7 +150,7 @@ this.$ = yy.b.charSetPreDefn($$[$0])
 break;
 }
 },
-table: [{3:1,4:2,5:3,6:4,8:5,9:$V0},{1:[3]},{1:[2,1]},o($V1,[2,2],{7:[1,7]}),o($V2,[2,3]),o($V2,[2,5],{10:8,11:9,12:10,16:[1,11],17:[1,12],18:[1,13],21:[1,14],22:[1,15],24:[1,16],28:[1,17]}),o($V3,[2,6]),{6:18,8:5,9:$V0},o($V3,[2,7]),o($V3,[2,8]),o($V3,[2,9],{13:19,14:$V1,15:[1,21]}),o($V3,[2,13]),o($V3,[2,14]),{4:23,5:3,6:4,8:5,9:$V0,19:[1,22],27:[1,24]},o($V4,[2,16]),{23:25,29:[1,26],30:27,36:$V5,37:$V6,38:$V7,39:$V8,40:$V9,41:$Va},o($Vb,[2,24],{25:34}),o($V4,[2,21]),o($V2,[2,4]),o($V3,[2,10]),o($V3,[2,11]),o($V3,[2,12]),{4:35,5:3,6:4,8:5,9:$V0},{20:[1,36]},{4:37,5:3,6:4,8:5,9:$V0},o($V4,[2,17]),o($V4,[2,22]),o($V4,[2,23]),o($Vc,[2,31]),o($Vc,[2,32]),o($Vc,[2,33]),o($Vc,[2,34]),o($Vc,[2,35]),o($Vc,[2,36]),{22:[1,40],26:[1,38],31:39,33:[1,41]},{20:[1,42]},o($V4,[2,19]),{20:[1,43]},o($V4,[2,18]),o($Vb,[2,25]),{30:47,32:44,34:[1,45],35:[1,46],36:$V5,37:$V6,38:$V7,39:$V8,40:$V9,41:$Va},o($Vb,[2,27]),o($V3,[2,15]),o($V4,[2,20]),o($Vb,[2,26]),o($Vb,[2,28]),o($Vb,[2,29]),o($Vb,[2,30])],
+table: [{3:1,4:2,5:3,6:4,8:5,9:$V0},{1:[3]},{1:[2,1]},o($V1,[2,2],{7:[1,7]}),o($V2,[2,3]),o($V2,[2,5],{10:8,11:9,12:10,16:[1,11],17:[1,12],18:[1,13],21:[1,14],22:[1,15],24:[1,16],29:[1,17]}),o($V3,[2,6]),{6:18,8:5,9:$V0},o($V3,[2,7]),o($V3,[2,8]),o($V3,[2,9],{13:19,14:$V1,15:[1,21]}),o($V3,[2,13]),o($V3,[2,14]),{4:23,5:3,6:4,8:5,9:$V0,19:[1,22],28:[1,24]},o($V4,[2,16]),{23:25,30:[1,26],31:27,37:$V5,38:$V6,39:$V7,40:$V8,41:$V9,42:$Va},{25:[1,34]},o($V4,[2,21]),o($V2,[2,4]),o($V3,[2,10]),o($V3,[2,11]),o($V3,[2,12]),{4:35,5:3,6:4,8:5,9:$V0},{20:[1,36]},{4:37,5:3,6:4,8:5,9:$V0},o($V4,[2,17]),o($V4,[2,22]),o($V4,[2,23]),o($Vb,[2,31]),o($Vb,[2,32]),o($Vb,[2,33]),o($Vb,[2,34]),o($Vb,[2,35]),o($Vb,[2,36]),o($Vc,[2,24],{26:38}),{20:[1,39]},o($V4,[2,19]),{20:[1,40]},{22:[1,43],27:[1,41],32:42,34:[1,44]},o($V3,[2,15]),o($V4,[2,20]),o($V4,[2,18]),o($Vc,[2,25]),{31:48,33:45,35:[1,46],36:[1,47],37:$V5,38:$V6,39:$V7,40:$V8,41:$V9,42:$Va},o($Vc,[2,27]),o($Vc,[2,26]),o($Vc,[2,28]),o($Vc,[2,29]),o($Vc,[2,30])],
 defaultActions: {2:[2,1]},
 parseError: function parseError(str, hash) {
     if (hash.recoverable) {
@@ -644,7 +644,7 @@ case 8:this.begin('ALT_BEGIN'); this.unput(yy_.yytext); return
 break;
 case 9:this.begin('ALT_BEGIN'); return 19
 break;
-case 10:this.begin('ALT_BEGIN'); return 27
+case 10:this.begin('ALT_BEGIN'); return 28
 break;
 case 11:return 16
 break;
@@ -654,42 +654,44 @@ case 13:return 21
 break;
 case 14:this.begin('ESCAPED_IN_ATOM'); return 22
 break;
-case 15:this.begin('CLASS'); return 24
+case 15:this.begin('CLASS_BEGIN'); return 24
 break;
-case 16:return 28
+case 16:return 29
 break;
-case 17:this.popState(); return 29 /* parse later in grammar */
+case 17:this.popState(); return 30 /* parse later in grammar */
 break;
 case 18:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
 break;
-case 19:this.popState(); return 26
+case 19:this.popState(); this.begin('CLASS'); return 25
 break;
-case 20:this.begin('ESCAPED_IN_CLASS'); return 22
+case 20:this.popState(); return 27
 break;
-case 21:return 33
+case 21:this.begin('ESCAPED_IN_CLASS'); return 22
 break;
-case 22:this.popState(); return 34 /* parse later in grammar */
+case 22:return 34
 break;
-case 23:this.popState(); return 35
+case 23:this.popState(); return 35 /* parse later in grammar */
 break;
-case 24:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
+case 24:this.popState(); return 36
 break;
-case 25:this.popState(); return 36 /* contrary to ecma, allow `[0-9_]` */
+case 25:this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yy_.yytext); return
 break;
-case 26:this.popState(); return 37
+case 26:this.popState(); return 37 /* contrary to ecma, allow `[0-9_]` */
 break;
-case 27:this.popState(); return 39
+case 27:this.popState(); return 38
 break;
-case 28:this.popState(); return 38
+case 28:this.popState(); return 40
 break;
-case 29:this.popState(); return 40
+case 29:this.popState(); return 39
 break;
-case 30:this.popState(); return 41 /* an approx. ecma's defn is much more involved. */
+case 30:this.popState(); return 41
+break;
+case 31:this.popState(); return 42 /* an approx. ecma's defn is much more involved. */
 break;
 }
 },
-rules: [/^(?:.)/,/^(?:())/,/^(?:[)])/,/^(?:[|])/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[(])/,/^(?:[?])/,/^(?:.)/,/^(?:[=!])/,/^(?:[:])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:[\]])/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:[^cxu])/],
-conditions: {"ESCAPED_NONDECI":{"rules":[25,26,27,28,29,30],"inclusive":false},"ESCAPED_IN_CLASS":{"rules":[22,23,24],"inclusive":false},"CLASS":{"rules":[19,20,21],"inclusive":false},"ESCAPED_IN_ATOM":{"rules":[17,18],"inclusive":false},"TERM_GROUP_NONCAPTR":{"rules":[9,10],"inclusive":false},"TERM_GROUP":{"rules":[7,8],"inclusive":false},"TERM":{"rules":[2,3,4,5,6,11,12,13,14,15,16],"inclusive":false},"ALT_BEGIN":{"rules":[1],"inclusive":false},"INITIAL":{"rules":[0],"inclusive":true}}
+rules: [/^(?:.)/,/^(?:())/,/^(?:[)])/,/^(?:[|])/,/^(?:[*+?][?]?)/,/^(?:[{][0-9]+(?:[,][0-9]*)?[}][?]?)/,/^(?:[(])/,/^(?:[?])/,/^(?:.)/,/^(?:[=!])/,/^(?:[:])/,/^(?:[$^])/,/^(?:[\\][bB])/,/^(?:[\.])/,/^(?:[\\])/,/^(?:[\[][\^]?)/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:.)/,/^(?:())/,/^(?:[\]])/,/^(?:[\\])/,/^(?:.)/,/^(?:[0-9]+)/,/^(?:[b])/,/^(?:.)/,/^(?:[c][0-9A-Z_a-z])/,/^(?:[fnrtv])/,/^(?:[x][0-9A-Fa-f]{2})/,/^(?:[u][0-9A-Fa-f]{4})/,/^(?:[dDsSwW])/,/^(?:[^cxu])/],
+conditions: {"ESCAPED_NONDECI":{"rules":[26,27,28,29,30,31],"inclusive":false},"ESCAPED_IN_CLASS":{"rules":[23,24,25],"inclusive":false},"CLASS_BEGIN":{"rules":[19],"inclusive":false},"CLASS":{"rules":[20,21,22],"inclusive":false},"ESCAPED_IN_ATOM":{"rules":[17,18],"inclusive":false},"TERM_GROUP_NONCAPTR":{"rules":[9,10],"inclusive":false},"TERM_GROUP":{"rules":[7,8],"inclusive":false},"TERM":{"rules":[2,3,4,5,6,11,12,13,14,15,16],"inclusive":false},"ALT_BEGIN":{"rules":[1],"inclusive":false},"INITIAL":{"rules":[0],"inclusive":true}}
 });
 function popTillOutOf(lexer, state) {
     var st
@@ -898,7 +900,7 @@ if (typeof module !== 'undefined' && require.main === module) {
                     : undefined
             }
         },
-        charSet: function(inclusive, items, predefined) {
+        charSet: function(loc, inclusive, items, predefined) {
             // TODO test: start with ^, ^-, -^, -, [\d-x]
             
             // convert some of 'Specific Char's to 'Range of Chars'.
@@ -921,30 +923,24 @@ if (typeof module !== 'undefined' && require.main === module) {
                 }
             }
 
-            if (! inclusive) {
-                items.push(builders.charSetAnyOtherChar())
-            }
-
             var toggleInclusive = {
-                'Any Other Char': function(inclusive, aoc) {
-                    aoc.inclusive = ! inclusive
+                'Any Other Char': function() {
+                    // do nothing since we're not visually distinguishing in/excl.
                 },
-                'Specific Char': function(inclusive, sc) {
-                    sc.inclusive = inclusive
+                'Specific Char': function(parentIncl, sc) {
+                    sc.inclusive = parentIncl
                 },
-                'Range of Chars': function(inclusive, r) {
-                    r.inclusive = inclusive
+                'Range of Chars': function(parentIncl, r) {
+                    r.inclusive = parentIncl
                     r.range.forEach(function(sc) {
-                        toggleInclusive[sc.type](inclusive, sc)
+                        toggleInclusive[sc.type](parentIncl, sc)
                     })
                 },
-                'Set of Chars': function(inclusive, s) {
-                    // custom char set can contain nested predefined char set.
-                    // max level of nesting is 1.
-                    var flipped = inclusive === s.inclusive
-                    s.inclusive = flipped
+                'Set of Chars': function(parentIncl, s) {
+                    var myIncl = parentIncl === s.inclusive
+                    s.inclusive = myIncl
                     s.possibilities.forEach(function(p) {
-                        toggleInclusive[p.type](flipped, p)
+                        toggleInclusive[p.type](myIncl, p)
                     })
                 }
             }
@@ -952,12 +948,26 @@ if (typeof module !== 'undefined' && require.main === module) {
                 toggleInclusive[item.type](inclusive, item)
             })
 
-            return {
+            var result = {
                 type: 'Set of Chars',
                 inclusive: inclusive,
                 possibilities: items,
                 predefined: predefined
             }
+            if (! inclusive) {
+                if (loc) {
+                    builders.withLoc(loc, result)
+                }
+                result = {
+                    type: 'Set of Chars',
+                    inclusive: true,
+                    possibilities: [
+                        result,
+                        builders.charSetAnyOtherChar()
+                    ]
+                }
+            }
+            return result
         },
         charSetPreDefn: function(key) {
             var inclusive = key >= 'a'
@@ -1006,6 +1016,8 @@ if (typeof module !== 'undefined' && require.main === module) {
             }[key]
 
             return builders.charSet(
+                null, // if pre defn is inclusive, its nested Set of Chars
+                    // won't be selectable, and that's ok
                 inclusive,
                 possibilities,
                 {

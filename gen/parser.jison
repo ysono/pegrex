@@ -14,6 +14,7 @@ For discrepancies noted below, a real-life example can be found in
 %x TERM_GROUP_NONCAPTR
 %x ESCAPED_IN_ATOM
 %x CLASS
+%x CLASS_BEGIN
 %x ESCAPED_IN_CLASS
 %x ESCAPED_NONDECI
 
@@ -55,7 +56,7 @@ For discrepancies noted below, a real-life example can be found in
 /* Atom */
 <TERM>[\.]                  return 'ATOM_CHAR_ANY'
 <TERM>[\\]                  this.begin('ESCAPED_IN_ATOM'); return 'ESCAPE_PREFIX'
-<TERM>[\[][\^]?             this.begin('CLASS'); return 'CLASS_BEGIN'
+<TERM>[\[][\^]?             this.begin('CLASS_BEGIN'); return 'CLASS_BEGIN'
 
 /* PatternCharacter */
 /* ecma forbids ^ $ \ . * + ? ( ) [ ] { } | */
@@ -67,6 +68,8 @@ For discrepancies noted below, a real-life example can be found in
 <ESCAPED_IN_ATOM>.          this.popState(); this.begin('ESCAPED_NONDECI'); this.unput(yytext); return
 
 /* CharacterClass */
+/* CLASS_BEGIN state exists the same reason ALT_BEGIN does. */
+<CLASS_BEGIN>("")           this.popState(); this.begin('CLASS'); return 'CLASS_EMPTY'
 <CLASS>[\]]                 this.popState(); return 'CLASS_END'
 <CLASS>[\\]                 this.begin('ESCAPED_IN_CLASS'); return 'ESCAPE_PREFIX'
 <CLASS>.                    return 'CLASS_ATOM_ETC'
@@ -151,8 +154,8 @@ Atom
     : ATOM_CHAR_ANY
         {$$ = yy.b.anyChar()}
     | ESCAPE_PREFIX AtomEscape -> $2
-    | CLASS_BEGIN ClassAtom_s CLASS_END
-        {$$ = yy.b.charSet($1.length === 1, $2)}
+    | CLASS_BEGIN CLASS_EMPTY ClassAtom_s CLASS_END
+        {$$ = yy.b.charSet(@3, $1.length === 1, $3)}
     | TERM_GROUP_BEGIN Disjunction TERM_GROUP_END
         {$$ = yy.b.group(true, $2)}
     | TERM_GROUP_BEGIN ATOM_GROUP_NONCAPTR_BEGIN Disjunction TERM_GROUP_END

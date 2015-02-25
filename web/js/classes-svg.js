@@ -231,7 +231,6 @@
                 pos: optional [n,n], default [0,0]
                 isVertical: optional bool, default false
                 usesMarkerEnd: optional bool, default true
-                usesMarkerMid: optional bool, default false
                 stroke: optional, default surfaceData.neighborArrowColor
             }
         */
@@ -240,7 +239,6 @@
                 var data = this.props.data
                 var segms = data.d
                 var usesMarkerEnd = data.usesMarkerEnd !== false
-                var usesMarkerMid = data.usesMarkerMid
 
                 var txform = ['translate(', (data.pos || [0,0]), ')'].join('')
 
@@ -288,7 +286,6 @@
                     <g transform={txform}>
                         <path d={dStr}
                             markerEnd={usesMarkerEnd ? 'url(#marker-end-arrow)' : null}
-                            markerMid={usesMarkerMid ? 'url(#marker-mid-cross)' : null}
                             stroke={data.stroke || surfaceData.neighborArrowColor}
                             fill="none" />
                     </g>
@@ -361,13 +358,7 @@
                 </marker>'
                     .replace(/\{0\}/g, surfaceData.markerLen)
                     .replace(/\{1\}/g, surfaceData.neighborArrowColor)
-            var markerMidCross = '\
-                <marker id="marker-mid-cross" \
-                    viewBox="0 0 10 10" refX="5" refY="5" markerWidth="{0}" markerHeight="{0}" orient="auto" fill="none" stroke="{1}"> \
-                    <path d="M 0 0 L 10 10 L 5 5 L 10 0 L 0 10" /> \
-                </marker>'
-                    .replace(/\{0\}/g, surfaceData.markerLen)
-                    .replace(/\{1\}/g, surfaceData.neighborArrowColor)
+            
             var dropShadowTemplate = '\
                 <filter id="{0}" height="180%" width="180%"> \
                     <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> \
@@ -388,7 +379,7 @@
             return (
                 <svg width="0" height="0" style={{position: 'absolute'}}>
                     <defs dangerouslySetInnerHTML={{
-                        __html: markerEndArrow + markerMidCross
+                        __html: markerEndArrow
                             + dropShadowSelByTextRange + dropShadowSelByExact
                     }}></defs>
                 </svg>

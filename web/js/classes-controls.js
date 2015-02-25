@@ -92,7 +92,7 @@
                 surfaceData.setUiData(parts.tree)
                 parts.isPatternValid = true
             } catch(e) {
-                console.warn('parsing failed', e)
+                console.warn('parsing failed', e.stack)
                 parts.tree = undefined
                 parts.isPatternValid = false
             }

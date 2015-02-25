@@ -173,7 +173,7 @@
                     : undefined
             }
         },
-        charSet: function(inclusive, items, predefined) {
+        charSet: function(loc, inclusive, items, predefined) {
             // TODO test: start with ^, ^-, -^, -, [\d-x]
             
             // convert some of 'Specific Char's to 'Range of Chars'.
@@ -196,30 +196,24 @@
                 }
             }
 
-            if (! inclusive) {
-                items.push(builders.charSetAnyOtherChar())
-            }
-
             var toggleInclusive = {
-                'Any Other Char': function(inclusive, aoc) {
-                    aoc.inclusive = ! inclusive
+                'Any Other Char': function() {
+                    // do nothing since we're not visually distinguishing in/excl.
                 },
-                'Specific Char': function(inclusive, sc) {
-                    sc.inclusive = inclusive
+                'Specific Char': function(parentIncl, sc) {
+                    sc.inclusive = parentIncl
                 },
-                'Range of Chars': function(inclusive, r) {
-                    r.inclusive = inclusive
+                'Range of Chars': function(parentIncl, r) {
+                    r.inclusive = parentIncl
                     r.range.forEach(function(sc) {
-                        toggleInclusive[sc.type](inclusive, sc)
+                        toggleInclusive[sc.type](parentIncl, sc)
                     })
                 },
-                'Set of Chars': function(inclusive, s) {
-                    // custom char set can contain nested predefined char set.
-                    // max level of nesting is 1.
-                    var flipped = inclusive === s.inclusive
-                    s.inclusive = flipped
+                'Set of Chars': function(parentIncl, s) {
+                    var myIncl = parentIncl === s.inclusive
+                    s.inclusive = myIncl
                     s.possibilities.forEach(function(p) {
-                        toggleInclusive[p.type](flipped, p)
+                        toggleInclusive[p.type](myIncl, p)
                     })
                 }
             }
@@ -227,12 +221,26 @@
                 toggleInclusive[item.type](inclusive, item)
             })
 
-            return {
+            var result = {
                 type: 'Set of Chars',
                 inclusive: inclusive,
                 possibilities: items,
                 predefined: predefined
             }
+            if (! inclusive) {
+                if (loc) {
+                    builders.withLoc(loc, result)
+                }
+                result = {
+                    type: 'Set of Chars',
+                    inclusive: true,
+                    possibilities: [
+                        result,
+                        builders.charSetAnyOtherChar()
+                    ]
+                }
+            }
+            return result
         },
         charSetPreDefn: function(key) {
             var inclusive = key >= 'a'
@@ -281,6 +289,8 @@
             }[key]
 
             return builders.charSet(
+                null, // if pre defn is exclusive, its nested Set of Chars
+                    // won't be selectable, and that's ok
                 inclusive,
                 possibilities,
                 {
