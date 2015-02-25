@@ -100,7 +100,7 @@
             data.ui
                 .fillers
                 .neighborArrows
-            whatever surfaceData.getChildVal(data) reads in order to get children
+            whatever surfaceData.getChildTokens(data) reads in order to get children
             data.ui
                 .textBlocks
     */
@@ -129,7 +129,7 @@
             var childCompos = [
                 data.ui.fillers || [],
                 data.ui.neighborArrows || [],
-                surfaceData.getChildVal(data) || [],
+                surfaceData.getChildTokens(data) || [],
                 data.ui.textBlocks || [],
             ].map(function(childVal) {
                 var childList = ([].concat(childVal))

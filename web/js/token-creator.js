@@ -9,9 +9,9 @@
 
     function parserTypeValidator(types) {
         types = [].concat(types)
-        return function(compoData) {
-            return compoData &&
-                types.indexOf(compoData.type) >= 0
+        return function(token) {
+            return token &&
+                types.indexOf(token.type) >= 0
         }
     }
     function numValidator(isInfAllowed) {
@@ -38,7 +38,7 @@
     // 'Look-Forward': 'assertionLF',
     // Group,
 
-    // `tokenLabel`s don't have to match a component `type` given by the parser.
+    // `tokenLabel`s don't have to match a `token.type` given by the parser.
     var createInfoList = [
         {
             tokenLabel: 'Specific Char',
@@ -67,11 +67,11 @@
             params: [
                 {
                     label: 'From',
-                    paramType: 'component',
+                    paramType: 'token',
                     validate: parserTypeValidator('Specific Char')
                 },{
                     label: 'To',
-                    paramType: 'component',
+                    paramType: 'token',
                     validate: parserTypeValidator('Specific Char')
                 }
             ],
@@ -89,7 +89,7 @@
                 },{
                     label: 'Possibility',
                     mult: true,
-                    paramType: 'component',
+                    paramType: 'token',
                     validate: parserTypeValidator(['Specific Char', 'Range of Chars'])
                 }
             ],
@@ -119,7 +119,7 @@
             params: [
                 {
                     label: 'Component being repeated',
-                    paramType: 'component',
+                    paramType: 'token',
                     validate: function(val) {
                         if (! val) { return false }
                         // has to be a term. is there a better way to get the list?
@@ -190,11 +190,11 @@
         return createInfoMap[tokenLabel].params
     }
     tokenCreator.create = function(tokenLabel, vals) {
-        var data
+        var token
         try {
-            data = createInfoMap[tokenLabel].create(vals)
-            data.textLoc = [0, 1] // so that the whole thing is always selectable
-            return data
+            token = createInfoMap[tokenLabel].create(vals)
+            token.textLoc = [0, 1] // so that the whole thing is always selectable
+            return token
         } catch(e) {
             console.error(e.stack)
             return e
@@ -204,23 +204,23 @@
 
     // keys are parser `type`s.
     var toStringers = {
-        'Specific Char': function(data) {
-            return data.display
+        'Specific Char': function(token) {
+            return token.display
         },
         'Any Char': function() {
             return '.'
         },
-        'Range of Chars': function(data) {
-            return data.range[0].display + '-'
-                + data.range[1].display
+        'Range of Chars': function(token) {
+            return token.range[0].display + '-'
+                + token.range[1].display
         },
-        'Set of Chars': function(data) {
-            if (data.predefined) {
-                return data.predefined.display
+        'Set of Chars': function(token) {
+            if (token.predefined) {
+                return token.predefined.display
             }
             return '['
-                + (data.inclusive ? '' : '^')
-                + data.possibilities
+                + (token.inclusive ? '' : '^')
+                + token.possibilities
                     .filter(function(p) {
                         return p.type !== 'Any Other Char'
                     })
@@ -230,20 +230,20 @@
                     .join(',')
                 + ']'
         },
-        'Quantified': function(data) {
-            var t = toStringers[data.target.type](data.target)
-            return t + data.qrStr
+        'Quantified': function(token) {
+            var t = toStringers[token.target.type](token.target)
+            return t + token.qrStr
         },
-        'Assertion': function(data) {
-            if (data.hasOwnProperty('atBeg')) {
-                return data.atBeg ? '^' : '$'
-            } else if (data.hasOwnProperty('atWb')) {
-                return '\\' + (data.atWb ? 'b' : 'B')
+        'Assertion': function(token) {
+            if (token.hasOwnProperty('atBeg')) {
+                return token.atBeg ? '^' : '$'
+            } else if (token.hasOwnProperty('atWb')) {
+                return '\\' + (token.atWb ? 'b' : 'B')
             }
         },
     }
-    tokenCreator.toString = function(data) {
-        return toStringers[data.type](data)
+    tokenCreator.toString = function(token) {
+        return toStringers[token.type](token)
     }
 
 })(window.tokenCreator = window.tokenCreator || {})
