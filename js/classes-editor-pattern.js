@@ -3,7 +3,7 @@
 
     /*
     important! keep all tokens in state in their pure form output by creator.
-    always clone (Object.create is sufficient) before modifying it.
+    always soft clone (Object.create is sufficient) before modifying it.
 
     The states in question are (in the chronological order of population)
         previewToken, tokensInPalette[i], selToken
@@ -120,8 +120,10 @@
         },
 
         validateSingle: function(fieldProps, elm) {
-            var isValid = ! fieldProps.param.validate
-                || fieldProps.param.validate(elm.value)
+            var isValid = fieldProps.param.choices
+                ? !! elm.value // assuming we don't have a value that is ''
+                : ( ! fieldProps.param.validate
+                    || fieldProps.param.validate(elm.value) )
             elm.classList.toggle('error', ! isValid)
                 // note: ie does not read second arg as a flag
             return isValid
@@ -161,7 +163,10 @@
                         Object.keys(fieldPropsProto).forEach(function(key) {
                             props[key] = fieldPropsProto[key]
                         })
-                        props.val = props.val || fieldPropValDefault
+                        if (props.val == null) {
+                            // do not replace if val is ''
+                            props.val = fieldPropValDefault
+                        }
                         return React.createElement(fieldClass, props)
                     }
 
@@ -273,21 +278,27 @@
         componentDidMount: function() {
             this.handleChange()
         },
-        handleChange: function(e) {
-            var input = e ? e.target : this.refs.input.getDOMNode()
-            this.props.onChange(this.props, input)
+        handleChange: function() {
+            this.props.onChange(this.props, this.getDOMNode())
         },
         render: function() {
             return <input type="text"
                 value={this.props.val}
-                onChange={this.handleChange}
-                ref="input" />
+                onChange={this.handleChange} />
         }
     })
     var FormFieldRadio = React.createClass({
+        // to work with validation, hacking the root elm to use value prop
+        componentDidMount: function() {
+            var div = this.getDOMNode()
+            // assuming default to be one of the choice vals and hence valid
+            div.value = this.props.param.default
+            this.props.onChange(this.props, div)
+        },
         handleChange: function(e) {
-            var input = e.target
-            this.props.onChange(this.props, input)
+            var div = this.getDOMNode()
+            div.value = e.target.value
+            this.props.onChange(this.props, div)
         },
         render: function() {
             var self = this
@@ -314,23 +325,22 @@
                 droppedToken: null
             }
         },
+        // to work with validation, hacking the root elm to use value prop
         handlePasteCompo: function(e) {
-            // mocking <input>. All that matters is `value` prop.
-            var input = this.refs.input.getDOMNode()
+            var div = this.getDOMNode()
             // important to clone! do not contaminate selToken.
-            input.value = Object.create(this.props.selToken)
+            div.value = Object.create(this.props.selToken)
             this.setState({
                 droppedToken: this.props.selToken
             })
-            this.props.onChange(this.props, input)
+            this.props.onChange(this.props, div)
         },
         render: function() {
             var droppedCompo = this.state.droppedToken
                 ? <Cell token={this.state.droppedToken} />
                 : <p className="error">Click on palette to copy; click here to paste.</p>
             return <div onClick={this.handlePasteCompo}
-                className="droppable"
-                ref="input">
+                className="droppable">
                 {droppedCompo}
             </div>
         }
