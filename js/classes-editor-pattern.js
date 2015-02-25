@@ -2,24 +2,34 @@
     'use strict'
 
     /*
-    important! keep all tokens in state in their pure form output by creator.
-    always soft clone (Object.create is sufficient) before modifying it.
+    Important!! : Tokens that are stored in a state are there to be shared
+        with many react components. When multiple components read the same
+        token and want to render different Surfaces from it, the tokens
+        must have different `.ui` assigned. To prevent the sharing of UI
+        data (e.g. pos and surfaceDim), tokens must be always cloned before
+        being rendered by the Surface class.
+    While soft cloning with Object.create is ok if only using `setUiData`
+        (where only `.ui` is assigned), a token is expected to have its
+        non-ui properties modified when embedded within another token.
+        Therefore, deep cloning with _.merge is the safe choice.
+    E.g. when a `Specific Char` is embedded in a `Range of Chars` which is
+        embedded in an exclusive `Set of Chars`, `Specific Char`'s
+        `.inclusive` is toggled, contaminating the original token if 
+        the embedded token was soft cloned.
 
     The states in question are (in the chronological order of population)
         previewToken, tokensInPalette[i], selToken
     The operations in question are
         Cell draws tokens from any of the above 3 sources, and adds `.ui` in the process.
-        FormFieldDroppable passes selToken as a parameter towards creating previewToken
-            -> anything can happen, including adding of `.ui` and
-                changes to non-`.ui`, such as toggling of `.inclusive`
+        FormFieldDroppable uses selToken to create previewToken.
+            In other words, previewToken embeds selToken.
     */
 
     var PatternEditor = React.createClass({
         getInitialState: function() {
             return {
                 tokenLabel: null,
-                tokensInPalette: [],
-                selToken: null
+                tokensInPalette: []
             }
         },
         handleChangeTokenLabel: function(e) {
@@ -32,18 +42,12 @@
                 tokensInPalette: this.state.tokensInPalette.concat(token)
             })
         },
-        handlePaletteSelect: function(selToken) {
-            this.setState({
-                selToken: selToken
-            })
-            var selText = tokenCreator.toString(selToken)
-            this.props.onSelect(selText)
-        },
         handlePaletteDelete: function(index) {
             this.state.tokensInPalette.splice(index, 1)
             this.setState({
                 tokensInPalette: this.state.tokensInPalette
             })
+            this.props.onSelect(null)
         },
         render: function() {
             var self = this
@@ -61,7 +65,8 @@
                 <div className="pattern-editor">
                     <Palette
                         tokensInPalette={this.state.tokensInPalette}
-                        onSelect={this.handlePaletteSelect}
+                        selToken={this.props.selToken}
+                        onSelect={this.props.onSelect}
                         onDelete={this.handlePaletteDelete} />
                     <div className="create-parent">
                         <fieldset className="create-type">
@@ -70,7 +75,7 @@
                         </fieldset>
                         <Form
                             tokenLabel={this.state.tokenLabel}
-                            selToken={this.state.selToken}
+                            selToken={this.props.selToken}
                             onSubmit={this.handleCreate} />
                     </div>
                 </div>
@@ -121,6 +126,12 @@
 
         validateSingle: function(fieldProps, elm) {
             var isValid = fieldProps.param.choices
+                // TODO make sure validation is happening on change tokenLabel.
+                // e.g. pick Set of Chars -> first radio has default hence valid -> pick Word Boundary -> wrongly shows as valid
+                // ? Object.keys(fieldProps.param.choices).some(function(choiceLabel) {
+                //     var choiceVal = fieldProps.param.choices[choiceLabel]
+                //     return elm.value === choiceVal
+                // })
                 ? !! elm.value // assuming we don't have a value that is ''
                 : ( ! fieldProps.param.validate
                     || fieldProps.param.validate(elm.value) )
@@ -156,7 +167,7 @@
                         selToken: self.props.selToken,
                         paramIndex: i
                     }
-                    var fieldPropValDefault = param.default || ''
+                    var fieldPropValDefault = param.default
 
                     /* required in props: val, onChange */
                     function getSingleFieldCompo(props) {
@@ -164,7 +175,7 @@
                             props[key] = fieldPropsProto[key]
                         })
                         if (props.val == null) {
-                            // do not replace if val is ''
+                            // do not replace if val is ''. otherwise user can never clear input
                             props.val = fieldPropValDefault
                         }
                         return React.createElement(fieldClass, props)
@@ -216,6 +227,8 @@
         getResetState: function() {
             return {
                 singleVals: [null], // size is 1. val null is not significant.
+                    // elm should prob be the default val, but not an issue for now
+                    // b/c only mult are droppables, and they don't have defaults.
                 singleValidities: [false], // is false ok as the default?
                 allValid: false
             }
@@ -258,12 +271,12 @@
                     onChange: self.handleSingleChange,
                     multIndex: i
                 })
+                var handleDelMult = function() {
+                    self.handleDelMult(i)
+                }
                 return <span key={i}>
                     {singleFieldCompo}
-                    <div className="mult"
-                        onClick={function() {
-                            self.handleDelMult(i)
-                        }}>-</div>
+                    <div className="mult" onClick={handleDelMult}>-</div>
                 </span>
             })
             return <div>
@@ -288,7 +301,7 @@
         }
     })
     var FormFieldRadio = React.createClass({
-        // to work with validation, hacking the root elm to use value prop
+        // to work with validation, using `value` prop on non-input elm
         componentDidMount: function() {
             var div = this.getDOMNode()
             // assuming default to be one of the choice vals and hence valid
@@ -320,24 +333,21 @@
         }
     })
     var FormFieldDroppable = React.createClass({
-        getInitialState: function() {
-            return {
-                droppedToken: null
-            }
-        },
-        // to work with validation, hacking the root elm to use value prop
+        // to work with validation, using `value` prop on non-input elm
         handlePasteCompo: function(e) {
-            var div = this.getDOMNode()
-            // important to clone! do not contaminate selToken.
-            div.value = Object.create(this.props.selToken)
-            this.setState({
-                droppedToken: this.props.selToken
-            })
+            if (! this.props.selToken) {
+                return
+            }
+            var div = e.target
+            // important to clone! do not let token creator later modify
+            //     the shared token selToken
+            div.value = _.merge({}, this.props.selToken)
             this.props.onChange(this.props, div)
         },
         render: function() {
-            var droppedCompo = this.state.droppedToken
-                ? <Cell token={this.state.droppedToken} />
+            var token = this.props.val
+            var droppedCompo = token
+                ? <Cell token={token} />
                 : <p className="error">Click on palette to copy; click here to paste.</p>
             return <div onClick={this.handlePasteCompo}
                 className="droppable">
@@ -347,23 +357,6 @@
     })
 
     var Palette = React.createClass({
-        getInitialState: function() {
-            return {
-                selCellIndex: null
-            }
-        },
-        handleSelect: function(cell) {
-            this.setState({
-                selCellIndex: cell.props.cellIndex
-            })
-            this.props.onSelect(cell.props.token)
-        },
-        handleDelete: function(cell) {
-            this.setState({
-                selCellIndex: null
-            })
-            this.props.onDelete(cell.props.cellIndex)
-        },
         render: function() {
             var self = this
             var minNumCells = 5
@@ -375,9 +368,9 @@
                 .map(function(foo, i) {
                     return <Cell
                         token={tokensInPalette[i]}
-                        isSelected={self.state.selCellIndex === i}
-                        onSelect={self.handleSelect}
-                        onDelete={self.handleDelete}
+                        selToken={self.props.selToken}
+                        onSelect={self.props.onSelect}
+                        onDelete={self.props.onDelete}
                         cellIndex={i} key={i} />
                 })
             return <div className="palette">
@@ -390,47 +383,68 @@
         in props {
             token: required
 
-            // below are required iff in palette
-            isSelected
-            cellIndex
+            // both of these 2 are required for Cell to be selectable.
+            // selection by text range is disabled (there is no corresponding text)
+            // selToken can be falsy, as it often will be.
             onSelect
+            selToken
+
+            // both of these 2 are required for Cell to be deletable.
+            cellIndex
             onDelete
         }
     */
     var Cell = React.createClass({
+        componentWillMount: function() {
+            this.saveClonedToken(this.props.token)
+        },
+        componentWillReceiveProps: function(nextProps) {
+            // Comparing with previous token is for more than just optimization.
+            // We do not want to unneceesary clone token b/c
+            //     selection in Cell relies on exact obj ref equality
+            //     between selToken and Cell's token
+            // When selected, selToken will be the cloned obj. Therefore
+            //     we have to retain the exact clone obj. Save it in state.
+            var willCloneToken = this.props.token !== nextProps.token
+            if (willCloneToken) {
+                this.saveClonedToken(nextProps.token)
+            }
+        },
+        saveClonedToken: function(token) {
+            if (token) {
+                token = _.merge({}, token)
+                surfaceData.setUiData(token)
+            }
+            this.setState({
+                token: token
+            })
+        },
+
         handleSelect: function() {
             if (this.props.onSelect) {
-                this.props.onSelect(this)
+                this.props.onSelect(this.state.token) // state not props
             }
         },
         handleDelete: function() {
             if (this.props.onDelete) {
-                this.props.onDelete(this)
+                this.props.onDelete(this.props.cellIndex)
             }
         },
         render: function() {
-            var token = this.props.token
-            if (token) {
-                // important to clone! do not contaminate token
-                token = Object.create(token)
-                surfaceData.setUiData(token)
-            }
+            var token = this.state.token // state not props
             var deleteBtn = this.props.onDelete
                 ? <button onClick={this.handleDelete} className="del">X</button>
                 : null
             return token
-                ? (
-                    <div className="pelette-cell">
-                        <reactClasses.Surface
-                            tree={token}
-                            onSelect={this.handleSelect}
-                            patternSel={this.props.isSelected
-                                ? [0, Infinity]
-                                : null}
-                            patternEditorMode="select" />
-                        {deleteBtn}
-                    </div>
-                )
+                ? <div className="pelette-cell">
+                    <reactClasses.Surface
+                        tree={token}
+                        onSelect={this.handleSelect}
+                        patternSel={[0,0]} // disable sel by text range
+                        selToken={this.props.selToken} // enable sel by exact
+                        patternEditorMode="select" />
+                    {deleteBtn}
+                </div>
                 : <div className="empty-surface" />
         }
     })

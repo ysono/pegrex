@@ -781,7 +781,7 @@
                     linkH
                 )
                 ui.stroke = '#f77'
-                ui.fill = token.inclusive ? null : surfaceData.fillForNegative
+                ui.fill = token.inclusive === false ? surfaceData.fillForNegative : null
 
                 var link = ui.fillers[0]
                 link.type = 'path'

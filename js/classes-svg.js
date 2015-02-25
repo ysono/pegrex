@@ -15,7 +15,7 @@
                 // Then `this` originated the event.
                 pegrexEvt = {
                     isPegrexEvt: true,
-                    textLoc: this.props.data.textLoc
+                    data: this.props.data
                 }
 
                 // Event can come from a click on a transparent element.
@@ -31,40 +31,39 @@
             Expresses these properties on the DOM, on this.refs.hiliteElm.
         */
         proto.hiliteSelected = function() {
-            // `filter` attr is not supported by react, so manually assign.
-            if (! this.refs.hiliteElm) {
+            if (! this.refs.hiliteElm || ! this.props.data.textLoc) {
                 return
             }
-
             var mode = this.props.patternEditorMode
             var patternSel = this.props.patternSel
             var textLoc = this.props.data.textLoc
-
-            if (! textLoc) {
-                return
-            }
 
             var textHasLen = textLoc
                 && textLoc[0] != textLoc[1]
             var amSelectable = mode
                 && textLoc
                 && (mode === 'add' || textHasLen)
-            var amSelected = patternSel
+            var amSelectedByExact = this.props.selToken === this.props.data
+                // obj ref equality. a match iff the exact selected token.
+            var amSelectedByTextRange =
+                ! amSelectedByExact
+                && patternSel
                 && textHasLen
                 && patternSel[0] <= textLoc[0]
                 && patternSel[1] >= textLoc[1]
 
             var hiliteElm = this.refs.hiliteElm.getDOMNode()
 
-            // don't make the root elm, the <g>, selectable b/c then hover and click
-            //     of its transparent children propagate.
             hiliteElm.classList.toggle('selectable', amSelectable)
                 // note: ie does not read second arg as a flag
             hiliteElm[(amSelectable ? 'add' : 'remove') + 'EventListener']
                 ('click', this.handleSelect)
 
-            if (amSelected) {
-                hiliteElm.setAttribute('filter', "url(#dropshadow)")
+            // note: filter attr is not supported by react, so have to use js anyway.
+            if (amSelectedByExact) {
+                hiliteElm.setAttribute('filter', 'url(#dropshadow-sel-by-exact)')
+            } else if (amSelectedByTextRange) {
+                hiliteElm.setAttribute('filter', 'url(#dropshadow-sel-by-text-range)')
             } else {
                 hiliteElm.removeAttribute('filter')
             }
@@ -313,6 +312,7 @@
             onBubbleUpSelect: parentCompo.handleSelect,
             data: childData,
             patternSel: parentCompo.props.patternSel,
+            selToken: parentCompo.props.selToken,
             patternEditorMode: parentCompo.props.patternEditorMode,
             key: key
         })
@@ -329,7 +329,7 @@
     */
     var Surface = React.createClass({
         handleSelect: function(pegrexEvt) {
-            this.props.onSelect(pegrexEvt.textLoc)
+            this.props.onSelect(pegrexEvt.data)
         },
         render: function() {
             var tree = this.props.tree
@@ -368,21 +368,28 @@
                 </marker>'
                     .replace(/\{0\}/g, surfaceData.markerLen)
                     .replace(/\{1\}/g, surfaceData.neighborArrowColor)
-            var dropshadow = '\
-                <filter id="dropshadow" height="180%" width="180%"> \
+            var dropShadowTemplate = '\
+                <filter id="{0}" height="180%" width="180%"> \
                     <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> \
                     <feOffset dx="2" dy="2" result="offsetblur"/> \
-                    <feFlood flood-color="red"/> \
+                    <feFlood flood-color="{1}"/> \
                     <feComposite in2="offsetblur" operator="in"/> \
                     <feMerge> \
                         <feMergeNode/> \
                         <feMergeNode in="SourceGraphic"/> \
                     </feMerge> \
                 </filter>'
+            var dropShadowSelByTextRange = dropShadowTemplate
+                .replace(/\{0\}/g, 'dropshadow-sel-by-text-range')
+                .replace(/\{1\}/g, '#3BEBE8')
+            var dropShadowSelByExact = dropShadowTemplate
+                .replace(/\{0\}/g, 'dropshadow-sel-by-exact')
+                .replace(/\{1\}/g, 'red')
             return (
                 <svg width="0" height="0" style={{position: 'absolute'}}>
                     <defs dangerouslySetInnerHTML={{
-                        __html: markerEndArrow + markerMidCross + dropshadow
+                        __html: markerEndArrow + markerMidCross
+                            + dropShadowSelByTextRange + dropShadowSelByExact
                     }}></defs>
                 </svg>
             )

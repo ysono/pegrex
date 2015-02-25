@@ -196,7 +196,7 @@
             token.textLoc = [0, 1] // so that the whole thing is always selectable
             return token
         } catch(e) {
-            console.error(e.stack)
+            console.warn(e.stack)
             return e
         }
     }
