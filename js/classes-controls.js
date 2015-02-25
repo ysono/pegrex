@@ -87,7 +87,7 @@
         patternToTree: function(parts) {
             try {
                 parts.tree = parser.parse(parts.pattern)
-                surfaceData.addUiData(parts.tree)
+                surfaceData.setUiData(parts.tree)
                 parts.isPatternValid = true
             } catch(e) {
                 console.warn('parsing failed', e)

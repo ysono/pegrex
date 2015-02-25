@@ -6,10 +6,10 @@
     always clone (Object.create is sufficient) before modifying it.
 
     The states in question are (in the chronological order of population)
-        previewData, datasInPalette[i], selData
+        previewToken, tokensInPalette[i], selToken
     The operations in question are
-        drawing by Cell -> adds `.ui`
-        previewData passes selData as a parameter towards creating previewData
+        Cell draws tokens from any of the above 3 sources, and adds `.ui` in the process.
+        FormFieldDroppable passes selToken as a parameter towards creating previewToken
             -> anything can happen, including adding of `.ui` and
                 changes to non-`.ui`, such as toggling of `.inclusive`
     */
@@ -18,8 +18,8 @@
         getInitialState: function() {
             return {
                 tokenLabel: null,
-                datasInPalette: [], // bad latin but w/e
-                selData: null
+                tokensInPalette: [],
+                selToken: null
             }
         },
         handleChangeTokenLabel: function(e) {
@@ -27,22 +27,22 @@
                 tokenLabel: e.target.value
             })
         },
-        handleCreate: function(data) {
+        handleCreate: function(token) {
             this.setState({
-                datasInPalette: this.state.datasInPalette.concat(data)
+                tokensInPalette: this.state.tokensInPalette.concat(token)
             })
         },
-        handlePaletteSelect: function(selData) {
+        handlePaletteSelect: function(selToken) {
             this.setState({
-                selData: selData
+                selToken: selToken
             })
-            var selText = tokenCreator.toString(selData)
+            var selText = tokenCreator.toString(selToken)
             this.props.onSelect(selText)
         },
         handlePaletteDelete: function(index) {
-            this.state.datasInPalette.splice(index, 1)
+            this.state.tokensInPalette.splice(index, 1)
             this.setState({
-                datasInPalette: this.state.datasInPalette
+                tokensInPalette: this.state.tokensInPalette
             })
         },
         render: function() {
@@ -60,7 +60,7 @@
             return (
                 <div className="pattern-editor">
                     <Palette
-                        datasInPalette={this.state.datasInPalette}
+                        tokensInPalette={this.state.tokensInPalette}
                         onSelect={this.handlePaletteSelect}
                         onDelete={this.handlePaletteDelete} />
                     <div className="create-parent">
@@ -70,7 +70,7 @@
                         </fieldset>
                         <Form
                             tokenLabel={this.state.tokenLabel}
-                            selData={this.state.selData}
+                            selToken={this.state.selToken}
                             onSubmit={this.handleCreate} />
                     </div>
                 </div>
@@ -80,7 +80,7 @@
 
     var Form = React.createClass({
         /* props of state:
-            params, allValid, validities, vals, previewData, overallErrorMsg */
+            params, allValid, validities, vals, previewToken, overallErrorMsg */
         getInitialState: function() {
             return {
                 params: [],
@@ -105,15 +105,15 @@
             newState.allValid = newState.validities.every(function(validity) {
                 return validity
             })
-            var data = newState.allValid
+            var token = newState.allValid
                 ? tokenCreator.create(tokenLabel, newState.vals)
                 : null
-            if (data instanceof Error) {
-                newState.previewData = null
-                newState.overallErrorMsg = data.message
+            if (token instanceof Error) {
+                newState.previewToken = null
+                newState.overallErrorMsg = token.message
                     || 'The inputs are not valid as a whole.'
             } else {
-                newState.previewData = data
+                newState.previewToken = token
                 newState.overallErrorMsg = null
             }
             this.setState(newState)
@@ -139,7 +139,7 @@
         },
         handleSubmit: function(e) {
             e.preventDefault()
-            this.props.onSubmit(this.state.previewData)
+            this.props.onSubmit(this.state.previewToken)
         },
 
         render: function() {
@@ -147,11 +147,11 @@
             var fieldCompos = this.state.params &&
                 this.state.params.map(function(param, i) {
                     var fieldClass = param.choices ? FormFieldRadio
-                        : param.paramType === 'component' ? FormFieldDroppable
+                        : param.paramType === 'token' ? FormFieldDroppable
                         : FormFieldText
                     var fieldPropsProto = {
                         param: param,
-                        selData: self.props.selData,
+                        selToken: self.props.selToken,
                         paramIndex: i
                     }
                     var fieldPropValDefault = param.default || ''
@@ -187,13 +187,13 @@
                     <div className="create-form-inputs">
                         {fieldCompos}
                         <input type="submit" value="Create"
-                            disabled={! this.state.previewData} />
+                            disabled={! this.state.previewToken} />
                         <p ref="overallError" className="error">
                             {this.state.overallErrorMsg}</p>
                     </div>
                     <div className="create-form-preview">
                         <p>Preview</p>
-                        <Cell data={this.state.previewData} />
+                        <Cell token={this.state.previewToken} />
                     </div>
                 </form>
             )
@@ -311,25 +311,25 @@
     var FormFieldDroppable = React.createClass({
         getInitialState: function() {
             return {
-                droppedData: null
+                droppedToken: null
             }
         },
         handlePasteCompo: function(e) {
             // mocking <input>. All that matters is `value` prop.
             var input = this.refs.input.getDOMNode()
-            // important to clone! do not taint selData.
-            input.value = Object.create(this.props.selData)
+            // important to clone! do not contaminate selToken.
+            input.value = Object.create(this.props.selToken)
             this.setState({
-                droppedData: this.props.selData
+                droppedToken: this.props.selToken
             })
             this.props.onChange(this.props, input)
         },
         render: function() {
-            var droppedCompo = this.state.droppedData
-                ? <Cell data={this.state.droppedData} />
+            var droppedCompo = this.state.droppedToken
+                ? <Cell token={this.state.droppedToken} />
                 : <p className="error">Click on palette to copy; click here to paste.</p>
             return <div onClick={this.handlePasteCompo}
-                className="component-droppable"
+                className="droppable"
                 ref="input">
                 {droppedCompo}
             </div>
@@ -346,7 +346,7 @@
             this.setState({
                 selCellIndex: cell.props.cellIndex
             })
-            this.props.onSelect(cell.props.data)
+            this.props.onSelect(cell.props.token)
         },
         handleDelete: function(cell) {
             this.setState({
@@ -357,14 +357,14 @@
         render: function() {
             var self = this
             var minNumCells = 5
-            var datasInPalette = this.props.datasInPalette
+            var tokensInPalette = this.props.tokensInPalette
             var cells = Array.apply(null, {
                     // +1 so there is always an empty cell
-                    length: Math.max(minNumCells, datasInPalette.length + 1)
+                    length: Math.max(minNumCells, tokensInPalette.length + 1)
                 })
                 .map(function(foo, i) {
                     return <Cell
-                        data={datasInPalette[i]}
+                        token={tokensInPalette[i]}
                         isSelected={self.state.selCellIndex === i}
                         onSelect={self.handleSelect}
                         onDelete={self.handleDelete}
@@ -378,7 +378,7 @@
 
     /*
         in props {
-            data: required
+            token: required
 
             // below are required iff in palette
             isSelected
@@ -399,21 +399,20 @@
             }
         },
         render: function() {
-            var data = this.props.data
-            if (data) {
-                // important to clone! do not taint data, which can come from
-                //     (previewData or datasInPalette[i] or selData)
-                data = Object.create(data)
-                surfaceData.addUiData(data)
+            var token = this.props.token
+            if (token) {
+                // important to clone! do not contaminate token
+                token = Object.create(token)
+                surfaceData.setUiData(token)
             }
             var deleteBtn = this.props.onDelete
                 ? <button onClick={this.handleDelete} className="del">X</button>
                 : null
-            return data
+            return token
                 ? (
                     <div className="pelette-cell">
                         <reactClasses.Surface
-                            tree={data}
+                            tree={token}
                             onSelect={this.handleSelect}
                             patternSel={this.props.isSelected
                                 ? [0, Infinity]

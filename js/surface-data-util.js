@@ -23,14 +23,14 @@
     /*
         Locate children for a given component.
     */
-    surfaceData.getChildVal = function(data) {
-        var prop = typeToChildProp[data.type]
+    surfaceData.getChildTokens = function(token) {
+        var prop = typeToChildProp[token.type]
         if (typeof prop === 'string') {
-            return data[prop]
+            return token[prop]
         }
         if (prop instanceof Array) {
             return prop.reduce(function(vals, prop) {
-                return vals.concat(data[prop] || [])
+                return vals.concat(token[prop] || [])
             }, [])
         }
         // else return undefined

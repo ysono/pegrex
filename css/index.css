@@ -143,11 +143,11 @@ html, body {
     background-color: #F0A9A1;
     color: #fff;
 }
-.create-form-inputs .component-droppable {
+.create-form-inputs .droppable {
     border: solid 1px;
     cursor: pointer;
 }
-.create-form-inputs .component-droppable:not(.error):hover {
+.create-form-inputs .droppable:not(.error):hover {
     background-color: #eee;
 }
 .create-form-inputs p {

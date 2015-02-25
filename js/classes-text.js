@@ -112,8 +112,8 @@
                     escapes back to the original `a\`, such a val does not exist.
             
             Solution:
-            On change, save the current escaped part (this.state.esc*),
-                and the converted unescaped part (this.state.prev*).
+            On change, save the current escaped part (this.state.escParts),
+                and the converted unescaped part (this.state.prevParts).
             On render, compare the saved escaped part against the received part.
                 If they're different, then use the received part. It can be assumed
                     that the received part came from some mechanism besides loop back (e.g. hash).
@@ -121,9 +121,9 @@
         */
         getInitialState: function() {
             return {
-                prevParts: {foo: 'bar'},
-                escParts: {foo: 'bar'},
-                escValidParts: {foo: 'bar'}
+                prevParts: {},
+                escParts: {},
+                escValidParts: {}
             }
         },
 

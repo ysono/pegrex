@@ -16,10 +16,10 @@
             not assigning pos on parent
 
         Result is
-        parentData ~= {
+        parentToken ~= {
             type: 'Foo',
             otherPropsForFoo: ...
-            theChildren: [
+            childTokens: [
                 {
                     type: 'Bar',
                     otherPropsForBar: ...
@@ -44,14 +44,14 @@
                 ]
             } // assigned by setUiWithChildren
         }
-        Returns parentData.ui for convenience.
+        Returns parentToken.ui for convenience.
 
         Caller of setUiWithChildren is responsible for assigning info required
-            for rendering both parentData and fillers.
-            E.g. fillers don't even have `.type`, and parentData.ui doesn't have `.pos`.
+            for rendering both parentToken and fillers.
+            E.g. fillers don't even have `.type`, and parentToken.ui doesn't have `.pos`.
     */
     function setUiWithChildren(
-        parentData,
+        parentToken,
         pad, /* {x: [n,n], y: [n,n]} -- where [n,n] are start and end paddings in that direction */
         intraMargin, /* spacing between children and fillers */
         dirPara, /* 'x' or 'y'. direction of expansion. */
@@ -76,10 +76,10 @@
             }
         }
 
-        var children = surfaceData.getChildVal(parentData)
+        var children = surfaceData.getChildTokens(parentToken)
 
         if (! children.length) {
-            return parentData.ui = {
+            return parentToken.ui = {
                 dim: toCoord(
                     pad[dirPara][0] + pad[dirPara][1],
                     pad[dirOrtho][0] + pad[dirOrtho][1]
@@ -88,7 +88,7 @@
             }
         }
 
-        var parentUi = parentData.ui = {}
+        var parentUi = parentToken.ui = {}
         var fillers = parentUi.fillers = []
 
         // the farthest point in the direction of expansion being occupied by children
@@ -147,7 +147,7 @@
         return parentUi
     }
     /*
-        Add arrows between left and right neighbors and current data's vertically aligned children
+        Add arrows between left and right neighbors and current token's vertically aligned children
             from (the left neighbor) to (every child)
             from (every child) to (the right neighbor)
 
@@ -155,8 +155,8 @@
             e.g. using `setUiWithChildren`, or manually.
         
         Result is
-        parentData ~= {
-            theChildren: [
+        parentToken ~= {
+            childTokens: [
                 // the given children need to be an array of 0 or more objs
             ]
             etc: ...
@@ -173,16 +173,16 @@
             }
         }
     */
-    function addNeighborArrows(parentData) {
-        var children = surfaceData.getChildVal(parentData)
-        var parentUi = parentData.ui
+    function addNeighborArrows(parentToken) {
+        var childTokens = surfaceData.getChildTokens(parentToken)
+        var parentUi = parentToken.ui
 
         var midY = parentUi.dim[1] / 2
         var onLeftEdge = [0, midY]
         var onRightEdge = [parentUi.dim[0], midY]
 
-        var arrows = children.length
-            ? children.reduce(function(allArrows, child, i) {
+        var arrows = childTokens.length
+            ? childTokens.reduce(function(allArrows, child, i) {
                 var childUi = child.ui
                 var childMidY = childUi.pos[1] + childUi.dim[1] / 2
                 allArrows.push({
@@ -221,7 +221,7 @@
                     }
                     // eg parent is an empty char set
                     return [pTextLoc[0] + 1, pTextLoc[0] + 1]
-                })(parentData.textLoc),
+                })(parentToken.textLoc),
                 fromLeft: true,
                 toRight: true
             }]
@@ -263,8 +263,8 @@
     /*
         Creates a textBlock.
         
-        Does not assign it to an component data. Hence caller must assign it,
-            probably pushing it to `theParentData.ui.textBlocks`.
+        Does not assign it to an token. Hence caller must assign it,
+            probably pushing it to `parentToken.ui.textBlocks`.
             (For doc on the list of props that are read, see `boxedClass`.)
 
         Caller is responsible for assigning pos to the returned obj,
@@ -304,7 +304,7 @@
             rows of texts (one textBlock) and nothing else.
 
         Result is
-        data ~= {
+        token ~= {
             etc: ...
             ui: {
                 dim: [n,n],
@@ -317,15 +317,15 @@
                 ]
             } // assigned by setUiWithTextBlockOnly
         }
-        Returns data.ui, for convenience.
+        Returns token.ui, for convenience.
     */
-    function setUiWithTextBlockOnly(contents, data) {
-        var textBlock = getTextBlock(contents, data.textLoc)
+    function setUiWithTextBlockOnly(contents, token) {
+        var textBlock = getTextBlock(contents, token.textLoc)
 
         var pad = {h: 3, v: 1}
         textBlock.pos = [pad.h, pad.v]
 
-        return data.ui = {
+        return token.ui = {
             dim: [
                 pad.h * 2 + textBlock.dim[0],
                 pad.v * 2 + textBlock.dim[1]
@@ -342,11 +342,11 @@
             That is, all except the positioning of the given component.
 
         Result is
-        data ~= {
-            etc: ... // direct children of `data` are _never_ modified.
-                Only `data.ui` is assigned.
+        token ~= {
+            etc: ... // direct children of `token` are _never_ modified.
+                Only `token.ui` is assigned.
                 This keeps the assining of UI data idempotent.
-                Hence `addUiData` can be applied multiple times to cloned
+                Hence `setUiData` can be applied multiple times to cloned
                 (Object.create) copies of the same parser output to produce
                 different environment-dependent ui data (e.g. pos and surfaceDim).
             childOrChildren:  ... // If there are any child or children, their
@@ -357,15 +357,15 @@
                 etc: ...
             } // assigned by setUiByType
         }
-        Returns data.ui, for convenience.
+        Returns token.ui, for convenience.
 
-        Caller of setUiByType is responsible for assigning `data.ui.pos`.
+        Caller of setUiByType is responsible for assigning `token.ui.pos`.
     */
-    function setUiByType(data) {
+    function setUiByType(token) {
         var map = {
             'Pattern': function() {
                 var ui = setUiWithChildren(
-                    data,
+                    token,
                     {x: [0,0], y: [0,0]},
                     0,
                     'x'
@@ -374,10 +374,10 @@
                 ui.fill = 'none'
 
                 // make the left terminus have higher z-index than disj
-                data.roots.push(data.roots.shift())
+                token.roots.push(token.roots.shift())
 
                 // disj's neighborArrows ...
-                data.roots[0].ui.neighborArrows.forEach(function(arrow) {
+                token.roots[0].ui.neighborArrows.forEach(function(arrow) {
                     if (arrow.toRight) {
                         // remove markers from those funneling into the right terminus
                         arrow.usesMarkerEnd = false
@@ -403,7 +403,7 @@
                 return ui
             },
             'Terminus': function() {
-                return data.ui = {
+                return token.ui = {
                     dim: [0,0],
                     cx: 0,
                     cy: 0,
@@ -416,7 +416,7 @@
                 var hrH = 30
 
                 var ui = setUiWithChildren(
-                    data,
+                    token,
                     pad,
                     5,
                     'y',
@@ -435,21 +435,21 @@
                     hr.stroke = '#ddd'
                 })
 
-                if (data.mandatedDim) {
+                if (token.mandatedDim) {
                     ;(function() {
                         // Special case. If disj's parent is a capturing group,
                         //     it dictates expansion of disj's right and bottom edges.
                         // Change disj's dim before drawing neighborArrows.
-                        var padRExpansion = data.mandatedDim.minPadR - pad.x[1]
+                        var padRExpansion = token.mandatedDim.minPadR - pad.x[1]
                         ui.dim[0] += Math.max(0, padRExpansion)
 
-                        if (ui.dim[1] < data.mandatedDim.minH) {
-                            ui.dim[1] = data.mandatedDim.minH
+                        if (ui.dim[1] < token.mandatedDim.minH) {
+                            ui.dim[1] = token.mandatedDim.minH
                         }
                     })()
                 }
 
-                addNeighborArrows(data)
+                addNeighborArrows(token)
 
                 return ui
             },
@@ -458,7 +458,7 @@
                 var pad = {x: [6,6], y: [padV,padV]}
                 var arrowW = 25
                 var ui = setUiWithChildren(
-                    data,
+                    token,
                     pad,
                     2,
                     'x',
@@ -481,19 +481,19 @@
 
             'Quantifier': function() {
                 var texts = [
-                    'min: ' + data.min,
-                    'max: ' + (data.max === Infinity ? '\u221e' : data.max),
-                    data.greedy ? 'Greedy' : 'Lazy'
+                    'min: ' + token.min,
+                    'max: ' + (token.max === Infinity ? '\u221e' : token.max),
+                    token.greedy ? 'Greedy' : 'Lazy'
                 ]
-                var ui = setUiWithTextBlockOnly(texts, data)
+                var ui = setUiWithTextBlockOnly(texts, token)
                 ui.fill = '#fff8ea'
                 ui.stroke = '#bbb'
                 ui.strokeW = 1
                 return ui
             },
             'Quantified': function() {
-                var tUi = setUiByType(data.target)
-                var myUi = data.ui = {
+                var tUi = setUiByType(token.target)
+                var myUi = token.ui = {
                     stroke: '#7a0'
                 }
 
@@ -506,13 +506,13 @@
                     targetY,
                     maxChildY
                 var btmArrowStyle = undefined
-                if (data.quantifier.min) {
+                if (token.quantifier.min) {
                     // term is at the top
                     targetY = pad.v
                     arrowMidTopY = targetY + tUi.dim[1] / 2
                     arrowMidBtmY = targetY + tUi.dim[1] + intraMargin
 
-                    if (data.quantifier.min === 1 && data.quantifier.max === 1) {
+                    if (token.quantifier.min === 1 && token.quantifier.max === 1) {
                         maxChildY = targetY + tUi.dim[1]
                     } else {
                         maxChildY = arrowMidBtmY
@@ -525,9 +525,9 @@
                     arrowMidBtmY = targetY + tUi.dim[1] / 2
                     maxChildY = targetY + tUi.dim[1]
 
-                    if (data.quantifier.max === 1) {
+                    if (token.quantifier.max === 1) {
                         btmArrowStyle = 'thru'
-                    } else if (data.quantifier.max) {
+                    } else if (token.quantifier.max) {
                         btmArrowStyle = 'loop'
                     }
                 }
@@ -536,7 +536,7 @@
                 // set dim of parent (Quantified)
                 var myH
                 ;(function() {
-                    var qUi = setUiByType(data.quantifier)
+                    var qUi = setUiByType(token.quantifier)
 
                     var myW = pad.h * 2 + Math.max(tUi.dim[0], qUi.dim[0])
                     
@@ -639,9 +639,9 @@
 
                 // if target is at the bottom and bottom arrow is looping,
                 //     neighborArrows in target would be pointing the wrong way
-                if (! data.quantifier.min && btmArrowStyle === 'loop') {
+                if (! token.quantifier.min && btmArrowStyle === 'loop') {
                     ;(function() {
-                        var child = data.target
+                        var child = token.target
                         if (child.type === 'Set of Chars') {
                             // b/e within a set, the path goes thru only one char,
                             // eliminating directinality is sufficient.
@@ -665,10 +665,10 @@
                 var pad = {x: [10,10], y: [3,10]}
                 var intraMargin = 5
 
-                var textBlock = getTextBlock([data.assertion], data.textLoc)
+                var textBlock = getTextBlock([token.assertion], token.textLoc)
                 textBlock.pos = [pad.x[0], pad.y[0]]
 
-                var cUi = setUiByType(data.grouped)
+                var cUi = setUiByType(token.grouped)
                 cUi.pos = [
                     pad.x[0],
                     textBlock.pos[1] + textBlock.dim[1] + intraMargin
@@ -678,44 +678,44 @@
                 cUi.strokeW = 1
                 cUi.neighborArrows.length = 0 // disj should not be connected with the rest of the flow
 
-                return data.ui = {
+                return token.ui = {
                     dim: [
                         pad.x[0] + Math.max(textBlock.dim[0], cUi.dim[0]) + pad.x[1],
                         cUi.pos[1] + cUi.dim[1] + pad.y[1]
                     ],
                     textBlocks: [textBlock],
                     stroke: '#f9f374',
-                    fill: /^Pos/.test(data.assertion) ? null : surfaceData.fillForNegative
+                    fill: /^Pos/.test(token.assertion) ? null : surfaceData.fillForNegative
                 }
             },
             'Assertion': function() {
-                var ui = setUiWithTextBlockOnly(data.assertion.split(' '), data)
+                var ui = setUiWithTextBlockOnly(token.assertion.split(' '), token)
                 ui.stroke = '#f9f374'
-                ui.fill = data.atWb === false ? surfaceData.fillForNegative : null
+                ui.fill = token.atWb === false ? surfaceData.fillForNegative : null
                 return ui
             },
 
             'Group': function() {
                 var tbPad = 3
                 var tb
-                if (typeof data.number === 'number') {
+                if (typeof token.number === 'number') {
                     tb = getTextBlock([
-                        '#' + data.number
-                    ], data.textLoc)
+                        '#' + token.number
+                    ], token.textLoc)
 
                     // provide mandated dim to disj before setUiByType call
-                    data.grouped.mandatedDim = {
+                    token.grouped.mandatedDim = {
                         minPadR: tbPad * 2 + tb.dim[0],
                         minH: (tbPad * 2 + tb.dim[1]) * 2
                     }
                 }
 
                 var pad = {h: 8, v: 8}
-                var cUi = setUiByType(data.grouped)
+                var cUi = setUiByType(token.grouped)
                 cUi.pos = [pad.h, pad.v]
                 cUi.stroke = '#FFF0DB'
 
-                var ui = data.ui = {
+                var ui = token.ui = {
                     dim: [
                         pad.h * 2 + cUi.dim[0],
                         pad.v * 2 + cUi.dim[1]
@@ -737,21 +737,21 @@
                 var pad = {x: [30,30], y: [10,10]}
                 var intraMargin = 10
                 var ui = setUiWithChildren(
-                    data,
+                    token,
                     pad,
                     intraMargin,
                     'y'
                 )
                 ui.stroke = '#b7a'
                 
-                data.possibilities.forEach(function(p) {
+                token.possibilities.forEach(function(p) {
                     // make nested sets transparent to avoid hiding parent's neighborArrows
                     if (p.type === 'Set of Chars') {
                         p.ui.fill = 'none'
                     }
                 })
 
-                addNeighborArrows(data)
+                addNeighborArrows(token)
                 ui.neighborArrows.forEach(function(arrow) {
                     var child
                     arrow.usesMarkerEnd = false // b/c it looks cluttered
@@ -760,7 +760,7 @@
                         // This is an inclusive Set of Chars with zero possibilities.
                         // Nothing to do.
                     } else {
-                        child = data.possibilities[arrow.childIndex]
+                        child = token.possibilities[arrow.childIndex]
                         // don't cross out line going to nested set, which is a predefined set
                         //     b/c it can have "Any Other" as whitelist
                         if (child.type !== 'Set of Chars') {
@@ -774,14 +774,14 @@
             'Range of Chars': function() {
                 var linkH = 15
                 var ui = setUiWithChildren(
-                    data,
+                    token,
                     {x: [10,10], y: [10,10]},
                     0,
                     'y',
                     linkH
                 )
                 ui.stroke = '#f77'
-                ui.fill = data.inclusive ? null : surfaceData.fillForNegative
+                ui.fill = token.inclusive ? null : surfaceData.fillForNegative
 
                 var link = ui.fillers[0]
                 link.type = 'path'
@@ -795,38 +795,38 @@
                 return ui
             },
             'Any Char': function() {
-                var ui = setUiWithTextBlockOnly([data.type], data)
+                var ui = setUiWithTextBlockOnly([token.type], token)
                 ui.stroke = '#09d'
-                ui.fill = data.inclusive === false ? surfaceData.fillForNegative : null
+                ui.fill = token.inclusive === false ? surfaceData.fillForNegative : null
                 return ui
             },
             'Specific Char': function() {
-                var ui = setUiWithTextBlockOnly([data.display], data)
+                var ui = setUiWithTextBlockOnly([token.display], token)
                 ui.stroke = '#09d'
-                ui.fill = data.inclusive === false ? surfaceData.fillForNegative : null
+                ui.fill = token.inclusive === false ? surfaceData.fillForNegative : null
                 return ui
             },
             'Reference': function() {
                 var ui = setUiWithTextBlockOnly(
-                    [data.type, 'To #' + data.number], data)
+                    [token.type, 'To #' + token.number], token)
                 ui.stroke = '#f9f374'
-                ui.fill = data.isBack ? null : surfaceData.fillForNegative
+                ui.fill = token.isBack ? null : surfaceData.fillForNegative
                 return ui
             },
             'Any Other Char': function() {
-                var ui = setUiWithTextBlockOnly(['Any', 'Other'], data)
+                var ui = setUiWithTextBlockOnly(['Any', 'Other'], token)
                 ui.stroke = '#888'
                 ui.strokeW = 1
-                ui.fill = data.inclusive === false ? surfaceData.fillForNegative : null
+                ui.fill = token.inclusive === false ? surfaceData.fillForNegative : null
                 return ui
             }
         } // end of var map
 
-        var fn = map[data.type]
+        var fn = map[token.type]
         if (fn) {
             return fn()
         } else {
-            console.error('could not determine how to set ui data', data)
+            console.error('could not determine how to set ui data', token)
         }
     } // end of fn setUiByType
 
@@ -834,9 +834,9 @@
         Assigns all info required for rendering the root component.
         See `setUiByType`.
     */
-    surfaceData.addUiData = function(data) {
+    surfaceData.setUiData = function(token) {
         var rootPad = 10
-        var dUi = setUiByType(data)
+        var dUi = setUiByType(token)
         dUi.pos = [rootPad, rootPad]
         dUi.surfaceDim = [
             rootPad * 2 + dUi.dim[0],
