@@ -96,7 +96,7 @@
             create: function(vals) {
                 var inclusive = vals[0] === 'true'
                 var items = vals[1].slice() // clone so 'Any Other Char' isn't persisted in form states
-                return parser.yy.b.charSet(inclusive, items)
+                return parser.yy.b.charSet(null, inclusive, items)
             }
         },{
             tokenLabel: 'Pre-Defined Set of Chars',

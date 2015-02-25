@@ -215,6 +215,7 @@
                     onRightEdge
                 ],
                 textLoc: (function(pTextLoc) {
+                    if (! pTextLoc) { return }
                     if (pTextLoc[0] === pTextLoc[1]) {
                         // eg parent is an empty alt
                         return pTextLoc
@@ -734,7 +735,7 @@
                 return ui
             },
             'Set of Chars': function() {
-                var pad = {x: [30,30], y: [10,10]}
+                var pad = {x: [14,14], y: [10,10]}
                 var intraMargin = 10
                 var ui = setUiWithChildren(
                     token,
@@ -743,31 +744,12 @@
                     'y'
                 )
                 ui.stroke = '#b7a'
-                
-                token.possibilities.forEach(function(p) {
-                    // make nested sets transparent to avoid hiding parent's neighborArrows
-                    if (p.type === 'Set of Chars') {
-                        p.ui.fill = 'none'
-                    }
-                })
+                ui.fill = token.inclusive ? 'white' : surfaceData.fillForNegative
 
-                addNeighborArrows(token)
-                ui.neighborArrows.forEach(function(arrow) {
-                    var child
-                    arrow.usesMarkerEnd = false // b/c it looks cluttered
-
-                    if (arrow.fromLeft && arrow.toRight) {
-                        // This is an inclusive Set of Chars with zero possibilities.
-                        // Nothing to do.
-                    } else {
-                        child = token.possibilities[arrow.childIndex]
-                        // don't cross out line going to nested set, which is a predefined set
-                        //     b/c it can have "Any Other" as whitelist
-                        if (child.type !== 'Set of Chars') {
-                            arrow.usesMarkerMid = ! child.inclusive
-                        }
-                    }
-                })
+                if (! token.possibilities.length) {
+                    // allow adding into [] or [^]
+                    addNeighborArrows(token)
+                }
 
                 return ui
             },
@@ -815,9 +797,7 @@
             },
             'Any Other Char': function() {
                 var ui = setUiWithTextBlockOnly(['Any', 'Other'], token)
-                ui.stroke = '#888'
-                ui.strokeW = 1
-                ui.fill = token.inclusive === false ? surfaceData.fillForNegative : null
+                ui.fill = 'none'
                 return ui
             }
         } // end of var map
