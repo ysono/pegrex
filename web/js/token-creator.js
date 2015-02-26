@@ -34,11 +34,52 @@
         return alt.terms[0]
     }
 
+
+    var termTypeValidator = parserTypeValidator(
+        ['Quantified', 'Group', 'Set of Chars', 'Any Char', 'Specific Char'])
+    var groupedTypeValidator = parserTypeValidator(
+        ['Disjunction', 'Alternative',
+        'Quantified', 'Group', 'Set of Chars', 'Any Char', 'Specific Char'])
+    function createDisj(tokens) {
+        // Making a guess as to what user wants:
+        // an entry of disj or alt becomes an alt
+        // consecutive Terms are lumped together into one Alternative
+        var disj = {
+            type: 'Disjunction',
+            alternatives: []
+        }
+        tokens.forEach(function(token, i) {
+            if (token.type === 'Disjunction') {
+                disj.alternatives = disj.alternatives.concat(token.alternatives)
+            } else if (token.type === 'Alternative') {
+                disj.alternatives.push(token)
+            } else if (termTypeValidator(token)) {
+                ;(function() {
+                    var alt
+                    if (termTypeValidator(tokens[i - 1])) {
+                        alt = disj.alternatives.slice(-1)[0]
+                    } else {
+                        alt = {
+                            type: 'Alternative',
+                            terms: []
+                        }
+                        disj.alternatives.push(alt)
+                    }
+                    alt.terms.push(token)
+                })()
+            } else {
+                throw new Error('could not add token to group', token)
+            }
+        })
+        return disj
+    }
+
     // TODO
     // 'Look-Forward': 'assertionLF',
     // Group,
 
     // `tokenLabel`s don't have to match a `token.type` given by the parser.
+    // ordered in the desc order of what users want to use the most.
     var createInfoList = [
         {
             tokenLabel: 'Specific Char',
@@ -62,6 +103,29 @@
             tokenLabel: 'Any Char',
             params: [],
             create: simpleCreator('anyChar')
+        },{
+            tokenLabel: 'Group',
+            params: [
+                {
+                    label: 'Capturing',
+                    choices: {
+                        'Yes': 'true',
+                        'No': 'false'
+                    },
+                    default: 'false'
+                },{
+                    label: 'Content',
+                    mult: true,
+                    paramType: 'token',
+                    validate: groupedTypeValidator
+                }
+            ],
+            create: function(vals) {
+                var isCapturing = vals[0] === 'true'
+                var tokens = vals[1]
+                var disj = createDisj(tokens)
+                return simpleCreator('group')([isCapturing, disj, 0])
+            }
         },{
             tokenLabel: 'Range of Chars',
             params: [
@@ -95,7 +159,7 @@
             ],
             create: function(vals) {
                 var inclusive = vals[0] === 'true'
-                var items = vals[1].slice() // clone so 'Any Other Char' isn't persisted in form states
+                var items = vals[1]
                 return parser.yy.b.charSet(null, inclusive, items)
             }
         },{
@@ -120,12 +184,9 @@
                 {
                     label: 'Component being repeated',
                     paramType: 'token',
-                    validate: function(val) {
-                        if (! val) { return false }
-                        // has to be a term. is there a better way to get the list?
-                        return ['Assertion', 'Grouped Assertion', 'Range of Chars', 'Any Other Char']
-                            .indexOf(val.type) < 0
-                    }
+                    validate: parserTypeValidator(
+                        // any term except Quantified
+                        ['Group', 'Set of Chars', 'Any Char', 'Specific Char'])
                 },{
                     label: 'Minimal occurrence',
                     validate: numValidator()
@@ -177,6 +238,28 @@
                 }
             ],
             create: simpleCreator('assertionWB')
+        },{
+            tokenLabel: 'Look-Forward Assertion',
+            params: [
+                {
+                    label: 'Expect the specified thing to',
+                    choices: {
+                        'Be there': '=',
+                        'Not be there': '!'
+                    }
+                },{
+                    label: 'Content',
+                    mult: true,
+                    paramType: 'token',
+                    validate: groupedTypeValidator
+                }
+            ],
+            create: function(vals) {
+                var flag = vals[0]
+                var tokens = vals[1]
+                var disj = createDisj(tokens)
+                return simpleCreator('assertionLF')([flag, disj])
+            }
         }
     ]
     var createInfoMap = createInfoList.reduce(function(map, createInfo) {
@@ -204,11 +287,38 @@
 
     // keys are parser `type`s.
     var toStringers = {
-        'Specific Char': function(token) {
-            return token.display
+        'Disjunction': function(token) {
+            return token.alternatives
+                .map(function(alt) {
+                    return toStringers.Alternative(alt)
+                })
+                .join('|')
         },
-        'Any Char': function() {
-            return '.'
+        'Alternative': function(token) {
+            return token.terms
+                .map(function(t) {
+                    return toStringers[t.type](t)
+                })
+                .join('')
+        },
+        'Quantified': function(token) {
+            var t = toStringers[token.target.type](token.target)
+            return t + token.qrStr
+        },
+        'Assertion': function(token) {
+            if (token.hasOwnProperty('atBeg')) {
+                return token.atBeg ? '^' : '$'
+            } else if (token.hasOwnProperty('atWb')) {
+                return '\\' + (token.atWb ? 'b' : 'B')
+            }
+        },
+        'Grouped Assertion': function(token) {
+            return toStringers.groupHelper(token.grouped,
+                /^Pos/.test(token.assertion) ? '?=' : '?!')
+        },
+        'Group': function(token) {
+            return toStringers.groupHelper(token.grouped,
+                typeof token.number === 'number' ? '' : '?:')
         },
         'Range of Chars': function(token) {
             return token.range[0].display + '-'
@@ -230,17 +340,16 @@
                     .join(',')
                 + ']'
         },
-        'Quantified': function(token) {
-            var t = toStringers[token.target.type](token.target)
-            return t + token.qrStr
+        'Any Char': function() {
+            return '.'
         },
-        'Assertion': function(token) {
-            if (token.hasOwnProperty('atBeg')) {
-                return token.atBeg ? '^' : '$'
-            } else if (token.hasOwnProperty('atWb')) {
-                return '\\' + (token.atWb ? 'b' : 'B')
-            }
+        'Specific Char': function(token) {
+            return token.display
         },
+
+        groupHelper: function(disj, groupPrefix) {
+            return '(' + groupPrefix + toStringers.Disjunction(disj) + ')'
+        }
     }
     tokenCreator.toString = function(token) {
         return toStringers[token.type](token)

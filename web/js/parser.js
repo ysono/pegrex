@@ -873,10 +873,15 @@ if (typeof module !== 'undefined' && require.main === module) {
             }
         },
 
-        group: function(isCapturing, disj) {
+        /* mockNumer used by token creator. */
+        group: function(isCapturing, disj, mockNumber) {
             return {
                 type: 'Group',
-                number: isCapturing ? ++numCapturedGroups : undefined,
+                number: isCapturing
+                    ? typeof mockNumber === 'number'
+                        ? mockNumber
+                        : ++numCapturedGroups
+                    : undefined,
                 grouped: disj
             }
         },
@@ -1016,7 +1021,7 @@ if (typeof module !== 'undefined' && require.main === module) {
             }[key]
 
             return builders.charSet(
-                null, // if pre defn is inclusive, its nested Set of Chars
+                null, // if pre defn is exclusive, its nested Set of Chars
                     // won't be selectable, and that's ok
                 inclusive,
                 possibilities,

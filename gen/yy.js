@@ -146,10 +146,15 @@
             }
         },
 
-        group: function(isCapturing, disj) {
+        /* mockNumer used by token creator. */
+        group: function(isCapturing, disj, mockNumber) {
             return {
                 type: 'Group',
-                number: isCapturing ? ++numCapturedGroups : undefined,
+                number: isCapturing
+                    ? typeof mockNumber === 'number'
+                        ? mockNumber
+                        : ++numCapturedGroups
+                    : undefined,
                 grouped: disj
             }
         },
