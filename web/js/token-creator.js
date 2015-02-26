@@ -74,10 +74,6 @@
         return disj
     }
 
-    // TODO
-    // 'Look-Forward': 'assertionLF',
-    // Group,
-
     // `tokenLabel`s don't have to match a `token.type` given by the parser.
     // ordered in the desc order of what users want to use the most.
     var createInfoList = [
@@ -328,8 +324,7 @@
             if (token.predefined) {
                 return token.predefined.display
             }
-            return '['
-                + (token.inclusive ? '' : '^')
+            var str = (token.inclusive ? '' : '^')
                 + token.possibilities
                     .filter(function(p) {
                         return p.type !== 'Any Other Char'
@@ -338,7 +333,10 @@
                         return toStringers[p.type](p)
                     })
                     .join(',')
-                + ']'
+            if (! token.nonSemantic) {
+                str = '[' + str + ']'
+            }
+            return str
         },
         'Any Char': function() {
             return '.'

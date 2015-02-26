@@ -242,7 +242,9 @@
                     possibilities: [
                         result,
                         builders.charSetAnyOtherChar()
-                    ]
+                    ],
+                    nonSemantic: true // used when converting to string
+                        // to prevent adding an extraneous pair of [ and ]
                 }
             }
             return result

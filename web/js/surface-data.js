@@ -708,7 +708,7 @@
                     }
                 }
 
-                var pad = {h: 8, v: 8}
+                var pad = {h: 14, v: 14}
                 var cUi = setUiByType(token.grouped)
                 cUi.pos = [pad.h, pad.v]
                 cUi.stroke = '#FFF0DB'
