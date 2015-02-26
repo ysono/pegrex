@@ -136,6 +136,9 @@ html, body {
 .create-form-inputs>* {
     display: block;
 }
+.create-form-inputs p {
+    margin: 4px;
+}
 .create-form-inputs label {
     display: block;
 }
@@ -149,9 +152,6 @@ html, body {
 }
 .create-form-inputs .droppable:not(.error):hover {
     background-color: #eee;
-}
-.create-form-inputs p {
-    margin: 4px;
 }
 .create-form-inputs .mult {
     float: right;
@@ -173,6 +173,11 @@ html, body {
 }
 .create-form-preview>p {
     margin: 0;
+}
+.create-form-preview .preview-str {
+    margin: .2rem;
+    border: solid 1px;
+    min-height: 1rem;
 }
 .create-form-preview>.surface-parent {
     max-height: 14rem;

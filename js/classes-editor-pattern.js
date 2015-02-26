@@ -197,6 +197,8 @@
                         {fieldCompo}
                     </label>
                 })
+            var previewStr = this.state.previewToken &&
+                tokenCreator.toString(this.state.previewToken)
             return (
                 <form onSubmit={this.handleSubmit}
                     className="create-form">
@@ -209,6 +211,7 @@
                     </div>
                     <div className="create-form-preview">
                         <p>Preview</p>
+                        <p className="preview-str">{previewStr}</p>
                         <Cell token={this.state.previewToken} />
                     </div>
                 </form>
