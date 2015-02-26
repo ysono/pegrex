@@ -455,8 +455,10 @@
                 return ui
             },
             'Alternative': function() {
+                var padH = token.terms.length ? 0 : 6
+                    // make add/repl/deletable even if no terms
                 var padV = surfaceData.selectableArrowHeight / 2
-                var pad = {x: [6,6], y: [padV,padV]}
+                var pad = {x: [padH,padH], y: [padV,padV]}
                 var arrowW = 25
                 var ui = setUiWithChildren(
                     token,
@@ -499,7 +501,8 @@
                 }
 
                 var pad = {h: 30, v: 10}
-                var intraMargin = pad.v // gap between edges of target and arrows that run parallel to them outside them
+                var intraMargin = pad.v
+                    // gap between edges of target and arrows that run parallel to them outside them
 
                 // determine target's and neighborArrows' pos, based on target dim.
                 var arrowMidTopY, /* y where top arrow runs in the middle */
@@ -533,8 +536,8 @@
                     }
                 }
 
-                // position children, which are target and Quantifier
-                // set dim of parent (Quantified)
+                // position children, which are target and Quantifier.
+                // set dim of Quantified.
                 var myH
                 ;(function() {
                     var qUi = setUiByType(token.quantifier)
@@ -612,7 +615,7 @@
                         return
                     }
 
-                    // the thru arrow at the top
+                    // top arrow
                     myUi.neighborArrows = [{
                         type: 'path',
                         d: [
@@ -624,7 +627,7 @@
                             return coord
                         })
                     }]
-                    // detour arrow at the bottom
+                    // bottom arrow
                     if (btmArrowStyle === 'thru') {
                         myUi.neighborArrows.push({
                             type: 'path',
@@ -643,16 +646,10 @@
                 if (! token.quantifier.min && btmArrowStyle === 'loop') {
                     ;(function() {
                         var child = token.target
-                        if (child.type === 'Set of Chars') {
-                            // b/e within a set, the path goes thru only one char,
-                            // eliminating directinality is sufficient.
-                            // (Set of Chars already eliminates arrowheads
-                            // to avoid visual cluttering, but keep code in here
-                            // for clarity.)
-                            tUi.neighborArrows.forEach(function(arrow) {
-                                arrow.usesMarkerEnd = false
-                            })
-                        } else if (child.type === 'Group') {
+                        // note, Set of Chars is another possible type of child
+                        // that requires touching on neighborArrows.
+                        // but right now it does not use any.
+                        if (child.type === 'Group') {
                             // there is no easy way to correct them, so simply remove them
                             child.grouped.ui.neighborArrows.length = 0
                         }
