@@ -32,6 +32,13 @@
         }, {})
     }
     var Literal = React.createClass({displayName: "Literal",
+        componentWillReceiveProps: function(nextProps) {
+            var input
+            if (nextProps.patternSel) {
+                input = this.refs.pattern.getDOMNode()
+                input.setSelectionRange.apply(input, nextProps.patternSel)
+            }
+        },
         handleChange: function() {
             var parts = getRefVals(this.refs)
             this.props.onChange(parts)
@@ -51,21 +58,6 @@
             this.props.onSelect(patternSel)
         },
         render: function() {
-            if (this.props.patternSel) {
-                ;(function(input, patternSel) {
-                    var origFocus = document.activeElement
-                    // TODO focus would scroll up on select.
-                    // input.focus() // ff requires it to change seln
-                    input.setSelectionRange.apply(input, patternSel)
-                    // try {
-                    //     origFocus.focus()
-                    // } catch(e) {
-                    //     // ie doesn't support focusing on svg elm. do nothing.
-                    // }
-                })(this.refs.pattern.getDOMNode(), this.props.patternSel)
-                // note, getDOMNode() does not error b/c patternSel is falsy at initial render.
-            }
-
             function className(propName, valid) {
                 return propName + (valid ? '' : ' error')
             }
