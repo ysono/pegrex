@@ -357,7 +357,9 @@
             return (
                 React.createElement("div", {className: "surface-parent"}, 
                     React.createElement("svg", {width: svgDim[0], height: svgDim[1], 
-                        "data-mode": this.props.patternEditorMode}, 
+                        "data-mode": this.props.patternEditorMode, 
+                        id: this.props.isMainSurface ? 'main-surface' : null}, 
+                        this.props.isMainSurface ? React.createElement(SurfaceMetadata, null) : null, 
                         childCompo
                     )
                 )
@@ -393,16 +395,13 @@
                 .replace(/\{0\}/g, 'dropshadow-sel-by-exact')
                 .replace(/\{1\}/g, 'red')
             return (
-                React.createElement("svg", {width: "0", height: "0", style: {position: 'absolute'}}, 
-                    React.createElement("defs", {dangerouslySetInnerHTML: {
-                        __html: markerEndArrow
-                            + dropShadowSelByTextRange + dropShadowSelByExact
-                    }})
-                )
+                React.createElement("defs", {dangerouslySetInnerHTML: {
+                    __html: markerEndArrow
+                        + dropShadowSelByTextRange + dropShadowSelByExact
+                }})
             )
         }
     })
 
     reactClasses.Surface = Surface
-    reactClasses.SurfaceMetadata = SurfaceMetadata
 })(window.reactClasses = window.reactClasses || {})

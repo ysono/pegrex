@@ -268,7 +268,6 @@
                             onPatternSelect={this.handlePatternTextSelect} />
                     </div>
                     <div className="visuals-parent">
-                        <reactClasses.SurfaceMetadata />
                         <reactClasses.Surface
                             tree={this.state.tree}
                             flags={this.state.flags}
@@ -276,7 +275,8 @@
                             selToken={this.state.selToken}
                             patternEditorMode={this.state.patternEditorMode}
                             onSelect={this.handleSurfaceSelect}
-                            onHover={this.handleSurfaceHover} />
+                            onHover={this.handleSurfaceHover}
+                            isMainSurface={true} />
                         <reactClasses.FlagsEditor
                             flags={this.state.flags}
                             isFlagsValid={this.state.isFlagsValid}
