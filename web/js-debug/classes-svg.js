@@ -60,8 +60,10 @@
 
             var hiliteElm = this.refs.hiliteElm.getDOMNode()
 
-            hiliteElm.classList.toggle('selectable', amSelectable)
-                // note: ie does not read second arg as a flag
+            // ie-safe toggle
+            if (hiliteElm.classList.contains('selectable') !== amSelectable) {
+                hiliteElm.classList.toggle('selectable')
+            }
             function handleEvt(elm, type, handler) {
                 elm[(amSelectable ? 'add' : 'remove') + 'EventListener'](type, handler)
             }
