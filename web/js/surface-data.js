@@ -748,12 +748,17 @@
                 if (token.possibilities.length) {
                     if (! token.nonSemantic && ! token.predefinedDisplay) {
                         // add targets for add/replace within set.
+                        // innerTextLoc can be falsy if token came from creator
                         ui.neighborArrows = [{
                             pos: [0, boxY],
-                            textLoc: [token.innerTextLoc[0], token.innerTextLoc[0]]
+                            textLoc: token.innerTextLoc
+                                ? [token.innerTextLoc[0], token.innerTextLoc[0]]
+                                : null
                         },{
                             pos: [ui.dim[0] - addReplW, boxY],
-                            textLoc: [token.innerTextLoc[1], token.innerTextLoc[1]]
+                            textLoc: token.innerTextLoc
+                                ? [token.innerTextLoc[1], token.innerTextLoc[1]]
+                                : null
                         }]
                         ui.neighborArrows.forEach(function(arrow) {
                             arrow.type = 'boxed path'

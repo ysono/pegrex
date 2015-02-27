@@ -331,6 +331,7 @@
         props ~= {
             tree: required
             onSelect: required
+            onHover: required
             patternSel: optional
             patternEditorMode: required if selection is to be enabled.
         }
