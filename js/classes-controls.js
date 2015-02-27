@@ -244,14 +244,18 @@
         render: function() {
             return (
                 <div className="controls-parent">
-                    <reactClasses.Texts
-                        pattern={this.state.pattern}
-                        flags={this.state.flags}
-                        isPatternValid={this.state.isPatternValid}
-                        isFlagsValid={this.state.isFlagsValid}
-                        patternSel={this.state.patternSel}
-                        onChange={this.handleTextsChange}
-                        onPatternSelect={this.handlePatternTextSelect} />
+                    <div className="texts-parent-parent">
+                        {/* texts-parent-parent exists purely for styling
+                            so we can use padding rather than margin */}
+                        <reactClasses.Texts
+                            pattern={this.state.pattern}
+                            flags={this.state.flags}
+                            isPatternValid={this.state.isPatternValid}
+                            isFlagsValid={this.state.isFlagsValid}
+                            patternSel={this.state.patternSel}
+                            onChange={this.handleTextsChange}
+                            onPatternSelect={this.handlePatternTextSelect} />
+                    </div>
                     <div className="visuals-parent">
                         <reactClasses.SurfaceMetadata />
                         <reactClasses.Surface
@@ -271,11 +275,9 @@
                             onChange={this.handlePatternEditorModeChange}
                             onUndo={this.handlePatternEditorUndo} />
                     </div>
-                    <div className="pattern-editor-parent">
-                        <reactClasses.PatternEditor
-                            selToken={this.state.selToken}
-                            onSelect={this.handlePatternEditorSelect} />
-                    </div>
+                    <reactClasses.PatternEditor
+                        selToken={this.state.selToken}
+                        onSelect={this.handlePatternEditorSelect} />
                 </div>
             )
         }

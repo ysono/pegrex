@@ -31,8 +31,27 @@
         getInitialState: function() {
             return {
                 tokenLabel: null,
-                tokensInPalette: []
+                tokensInPalette: [],
+                hidden: false,
+                pinned: true
             }
+        },
+        handleTogglePin: function() {
+            this.setState({
+                pinned: ! this.state.pinned
+            })
+        },
+        handleToggleShow: function() {
+            this.setState({
+                hidden: ! this.state.hidden
+            })
+        },
+        handleDeleteFromPalette: function(index) {
+            this.state.tokensInPalette.splice(index, 1)
+            this.setState({
+                tokensInPalette: this.state.tokensInPalette
+            })
+            this.props.onSelect(null) // clear selToken
         },
         handleChangeTokenLabel: function(tokenLabel) {
             this.setState({
@@ -44,28 +63,33 @@
                 tokensInPalette: this.state.tokensInPalette.concat(token)
             })
         },
-        handleDeleteFromPalette: function(index) {
-            this.state.tokensInPalette.splice(index, 1)
-            this.setState({
-                tokensInPalette: this.state.tokensInPalette
-            })
-            this.props.onSelect(null) // clear selToken
-        },
         render: function() {
             return (
-                <div className="pattern-editor">
-                    <Palette
-                        tokensInPalette={this.state.tokensInPalette}
-                        selToken={this.props.selToken}
-                        onSelect={this.props.onSelect}
-                        onDelete={this.handleDeleteFromPalette} />
-                    <div className="create-parent">
-                        <FormChooser
-                            onChange={this.handleChangeTokenLabel} />
-                        <Form
-                            tokenLabel={this.state.tokenLabel}
+                <div className="pattern-editor-parent"
+                    data-hidden={this.state.hidden ? '' : null}
+                    data-pinned={this.state.pinned ? '' : null}>
+                    <div className="pattern-editor-toggler-parent">
+                        <button
+                            onClick={this.handleTogglePin}
+                            className="pattern-editor-pinner" />
+                        <button
+                            onClick={this.handleToggleShow}
+                            className="pattern-editor-toggler" />
+                    </div>
+                    <div className="pattern-editor">
+                        <Palette
+                            tokensInPalette={this.state.tokensInPalette}
                             selToken={this.props.selToken}
-                            onSubmit={this.handleCreate} />
+                            onSelect={this.props.onSelect}
+                            onDelete={this.handleDeleteFromPalette} />
+                        <div className="create-parent">
+                            <FormChooser
+                                onChange={this.handleChangeTokenLabel} />
+                            <Form
+                                tokenLabel={this.state.tokenLabel}
+                                selToken={this.props.selToken}
+                                onSubmit={this.handleCreate} />
+                        </div>
                     </div>
                 </div>
             )
@@ -339,8 +363,9 @@
             if (! this.props.selToken) {
                 return
             }
-            var val = _.merge({}, this.props.selToken) // important to clone!
-            this.props.onChange(val)
+            var token = _.merge({}, this.props.selToken) // important to clone!
+            // note, selecting `x` of `[^x]` and then pasting will paste `[^x]`
+            this.props.onChange(token)
         },
         render: function() {
             var token = this.props.val
