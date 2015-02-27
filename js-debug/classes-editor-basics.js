@@ -42,6 +42,15 @@
             var mode = e.target.value
             this.props.onChange(mode)
         },
+        saveSvg: function() {
+            var svg = document.getElementById('main-surface')
+            var svgData = new XMLSerializer().serializeToString(svg)
+            var blob = new Blob([svgData], {
+                type: 'image/svg+xml;charset=utf-8'
+            })
+            debugger
+            saveAs(blob, 'pegrex.svg')
+        },
         render: function() {
             var self = this
             var options = {
@@ -71,6 +80,8 @@
                         disabled={! canUndo}>
                         Undo
                     </button>
+                    <hr />
+                    <button onClick={this.saveSvg}>Save Image</button>
                 </fieldset>
             )
         }
