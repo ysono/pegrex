@@ -89,7 +89,7 @@
         },
         render: function() {
             var hint = this.state.show
-                ? this.props.selToken && this.props.selToken.hint
+                ? this.props.hoverToken && this.props.hoverToken.hint
                 : null
             return <div className="hint">
                 <label>

@@ -6,7 +6,7 @@
             Relays a select event to the parent component. The root `Surface`
                 component will eventually receive it and process it.
         */
-        proto.handleSelect = function(e) {
+        proto.handleEvents = function(e) {
             var pegrexEvt
             if (e.isPegrexEvt) {
                 // Then pass-thru.
@@ -15,14 +15,15 @@
                 // Then `this` originated the event.
                 pegrexEvt = {
                     isPegrexEvt: true,
-                    data: this.props.data
+                    data: this.props.data,
+                    type: e.type
                 }
 
                 // Event can come from a click on a transparent element.
                 // If so, prevent elements behind it from firing more click events.
                 e.stopPropagation()
             }
-            this.props.onBubbleUpSelect(pegrexEvt)
+            this.props.onBubbleUpEvents(pegrexEvt)
         }
         /*
             Determines if this compo is (1) selectable and (2) selected, based on
@@ -56,8 +57,12 @@
 
             hiliteElm.classList.toggle('selectable', amSelectable)
                 // note: ie does not read second arg as a flag
-            hiliteElm[(amSelectable ? 'add' : 'remove') + 'EventListener']
-                ('click', this.handleSelect)
+            function handleEvt(elm, type, handler) {
+                elm[(amSelectable ? 'add' : 'remove') + 'EventListener'](type, handler)
+            }
+            handleEvt(hiliteElm, 'click', this.handleEvents)
+            handleEvt(hiliteElm, 'mouseenter', this.handleEvents)
+            handleEvt(hiliteElm, 'mouseleave', this.handleEvents)
 
             // note: filter attr is not supported by react, so have to use js anyway.
             if (amSelectedByExact) {
@@ -294,7 +299,7 @@
     }
 
     function createNested(parentCompo, childData, key) {
-        if (! parentCompo.handleSelect) {
+        if (! parentCompo.handleEvents) {
             console.error('Cannot nest', parentCompo.props, childData)
             throw [
                 'Because the parent component is not equipped to relay',
@@ -305,7 +310,7 @@
         }
         var clazz = typeToClass[childData.type] || boxedClass
         var instance = React.createElement(clazz, {
-            onBubbleUpSelect: parentCompo.handleSelect,
+            onBubbleUpEvents: parentCompo.handleEvents,
             data: childData,
             patternSel: parentCompo.props.patternSel,
             selToken: parentCompo.props.selToken,
@@ -324,8 +329,12 @@
         }
     */
     var Surface = React.createClass({
-        handleSelect: function(pegrexEvt) {
-            this.props.onSelect(pegrexEvt.data)
+        handleEvents: function(pegrexEvt) {
+            if (pegrexEvt.type === 'click') {
+                this.props.onSelect(pegrexEvt.data)
+            } else {
+                this.props.onHover(pegrexEvt.data, pegrexEvt.type === 'mouseenter')
+            }
         },
         render: function() {
             var tree = this.props.tree

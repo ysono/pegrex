@@ -50,6 +50,7 @@
                 //     non-token obj like UI data.
                 // the two selections are separate concepts and hence not kept in sync.
             patternEditorMode
+            hoverToken
         */
         getInitialState: function() {
             var state = hashUtil.parse() || {
@@ -162,8 +163,8 @@
 
         /* events from surface */
 
-        handleSurfaceSelect: function(data) {
-            var textLoc = data.textLoc
+        handleSurfaceSelect: function(token) {
+            var textLoc = token.textLoc
 
             var mode = this.state.patternEditorMode
             var newState
@@ -172,8 +173,8 @@
                 newState = {
                     patternSel: textLoc
                 }
-                if (data.type) {
-                    newState.selToken = data
+                if (token.type) {
+                    newState.selToken = token
                 }
                 this.setState(newState)
                 return
@@ -213,6 +214,11 @@
                 this.updateHash(newState, true)
                 this.setState(newState)
             }
+        },
+        handleSurfaceHover: function(token, hoveringIn) {
+            this.setState({
+                hoverToken: hoveringIn ? token : null
+            })
         },
 
         /* events from editors */
@@ -268,7 +274,8 @@
                             patternSel={this.state.patternSel}
                             selToken={this.state.selToken}
                             patternEditorMode={this.state.patternEditorMode}
-                            onSelect={this.handleSurfaceSelect} />
+                            onSelect={this.handleSurfaceSelect}
+                            onHover={this.handleSurfaceHover} />
                         <reactClasses.FlagsEditor
                             flags={this.state.flags}
                             isFlagsValid={this.state.isFlagsValid}
@@ -279,7 +286,7 @@
                             onChange={this.handlePatternEditorModeChange}
                             onUndo={this.handlePatternEditorUndo} />
                         <reactClasses.Hint 
-                            selToken={this.state.selToken} />
+                            hoverToken={this.state.hoverToken} />
                     </div>
                     <reactClasses.PatternEditor
                         selToken={this.state.selToken}
