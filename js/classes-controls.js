@@ -278,6 +278,8 @@
                             historyCount={this.state.historyCount}
                             onChange={this.handlePatternEditorModeChange}
                             onUndo={this.handlePatternEditorUndo} />
+                        <reactClasses.Hint 
+                            selToken={this.state.selToken} />
                     </div>
                     <reactClasses.PatternEditor
                         selToken={this.state.selToken}

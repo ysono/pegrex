@@ -374,7 +374,7 @@
                 .replace(/\{1\}/g, '#F4FA50')
             var dropShadowSelByExact = dropShadowTemplate
                 .replace(/\{0\}/g, 'dropshadow-sel-by-exact')
-                .replace(/\{1\}/g, '#FF4A77')
+                .replace(/\{1\}/g, 'red')
             return (
                 <svg width="0" height="0" style={{position: 'absolute'}}>
                     <defs dangerouslySetInnerHTML={{

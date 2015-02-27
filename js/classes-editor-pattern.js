@@ -311,11 +311,11 @@
                 }
                 return <span key={i}>
                     {singleInputCompo}
-                    <div className="mult" onClick={handleDelMult}>-</div>
+                    <div className="mult" onClick={handleDelMult} role="button">-</div>
                 </span>
             })
             return <div>
-                <div className="mult" onClick={this.handleAddMult}>+</div>
+                <div className="mult" onClick={this.handleAddMult} role="button">+</div>
                 {singleInputCompos}
             </div>
             // for +/-, mock a button b/c a <botton> or <button type="button">
@@ -396,12 +396,11 @@
                             }}
                             className="del">X</button>
                         : null
-                    return <div className="pelette-cell">
+                    return <div className="pelette-cell" key={i}>
                         <Cell
                             token={tokensInPalette[i]}
                             selToken={self.props.selToken}
-                            onSelect={self.props.onSelect}
-                            key={i} />
+                            onSelect={self.props.onSelect} />
                         {deleteBtn}
                     </div>
                 })

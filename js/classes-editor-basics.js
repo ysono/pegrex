@@ -75,4 +75,31 @@
             )
         }
     })
+
+    reactClasses.Hint = React.createClass({
+        getInitialState: function() {
+            return {
+                show: true
+            }
+        },
+        handleToggle: function() {
+            this.setState({
+                show: ! this.state.show
+            })
+        },
+        render: function() {
+            var hint = this.state.show
+                ? this.props.selToken && this.props.selToken.hint
+                : null
+            return <div className="hint">
+                <label>
+                    <input type="checkbox"
+                        checked={this.state.show}
+                        onChange={this.handleToggle} />
+                    <span>Show Hint</span>
+                </label>
+                {hint ? <p>{hint}</p> : null}
+            </div>
+        }
+    })
 })(window.reactClasses = window.reactClasses || {})

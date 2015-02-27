@@ -765,7 +765,6 @@
                         })
                     }
                 } else {
-                    debugger
                     addNeighborArrows(token) // allow adding into [] or [^]
                 }
 
