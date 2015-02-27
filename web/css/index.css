@@ -113,7 +113,8 @@ html, body {
 }
 
 .hint {
-    position: absolute;
+    position: fixed;
+    z-index: 10;
     right: 3px;
     bottom: 1rem; /* enough to clear .pattern-editor-toggler-parent when pinned and collapsed */
     width: 20%;

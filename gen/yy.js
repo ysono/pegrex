@@ -387,7 +387,7 @@
                     ? ['Warning: A Back Reference will match with an empty string if'
                         ,'the target group has not been captured by the time this reference is expected.'
                         ,'In practice, any group that is 1) outside the root-level Alternative (the portion'
-                        ,'demarcated by `|`) that this Back Reference belongs to or 2) inside a Look-Forward'
+                        ,'demarcated by '|') that this Back Reference belongs to or 2) inside a Look-Forward'
                         ,'Assertion will have not been captured.'].join(' ')
                     : ['Because its target group will never have been captured,'
                         ,'a Forward Reference always matches with an empty string.'].join(' ')
