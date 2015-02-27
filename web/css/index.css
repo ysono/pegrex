@@ -112,6 +112,19 @@ html, body {
     margin-left: 1.25rem;
 }
 
+.hint {
+    float: right;
+    width: 20%;
+}
+.hint>p {
+    margin: 0;
+    padding: .3rem;
+    background-color: #0D547A;
+    color: #fff;
+    max-height: 6rem;
+    overflow-y: auto;
+}
+
 /* under pattern-editor-parent */
 
 .pattern-editor-parent {
@@ -266,7 +279,6 @@ svg .selectable:hover {
     stroke: black;
     stroke-dasharray: 5,5;
     stroke-width: 1;
-    fill: #eee;
 }
 svg text, svg path {
     pointer-events: none; /* prevent flicker on hover. */
