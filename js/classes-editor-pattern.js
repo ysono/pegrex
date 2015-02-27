@@ -458,6 +458,7 @@
                 ? <reactClasses.Surface
                     tree={token}
                     onSelect={this.handleSelect}
+                    onHover={function() {}}
                     patternSel={[0,0]} // disable sel by text range
                     selToken={this.props.selToken} // enable sel by exact match
                     patternEditorMode="select" />
