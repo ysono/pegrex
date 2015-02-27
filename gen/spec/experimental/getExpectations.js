@@ -128,25 +128,24 @@ var provide = {
     //     }, {})
     // },
     CharacterEscape: function() {
-        var needEscape = {
-            'f': 'Form Feed',
-            'cA': 'Control Char',
-            'cz': 'Control Char',
-            'c3': 'Control Char',
-            'c_': 'Control Char',
-            'u3f9b': 'Hexadecimal Notation',
-            'x3f': 'Hexadecimal Notation'
-        }
+        var needEscape = [
+            'f',
+            'cA',
+            'cz',
+            'c3',
+            'c_',
+            'u3f9b',
+            'x3f'
+        ]
         var identityEscape = [
             'a', '$'
         ]
 
-        needEscape = _.reduce(needEscape, function(map, meaning, unescaped) {
+        needEscape = _.reduce(needEscape, function(map, unescaped) {
             var escaped = '\\' + unescaped
             map[escaped] = {
                 type: 'Specific Char',
-                display: escaped,
-                meaning: meaning
+                display: escaped
             }
             return map
         }, {})
@@ -154,8 +153,7 @@ var provide = {
             var escaped = '\\' + unescaped
             map[escaped] = {
                 type: 'Specific Char',
-                display: unescaped,
-                meaning: undefined
+                display: unescaped
             }
             return map
         }, {})
@@ -185,10 +183,7 @@ var provide = {
                         ]
                     }
                 ],
-                predefined: {
-                    display: '\\d',
-                    meaning: 'Decimal'
-                }
+                predefinedDisplay: '\\d'
             },
             '\\W': {
                 type: 'Set of Chars',
@@ -252,10 +247,7 @@ var provide = {
                                 ]
                             }
                         ],  
-                        predefined: {
-                            display: '\\W',
-                            meaning: 'Non-Word Char'
-                        }
+                        predefinedDisplay: '\\W'
                     },
                     {
                         type: 'Any Other Char'

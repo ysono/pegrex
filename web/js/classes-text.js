@@ -54,13 +54,14 @@
             if (this.props.patternSel) {
                 ;(function(input, patternSel) {
                     var origFocus = document.activeElement
-                    input.focus() // ff requires it to change seln
+                    // TODO focus would scroll up on select.
+                    // input.focus() // ff requires it to change seln
                     input.setSelectionRange.apply(input, patternSel)
-                    try {
-                        origFocus.focus()
-                    } catch(e) {
-                        // ie doesn't support focusing on svg elm. do nothing.
-                    }
+                    // try {
+                    //     origFocus.focus()
+                    // } catch(e) {
+                    //     // ie doesn't support focusing on svg elm. do nothing.
+                    // }
                 })(this.refs.pattern.getDOMNode(), this.props.patternSel)
                 // note, getDOMNode() does not error b/c patternSel is falsy at initial render.
             }

@@ -161,7 +161,7 @@
                     //         return true
                     //     }
                     //     if (token && token.type === 'Set of Chars') {
-                    //         return !! token.predefined
+                    //         return !! token.predefinedDisplay
                     //     }
                     // }
                 }
@@ -336,8 +336,8 @@
                 + token.range[1].display
         },
         'Set of Chars': function(token) {
-            if (token.predefined) {
-                return token.predefined.display
+            if (token.predefinedDisplay) {
+                return token.predefinedDisplay
             }
             var str = (token.inclusive ? '' : '^')
                 + token.possibilities

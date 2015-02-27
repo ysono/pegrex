@@ -110,8 +110,8 @@
                 atBeg ? 'after' : 'before',
                 'it.',
                 'In the regular single-line mode, a "line separation" is the beginning or the end of the input.',
-                'In multi-line mode, a "line separation" also includes these chars:',
-                sepChars,
+                'In multi-line mode, it also includes these chars:',
+                sepChars.join(', '),
             ].join(' ') + '.'
             return {
                 type: 'Assertion',
@@ -122,8 +122,8 @@
         },
         assertionWB: function(token) {
             var atWb = token[1] === 'b'
-            var wc = '(a word char (\\w))'
-            var nwc = '(a non-word char (\\W) or the start (^) or the end ($) of a line)'
+            var wc = '(a word char i.e. \\w)'
+            var nwc = '(a non-word char i.e. \\W or the start (^) or the end ($) of a line)'
             var hint = [
                 'Matches the zero-length string between',
                 wc,
@@ -178,7 +178,7 @@
                     : undefined
             }
         },
-        charSet: function(loc, inclusive, items, predefined) {
+        charSet: function(loc, inclusive, items, predefinedDisplay) {
             // TODO test: start with ^, ^-, -^, -, [\d-x]
             
             // convert some of 'Specific Char's to 'Range of Chars'.
@@ -230,7 +230,7 @@
                 type: 'Set of Chars',
                 inclusive: inclusive,
                 possibilities: items,
-                predefined: predefined
+                predefinedDisplay: predefinedDisplay
             }
             if (loc) {
                 // if exclusive, need to specify loc for the nested set
@@ -296,7 +296,7 @@
                 }
             }[key.toLowerCase()]()
 
-            var meaning = {
+            var hint = {
                 d: 'Decimal',
                 D: 'Non-Decimal',
                 s: 'Whitepace',
@@ -305,16 +305,15 @@
                 W: 'Non-Word Char'
             }[key]
 
-            return builders.charSet(
+            var result = builders.charSet(
                 null, // if pre defn is exclusive, its nested Set of Chars
                     // won't be selectable, and that's ok
                 inclusive,
                 possibilities,
-                {
-                    display: '\\' + key,
-                    meaning: meaning
-                }
+                '\\' + key
             )
+            result.hint = hint
+            return result
         },
 
         anyChar: function() {
@@ -331,7 +330,7 @@
                 display: display
             }
         },
-        specificCharEsc: function(key, meaning) {
+        specificCharEsc: function(key, hint) {
             var map = {
                 b: 'Backspace',
                 c: 'Control Char',
@@ -346,11 +345,11 @@
                 'u2029': 'Paragraph Separator',
                 'u00a0': 'Nbsp'
             }
-            meaning = meaning || map[key] || map[key[0]]
+            hint = hint || map[key] || map[key[0]]
             return {
                 type: 'Specific Char',
-                display: (meaning ? '\\' : '') + key,
-                meaning: meaning
+                display: (hint ? '\\' : '') + key,
+                hint: hint
             }
         },
 
@@ -385,8 +384,13 @@
 
                 var isBack = intVal <= p.maxCapturedGroupNum
                 var hint = isBack
-                    ? 'Warning: A Back Reference will match with an empty string if the target group has not been captured by the time this reference is expected. In practice, any group that is 1) outside the root-level Alternative that this Back Reference belongs to or 2) inside a Look-Forward Assertion will have not been captured.'
-                    : 'Because its target group will never have been captured, a Forward Reference always matches with an empty string.'
+                    ? ['Warning: A Back Reference will match with an empty string if'
+                        ,'the target group has not been captured by the time this reference is expected.'
+                        ,'In practice, any group that is 1) outside the root-level Alternative (the portion'
+                        ,'demarcated by `|`) that this Back Reference belongs to or 2) inside a Look-Forward'
+                        ,'Assertion will have not been captured.'].join(' ')
+                    : ['Because its target group will never have been captured,'
+                        ,'a Forward Reference always matches with an empty string.'].join(' ')
                 return [{
                     type: 'Reference',
                     number: intVal,
