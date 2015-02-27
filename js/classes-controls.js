@@ -3,7 +3,8 @@
 
     var hashUtil = {
         read: function() {
-            return decodeURIComponent(window.location.hash.slice(1))
+            // ff decodes location.hash
+            return decodeURIComponent(window.location.href.split("#")[1])
         },
         parse: function() {
             var hash = hashUtil.read()
