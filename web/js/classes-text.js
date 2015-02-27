@@ -12,7 +12,7 @@
                         isFlagsValid={this.props.isFlagsValid}
                         patternSel={this.props.patternSel}
                         onChange={this.props.onChange}
-                        onSelect={this.props.onSelect} />
+                        onSelect={this.props.onPatternSelect} />
                     <hr />
                     <Ctor
                         pattern={this.props.pattern}
@@ -52,16 +52,17 @@
         },
         render: function() {
             if (this.props.patternSel) {
-                ;(function(input, range) {
+                ;(function(input, patternSel) {
                     var origFocus = document.activeElement
                     input.focus() // ff requires it to change seln
-                    input.setSelectionRange.apply(input, range)
+                    input.setSelectionRange.apply(input, patternSel)
                     try {
                         origFocus.focus()
                     } catch(e) {
                         // ie doesn't support focusing on svg elm. do nothing.
                     }
                 })(this.refs.pattern.getDOMNode(), this.props.patternSel)
+                // note, getDOMNode() does not error b/c patternSel is falsy at initial render.
             }
 
             function className(propName, valid) {
@@ -208,5 +209,6 @@
             )
         }
     })
+
     reactClasses.Texts = Texts
 })(window.reactClasses = window.reactClasses || {})

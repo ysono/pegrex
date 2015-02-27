@@ -2,26 +2,28 @@
     'use strict'
 
     /*
-    Important!! : Tokens that are stored in a state are there to be shared
-        with many react components. When multiple components read the same
-        token and want to render different Surfaces from it, the tokens
-        must have different `.ui` assigned. To prevent the sharing of UI
-        data (e.g. pos and surfaceDim), tokens must be always cloned before
-        being rendered by the Surface class.
-    While soft cloning with Object.create is ok if only using `setUiData`
-        (where only `.ui` is assigned), a token is expected to have its
-        non-ui properties modified when embedded within another token.
-        Therefore, deep cloning with _.merge is the safe choice.
-    E.g. when a `Specific Char` is embedded in a `Range of Chars` which is
-        embedded in an exclusive `Set of Chars`, `Specific Char`'s
-        `.inclusive` is toggled, contaminating the original token if 
-        the embedded token was soft cloned.
+    Important!!
+    Tokens that are stored in states are there to be shared with many
+        react components. When multiple components read the same token
+        and want to render different Surfaces from it, the tokens must
+        have different `.ui` assigned. To prevent the overriding of other
+        components' UI data (e.g. pos and surfaceDim), tokens must always
+        be cloned.
+    For this concern, soft cloning with Object.create is sufficient.
+    However, token can also be embedded within another, in which case,
+        anything can be assumed to be modified. Object.create is no longer
+        safe if a prop nested more than one level deep can be modified.
+        E.g. `someToken.someArr[i]` or `someToken.someProp.someProp`.
+        Real-world e.g. `Set of Chars` modifies `.inclusive` prop nested
+        multiple levels deep.
+    For this reason, we need deep cloning i.e. `_.merge`.
 
     The states in question are (in the chronological order of population)
         previewToken, tokensInPalette[i], selToken
     The operations in question are
-        Cell draws tokens from any of the above 3 sources, and adds `.ui` in the process.
-        FormFieldDroppable uses selToken to create previewToken.
+        Cell draws tokens from any of the above 3 sources, adding `.ui`
+            in the process.
+        FormInputToken uses selToken to create previewToken.
             In other words, previewToken embeds selToken.
     */
 
@@ -32,9 +34,9 @@
                 tokensInPalette: []
             }
         },
-        handleChangeTokenLabel: function(e) {
+        handleChangeTokenLabel: function(tokenLabel) {
             this.setState({
-                tokenLabel: e.target.value
+                tokenLabel: tokenLabel
             })
         },
         handleCreate: function(token) {
@@ -42,37 +44,24 @@
                 tokensInPalette: this.state.tokensInPalette.concat(token)
             })
         },
-        handlePaletteDelete: function(index) {
+        handleDeleteFromPalette: function(index) {
             this.state.tokensInPalette.splice(index, 1)
             this.setState({
                 tokensInPalette: this.state.tokensInPalette
             })
-            this.props.onSelect(null)
+            this.props.onSelect(null) // clear selToken
         },
         render: function() {
-            var self = this
-            var createOptions = tokenCreator.tokenLabels.map(function(tokenLabel) {
-                return (
-                    <label key={tokenLabel}>
-                        <input type="radio" name="palette-editor-create-type"
-                            value={tokenLabel}
-                            onChange={self.handleChangeTokenLabel} />
-                        <span>{tokenLabel}</span>
-                    </label>
-                )
-            })
             return (
                 <div className="pattern-editor">
                     <Palette
                         tokensInPalette={this.state.tokensInPalette}
                         selToken={this.props.selToken}
                         onSelect={this.props.onSelect}
-                        onDelete={this.handlePaletteDelete} />
+                        onDelete={this.handleDeleteFromPalette} />
                     <div className="create-parent">
-                        <fieldset className="create-type">
-                            <legend>Create</legend>
-                            {createOptions}
-                        </fieldset>
+                        <FormChooser
+                            onChange={this.handleChangeTokenLabel} />
                         <Form
                             tokenLabel={this.state.tokenLabel}
                             selToken={this.props.selToken}
@@ -82,31 +71,57 @@
             )
         }
     })
+    var FormChooser = React.createClass({
+        shouldComponentUpdate: function() {
+            return false
+        },
+        handleChangeTokenLabel: function(e) {
+            this.props.onChange(e.target.value)
+        },
+        render: function() {
+            var self = this
+            var createOptions = tokenCreator.tokenLabels.map(function(tokenLabel) {
+                return <label key={tokenLabel}>
+                    <input type="radio" name="palette-editor-create-type"
+                        value={tokenLabel}
+                        onChange={self.handleChangeTokenLabel} />
+                    <span>{tokenLabel}</span>
+                </label>
+            })
+            return <fieldset className="create-type-chooser">
+                <legend>Create</legend>
+                {createOptions}
+            </fieldset>
+        }
+    })
 
     var Form = React.createClass({
-        /* props of state:
-            params, allValid, validities, vals, previewToken, overallErrorMsg */
+        /* states:
+            params, vals, validities, allValid, previewToken, overallErrorMsg */
         getInitialState: function() {
             return {
-                params: [],
+                params: []
             }
         },
         componentWillReceiveProps: function(nextProps) {
             if (this.props.tokenLabel === nextProps.tokenLabel) {
                 return
             }
+            var self = this
             // reset state to a clean slate for the tokenLabel
             var params = tokenCreator.getParams(nextProps.tokenLabel)
-            this.compileVals(nextProps.tokenLabel, {
+            this.validateAll(nextProps.tokenLabel, {
                 params: params,
-                validities: params.map(function() {
-                    return false
-                }), // make dense array so allValid can be correctly derived.
-                vals: [] // sparse array
+                vals: params.map(function(param) {
+                    return param.default
+                }),
+                validities: params.map(function(param) {
+                    return self.validateSingle(param, param.default)
+                })
             })
         },
 
-        compileVals: function(tokenLabel, newState) {
+        validateAll: function(tokenLabel, newState) {
             newState.allValid = newState.validities.every(function(validity) {
                 return validity
             })
@@ -123,33 +138,23 @@
             }
             this.setState(newState)
         },
-
-        validateSingle: function(fieldProps, elm) {
-            var isValid = fieldProps.param.choices
-                // TODO make sure validation is happening on change tokenLabel.
-                // e.g. pick Set of Chars -> first radio has default hence valid -> pick Word Boundary -> wrongly shows as valid
-                // ? Object.keys(fieldProps.param.choices).some(function(choiceLabel) {
-                //     var choiceVal = fieldProps.param.choices[choiceLabel]
-                //     return elm.value === choiceVal
-                // })
-                ? !! elm.value // assuming we don't have a value that is ''
-                : ( ! fieldProps.param.validate
-                    || fieldProps.param.validate(elm.value) )
-            elm.classList.toggle('error', ! isValid)
-                // note: ie does not read second arg as a flag
-            return isValid
+        validateSingle: function(param, val) {
+            return param.choices
+                ? !! val // skipping check on if it's a valid val.
+                    // we don't have falsy i.e. empty val as a choice.
+                : ! param.validate || param.validate(val)
         },
-        handleSingleChange: function(fieldProps, elm) {
-            var isValid = this.validateSingle(fieldProps, elm)
-            this.state.validities[fieldProps.paramIndex] = isValid
-            this.state.vals[fieldProps.paramIndex] = elm.value
-            this.compileVals(this.props.tokenLabel, this.state)
+        handleChangeSingle: function(paramIndex, val, param) {
+            this.state.vals[paramIndex] = val
+            this.state.validities[paramIndex] = this.validateSingle(param, val)
+            this.validateAll(this.props.tokenLabel, this.state)
         },
-        handleMultChange: function(paramIndex, singleVals, isValid) {
+        handleChangeMult: function(paramIndex, val, isValid) {
+            this.state.vals[paramIndex] = val
             this.state.validities[paramIndex] = isValid
-            this.state.vals[paramIndex] = singleVals
-            this.compileVals(this.props.tokenLabel, this.state)
+            this.validateAll(this.props.tokenLabel, this.state)
         },
+
         handleSubmit: function(e) {
             e.preventDefault()
             this.props.onSubmit(this.state.previewToken)
@@ -157,46 +162,44 @@
 
         render: function() {
             var self = this
-            var fieldCompos = this.state.params &&
-                this.state.params.map(function(param, i) {
-                    var fieldClass = param.choices ? FormFieldRadio
-                        : param.paramType === 'token' ? FormFieldDroppable
-                        : FormFieldText
-                    var fieldPropsProto = {
-                        param: param,
-                        selToken: self.props.selToken,
-                        paramIndex: i
-                    }
-                    var fieldPropValDefault = param.default
+            var fieldCompos = this.state.params.map(function(param, i) {
+                var fieldClass = param.choices ? FormInputRadio
+                    : param.paramType === 'token' ? FormInputToken
+                    : FormInputText
+                var fieldPropsProto = {
+                    param: param,
+                    selToken: self.props.selToken
+                }
 
-                    /* required in props: val, onChange */
-                    function getSingleFieldCompo(props) {
-                        Object.keys(fieldPropsProto).forEach(function(key) {
-                            props[key] = fieldPropsProto[key]
-                        })
-                        if (props.val == null) {
-                            // do not replace if val is ''. otherwise user can never clear input
-                            props.val = fieldPropValDefault
+                /* required in props: val, valid, onChange */
+                function getSingleInputCompo(props) {
+                    Object.keys(fieldPropsProto).forEach(function(key) {
+                        props[key] = fieldPropsProto[key]
+                    })
+                    return React.createElement(fieldClass, props)
+                }
+
+                var fieldCompo = param.mult
+                    ? <FormInputMult
+                        param={param}
+                        getSingleInputCompo={getSingleInputCompo}
+                        validateSingle={self.validateSingle}
+                        onChange={function(val, isValid) {
+                            self.handleChangeMult(i, val, isValid)
+                        }} />
+                    : getSingleInputCompo({
+                        val: self.state.vals[i],
+                        valid: self.state.validities[i],
+                        onChange: function(val) {
+                            self.handleChangeSingle(i, val, param)
                         }
-                        return React.createElement(fieldClass, props)
-                    }
+                    })
+                return <label key={i}>
+                    <span>{param.label}</span>
+                    {fieldCompo}
+                </label>
+            })
 
-                    var fieldCompo = param.mult
-                        ? <FormFieldMult
-                            getSingleFieldCompo={getSingleFieldCompo}
-                            validateSingle={self.validateSingle}
-                            onMultChange={self.handleMultChange}
-                            paramIndex={i} />
-                        : getSingleFieldCompo({
-                            val: self.state.vals[i],
-                            onChange: self.handleSingleChange,
-                            key: i
-                        })
-                    return <label key={i}>
-                        <span>{param.label}</span>
-                        {fieldCompo}
-                    </label>
-                })
             var previewStr = this.state.previewToken &&
                 tokenCreator.toString(this.state.previewToken)
             return (
@@ -218,7 +221,8 @@
             )
         }
     })
-    var FormFieldMult = React.createClass({
+    var FormInputMult = React.createClass({
+        /* states: vals, validities */
         getInitialState: function() {
             return this.getResetState()
         },
@@ -228,132 +232,123 @@
             }
         },
         getResetState: function() {
+            var param = this.props.param
             return {
-                singleVals: [null], // size is 1. val null is not significant.
-                    // elm should prob be the default val, but not an issue for now
-                    // b/c only mult are droppables, and they don't have defaults.
-                singleValidities: [false], // is false ok as the default?
-                allValid: false
+                // init size 1
+                vals: [param.default],
+                validities: [this.validateSingle(param.default)],
             }
         },
 
         validateAll: function() {
-            var allValid = this.state.singleValidities.every(function(validity) {
+            var allValid = this.state.validities.every(function(validity) {
                 return validity
             })
             this.setState({
-                singleVals: this.state.singleVals,
-                singleValidities: this.state.singleValidities,
-                allValid: allValid
+                vals: this.state.vals,
+                validities: this.state.validities
             })
-            this.props.onMultChange(this.props.paramIndex,
-                this.state.singleVals, allValid)
+            this.props.onChange(this.state.vals, allValid)
         },
-        handleSingleChange: function(fieldProps, input) {
-            var isValid = this.props.validateSingle(fieldProps, input)
-            this.state.singleVals[fieldProps.multIndex] = input.value
-            this.state.singleValidities[fieldProps.multIndex] = isValid
+        validateSingle: function(val) {
+            var param = this.props.param
+            return this.props.validateSingle(param, val)
+        },
+        handleChange: function(multIndex, val) {
+            this.state.vals[multIndex] = val
+            this.state.validities[multIndex] = this.validateSingle(val)
             this.validateAll()
         },
+
         handleAddMult: function() {
-            this.state.singleVals.push(null)
-            this.state.singleValidities.push(false)
+            var param = this.props.param
+            this.state.vals.push(param.default)
+            this.state.validities.push(this.validateSingle(param.default))
             this.validateAll()
         },
         handleDelMult: function(multIndex) {
-            this.state.singleVals.splice(multIndex, 1)
-            this.state.singleValidities.splice(multIndex, 1)
+            this.state.vals.splice(multIndex, 1)
+            this.state.validities.splice(multIndex, 1)
             this.validateAll()
         },
 
         render: function() {
             var self = this
-            var singleFieldCompos = this.state.singleVals.map(function(singleVal, i) {
-                var singleFieldCompo = self.props.getSingleFieldCompo({
+            var singleInputCompos = this.state.vals.map(function(singleVal, i) {
+                var singleInputCompo = self.props.getSingleInputCompo({
                     val: singleVal,
-                    onChange: self.handleSingleChange,
-                    multIndex: i
+                    valid: self.state.validities[i],
+                    onChange: function(val) {
+                        self.handleChange(i, val)
+                    }
                 })
                 var handleDelMult = function() {
                     self.handleDelMult(i)
                 }
                 return <span key={i}>
-                    {singleFieldCompo}
+                    {singleInputCompo}
                     <div className="mult" onClick={handleDelMult}>-</div>
                 </span>
             })
             return <div>
                 <div className="mult" onClick={this.handleAddMult}>+</div>
-                {singleFieldCompos}
+                {singleInputCompos}
             </div>
             // for +/-, mock a button b/c a <botton> or <button type="button">
             //     would be associated with its parent <label>
         }
     })
-    var FormFieldText = React.createClass({
-        componentDidMount: function() {
-            this.handleChange()
-        },
-        handleChange: function() {
-            this.props.onChange(this.props, this.getDOMNode())
+    var FormInputText = React.createClass({
+        handleChange: function(e) {
+            this.props.onChange(e.target.value)
         },
         render: function() {
             return <input type="text"
                 value={this.props.val}
-                onChange={this.handleChange} />
+                onChange={this.handleChange}
+                className={this.props.valid ? '' : 'error'} />
         }
     })
-    var FormFieldRadio = React.createClass({
-        // to work with validation, using `value` prop on non-input elm
-        componentDidMount: function() {
-            var div = this.getDOMNode()
-            // assuming default to be one of the choice vals and hence valid
-            div.value = this.props.param.default
-            this.props.onChange(this.props, div)
-        },
+    var FormInputRadio = React.createClass({
         handleChange: function(e) {
-            var div = this.getDOMNode()
-            div.value = e.target.value
-            this.props.onChange(this.props, div)
+            this.props.onChange(e.target.value)
         },
         render: function() {
             var self = this
-            var choices = this.props.param.choices
-            var radios = Object.keys(choices).map(function(choiceLabel) {
-                var choiceVal = choices[choiceLabel]
+            var param = this.props.param
+            var name = 'pattern-editor-create-param-' + param.label
+                // assume param.label is unique among the list of params
+            var radios = Object.keys(param.choices).map(function(choiceLabel) {
+                var choiceVal = param.choices[choiceLabel]
                 return <label key={choiceVal}>
                     <input type="radio"
-                        name={'pattern-editor-create-param-' + self.props.paramIndex}
+                        name={name}
                         value={choiceVal}
                         checked={self.props.val === choiceVal}
                         onChange={self.handleChange} />
                     <span>{choiceLabel}</span>
                 </label>
             })
-            return <div>
+            return <div className={this.props.valid ? '' : 'error'}>
                 {radios}
             </div>
         }
     })
-    var FormFieldDroppable = React.createClass({
-        // to work with validation, using `value` prop on non-input elm
-        handlePasteCompo: function(e) {
+    var FormInputToken = React.createClass({
+        handlePasteCompo: function() {
             if (! this.props.selToken) {
                 return
             }
-            var div = e.target
-            // important to clone! do not let token creator later modify
-            //     the shared token selToken
-            div.value = _.merge({}, this.props.selToken)
-            this.props.onChange(this.props, div)
+            var val = _.merge({}, this.props.selToken) // important to clone!
+            this.props.onChange(val)
         },
         render: function() {
             var token = this.props.val
             var droppedCompo = token
                 ? <Cell token={token} />
-                : <p className="error">Click on palette to copy; click here to paste.</p>
-            return <div onClick={this.handlePasteCompo}
-                className="droppable">
+                : <p className="error">Select a node to highlight it; then click here to paste.</p>
+            var className = 'droppable ' + (this.props.valid ? '' : 'error')
+            return <div onClick={this.handlePasteCompo} className={className}>
                 {droppedCompo}
             </div>
         }
@@ -369,12 +364,21 @@
                     length: Math.max(minNumCells, tokensInPalette.length + 1)
                 })
                 .map(function(foo, i) {
-                    return <Cell
-                        token={tokensInPalette[i]}
-                        selToken={self.props.selToken}
-                        onSelect={self.props.onSelect}
-                        onDelete={self.props.onDelete}
-                        cellIndex={i} key={i} />
+                    var deleteBtn = tokensInPalette[i]
+                        ? <button
+                            onClick={function() {
+                                self.props.onDelete(i)
+                            }}
+                            className="del">X</button>
+                        : null
+                    return <div className="pelette-cell">
+                        <Cell
+                            token={tokensInPalette[i]}
+                            selToken={self.props.selToken}
+                            onSelect={self.props.onSelect}
+                            key={i} />
+                        {deleteBtn}
+                    </div>
                 })
             return <div className="palette">
                 {cells}
@@ -387,14 +391,9 @@
             token: required
 
             // both of these 2 are required for Cell to be selectable.
-            // selection by text range is disabled (there is no corresponding text)
             // selToken can be falsy, as it often will be.
             onSelect
             selToken
-
-            // both of these 2 are required for Cell to be deletable.
-            cellIndex
-            onDelete
         }
     */
     var Cell = React.createClass({
@@ -403,11 +402,12 @@
         },
         componentWillReceiveProps: function(nextProps) {
             // Comparing with previous token is for more than just optimization.
-            // We do not want to unneceesary clone token b/c
-            //     selection in Cell relies on exact obj ref equality
-            //     between selToken and Cell's token
-            // When selected, selToken will be the cloned obj. Therefore
-            //     we have to retain the exact clone obj. Save it in state.
+            // We want to clone exactly once per token
+            //     b/c selection in Cell relies on exact obj ref equality
+            //     between the global selection `selToken` and Cell's token.
+            //     Hence retained the cloned obj by saving it in state.
+            // Selection by text range is disabled
+            //     b/c there is no corresponding text.
             var willCloneToken = this.props.token !== nextProps.token
             if (willCloneToken) {
                 this.saveClonedToken(nextProps.token)
@@ -415,7 +415,7 @@
         },
         saveClonedToken: function(token) {
             if (token) {
-                token = _.merge({}, token)
+                token = _.merge({}, token) // important to clone!
                 surfaceData.setUiData(token)
             }
             this.setState({
@@ -428,27 +428,16 @@
                 this.props.onSelect(this.state.token) // state not props
             }
         },
-        handleDelete: function() {
-            if (this.props.onDelete) {
-                this.props.onDelete(this.props.cellIndex)
-            }
-        },
         render: function() {
             var token = this.state.token // state not props
-            var deleteBtn = this.props.onDelete
-                ? <button onClick={this.handleDelete} className="del">X</button>
-                : null
             return token
-                ? <div className="pelette-cell">
-                    <reactClasses.Surface
-                        tree={token}
-                        onSelect={this.handleSelect}
-                        patternSel={[0,0]} // disable sel by text range
-                        selToken={this.props.selToken} // enable sel by exact
-                        patternEditorMode="select" />
-                    {deleteBtn}
-                </div>
-                : <div className="empty-surface" />
+                ? <reactClasses.Surface
+                    tree={token}
+                    onSelect={this.handleSelect}
+                    patternSel={[0,0]} // disable sel by text range
+                    selToken={this.props.selToken} // enable sel by exact match
+                    patternEditorMode="select" />
+                : null
         }
     })
 

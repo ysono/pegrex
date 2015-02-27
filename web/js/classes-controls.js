@@ -18,10 +18,8 @@
             }
         },
         update: function(parts, rememberPrev) {
-            var hash = parts.pattern.length
-                + ','
-                + parts.pattern
-                + parts.flags
+            var hash = parts.pattern.length + ','
+                + parts.pattern + parts.flags
             if (hash === hashUtil.read()) {
                 return
             }
@@ -34,24 +32,24 @@
     }
     
     var Controls = React.createClass({
-        /*
-            props of state:
-                pattern, tree, isPatternValid
-                    // Last 2 are always derived from pattern.
-                    // It's useful for Surface to receive tree as a prop
-                    //     and not be tied to pattern.
-                    //     See how Cell class in Palette uses Surface.
-                    // isPatternValid could be internalized in Texts class,
-                    //     but keeping it consistent with isFlagsValid.
-                flags, isFlagsValid
-                (hash), historyCount, rememberHistoryCount
-                    // Synced with pattern and flags, hash is treated as if a state.
-                patternSel, selToken
-                    // these selections are separate concepts and hence not kept in sync.
-                    // patternSel is a sel of text range; latter targets an exact token.
-                    // selToken is for pasting into pattern editor, and it must be a
-                    //     parser token, not one of UI data objs.
-                patternEditorMode
+        /* states:
+            pattern, tree, isPatternValid
+                // Last 2 are always derived from pattern.
+                // It's useful for Surface to receive tree as a prop
+                //     and not be tied to pattern.
+                //     See how Cell class in Palette uses Surface.
+                // isPatternValid could be internalized in Texts class,
+                //     but keeping it consistent with isFlagsValid.
+            flags, isFlagsValid
+            (hash), historyCount, rememberHistoryCount
+                // Synced with pattern and flags, hash is treated as if a state.
+            patternSel, selToken
+                // patternSel represents user's selection range of the pattern text.
+                // selToken represents user's selection of one specific token.
+                // selToken is the clipboard of tokens, and hence must be kept free of
+                //     non-token obj like UI data.
+                // the two selections are separate concepts and hence not kept in sync.
+            patternEditorMode
         */
         getInitialState: function() {
             var state = hashUtil.parse() || {
@@ -117,7 +115,7 @@
                 this.patternToTree(newState)
                 newState.patternSel = null // do not force cursor/selection to stay in the same location
                 newState.selToken = null // selToken doesn't need to be cleared if it's on palette,
-                    // but not sure if it's easy to figure this out.
+                    // but that would require adding another state to keep track of it.
                 didChange = true
             }
             if (this.state && this.state.flags === newState.flags) {
@@ -156,7 +154,7 @@
                 this.setState(newState)
             }
         },
-        handleTextsSelect: function(patternSel) {
+        handlePatternTextSelect: function(patternSel) {
             this.setState({
                 patternSel: patternSel
             })
@@ -253,7 +251,7 @@
                         isFlagsValid={this.state.isFlagsValid}
                         patternSel={this.state.patternSel}
                         onChange={this.handleTextsChange}
-                        onSelect={this.handleTextsSelect} />
+                        onPatternSelect={this.handlePatternTextSelect} />
                     <div className="visuals-parent">
                         <reactClasses.SurfaceMetadata />
                         <reactClasses.Surface
