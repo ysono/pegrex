@@ -27,7 +27,7 @@
             In other words, previewToken embeds selToken.
     */
 
-    var PatternEditor = React.createClass({displayName: "PatternEditor",
+    var PatternEditor = React.createClass({
         getInitialState: function() {
             return {
                 tokenLabel: null,
@@ -65,37 +65,37 @@
         },
         render: function() {
             return (
-                React.createElement("div", {className: "pattern-editor-parent", 
-                    "data-hidden": this.state.hidden ? '' : null, 
-                    "data-pinned": this.state.pinned ? '' : null}, 
-                    React.createElement("div", {className: "pattern-editor-toggler-parent"}, 
-                        React.createElement("button", {
-                            onClick: this.handleTogglePin, 
-                            className: "pattern-editor-pinner"}), 
-                        React.createElement("button", {
-                            onClick: this.handleToggleShow, 
-                            className: "pattern-editor-toggler"})
-                    ), 
-                    React.createElement("div", {className: "pattern-editor"}, 
-                        React.createElement(Palette, {
-                            tokensInPalette: this.state.tokensInPalette, 
-                            selToken: this.props.selToken, 
-                            onSelect: this.props.onSelect, 
-                            onDelete: this.handleDeleteFromPalette}), 
-                        React.createElement("div", {className: "create-parent"}, 
-                            React.createElement(FormChooser, {
-                                onChange: this.handleChangeTokenLabel}), 
-                            React.createElement(Form, {
-                                tokenLabel: this.state.tokenLabel, 
-                                selToken: this.props.selToken, 
-                                onSubmit: this.handleCreate})
-                        )
-                    )
-                )
+                <div className="pattern-editor-parent"
+                    data-hidden={this.state.hidden ? '' : null}
+                    data-pinned={this.state.pinned ? '' : null}>
+                    <div className="pattern-editor-toggler-parent">
+                        <button
+                            onClick={this.handleTogglePin}
+                            className="pattern-editor-pinner" />
+                        <button
+                            onClick={this.handleToggleShow}
+                            className="pattern-editor-toggler" />
+                    </div>
+                    <div className="pattern-editor">
+                        <Palette
+                            tokensInPalette={this.state.tokensInPalette}
+                            selToken={this.props.selToken}
+                            onSelect={this.props.onSelect}
+                            onDelete={this.handleDeleteFromPalette} />
+                        <div className="create-parent">
+                            <FormChooser
+                                onChange={this.handleChangeTokenLabel} />
+                            <Form
+                                tokenLabel={this.state.tokenLabel}
+                                selToken={this.props.selToken}
+                                onSubmit={this.handleCreate} />
+                        </div>
+                    </div>
+                </div>
             )
         }
     })
-    var FormChooser = React.createClass({displayName: "FormChooser",
+    var FormChooser = React.createClass({
         shouldComponentUpdate: function() {
             return false
         },
@@ -105,21 +105,21 @@
         render: function() {
             var self = this
             var createOptions = tokenCreator.tokenLabels.map(function(tokenLabel) {
-                return React.createElement("label", {key: tokenLabel}, 
-                    React.createElement("input", {type: "radio", name: "palette-editor-create-type", 
-                        value: tokenLabel, 
-                        onChange: self.handleChangeTokenLabel}), 
-                    React.createElement("span", null, tokenLabel)
-                )
+                return <label key={tokenLabel}>
+                    <input type="radio" name="palette-editor-create-type"
+                        value={tokenLabel}
+                        onChange={self.handleChangeTokenLabel} />
+                    <span>{tokenLabel}</span>
+                </label>
             })
-            return React.createElement("fieldset", {className: "create-type-chooser"}, 
-                React.createElement("legend", null, "Create"), 
-                createOptions
-            )
+            return <fieldset className="create-type-chooser">
+                <legend>Create</legend>
+                {createOptions}
+            </fieldset>
         }
     })
 
-    var Form = React.createClass({displayName: "Form",
+    var Form = React.createClass({
         /* states:
             params, vals, validities, allValid, previewToken, overallErrorMsg */
         getInitialState: function() {
@@ -204,13 +204,13 @@
                 }
 
                 var fieldCompo = param.mult
-                    ? React.createElement(FormInputMult, {
-                        param: param, 
-                        getSingleInputCompo: getSingleInputCompo, 
-                        validateSingle: self.validateSingle, 
-                        onChange: function(val, isValid) {
+                    ? <FormInputMult
+                        param={param}
+                        getSingleInputCompo={getSingleInputCompo}
+                        validateSingle={self.validateSingle}
+                        onChange={function(val, isValid) {
                             self.handleChangeMult(i, val, isValid)
-                        }})
+                        }} />
                     : getSingleInputCompo({
                         val: self.state.vals[i],
                         valid: self.state.validities[i],
@@ -218,34 +218,34 @@
                             self.handleChangeSingle(i, val, param)
                         }
                     })
-                return React.createElement("label", {key: i}, 
-                    React.createElement("span", null, param.label), 
-                    fieldCompo
-                )
+                return <label key={i}>
+                    <span>{param.label}</span>
+                    {fieldCompo}
+                </label>
             })
 
             var previewStr = this.state.previewToken &&
                 tokenCreator.toString(this.state.previewToken)
             return (
-                React.createElement("form", {onSubmit: this.handleSubmit, 
-                    className: "create-form"}, 
-                    React.createElement("div", {className: "create-form-inputs"}, 
-                        fieldCompos, 
-                        React.createElement("input", {type: "submit", value: "Create", 
-                            disabled: ! this.state.previewToken}), 
-                        React.createElement("p", {ref: "overallError", className: "error"}, 
-                            this.state.overallErrorMsg)
-                    ), 
-                    React.createElement("div", {className: "create-form-preview"}, 
-                        React.createElement("p", null, "Preview"), 
-                        React.createElement("p", {className: "preview-str"}, previewStr), 
-                        React.createElement(Cell, {token: this.state.previewToken})
-                    )
-                )
+                <form onSubmit={this.handleSubmit}
+                    className="create-form">
+                    <div className="create-form-inputs">
+                        {fieldCompos}
+                        <input type="submit" value="Create"
+                            disabled={! this.state.previewToken} />
+                        <p ref="overallError" className="error">
+                            {this.state.overallErrorMsg}</p>
+                    </div>
+                    <div className="create-form-preview">
+                        <p>Preview</p>
+                        <p className="preview-str">{previewStr}</p>
+                        <Cell token={this.state.previewToken} />
+                    </div>
+                </form>
             )
         }
     })
-    var FormInputMult = React.createClass({displayName: "FormInputMult",
+    var FormInputMult = React.createClass({
         /* states: vals, validities */
         getInitialState: function() {
             return this.getResetState()
@@ -309,31 +309,31 @@
                 var handleDelMult = function() {
                     self.handleDelMult(i)
                 }
-                return React.createElement("span", {key: i}, 
-                    singleInputCompo, 
-                    React.createElement("div", {className: "mult", onClick: handleDelMult, role: "button"}, "-")
-                )
+                return <span key={i}>
+                    {singleInputCompo}
+                    <div className="mult" onClick={handleDelMult} role="button">-</div>
+                </span>
             })
-            return React.createElement("div", null, 
-                React.createElement("div", {className: "mult", onClick: this.handleAddMult, role: "button"}, "+"), 
-                singleInputCompos
-            )
+            return <div>
+                <div className="mult" onClick={this.handleAddMult} role="button">+</div>
+                {singleInputCompos}
+            </div>
             // for +/-, mock a button b/c a <botton> or <button type="button">
             //     would be associated with its parent <label>
         }
     })
-    var FormInputText = React.createClass({displayName: "FormInputText",
+    var FormInputText = React.createClass({
         handleChange: function(e) {
             this.props.onChange(e.target.value)
         },
         render: function() {
-            return React.createElement("input", {type: "text", 
-                value: this.props.val, 
-                onChange: this.handleChange, 
-                className: this.props.valid ? '' : 'error'})
+            return <input type="text"
+                value={this.props.val}
+                onChange={this.handleChange}
+                className={this.props.valid ? '' : 'error'} />
         }
     })
-    var FormInputRadio = React.createClass({displayName: "FormInputRadio",
+    var FormInputRadio = React.createClass({
         handleChange: function(e) {
             this.props.onChange(e.target.value)
         },
@@ -344,21 +344,21 @@
                 // assume param.label is unique among the list of params
             var radios = Object.keys(param.choices).map(function(choiceLabel) {
                 var choiceVal = param.choices[choiceLabel]
-                return React.createElement("label", {key: choiceVal}, 
-                    React.createElement("input", {type: "radio", 
-                        name: name, 
-                        value: choiceVal, 
-                        checked: self.props.val === choiceVal, 
-                        onChange: self.handleChange}), 
-                    React.createElement("span", null, choiceLabel)
-                )
+                return <label key={choiceVal}>
+                    <input type="radio"
+                        name={name}
+                        value={choiceVal}
+                        checked={self.props.val === choiceVal}
+                        onChange={self.handleChange} />
+                    <span>{choiceLabel}</span>
+                </label>
             })
-            return React.createElement("div", {className: this.props.valid ? '' : 'error'}, 
-                radios
-            )
+            return <div className={this.props.valid ? '' : 'error'}>
+                {radios}
+            </div>
         }
     })
-    var FormInputToken = React.createClass({displayName: "FormInputToken",
+    var FormInputToken = React.createClass({
         handlePasteCompo: function() {
             if (! this.props.selToken) {
                 return
@@ -370,16 +370,16 @@
         render: function() {
             var token = this.props.val
             var droppedCompo = token
-                ? React.createElement(Cell, {token: token})
-                : React.createElement("p", {className: "error"}, "Select a node to highlight it; then click here to paste.")
+                ? <Cell token={token} />
+                : <p className="error">Select a node to highlight it; then click here to paste.</p>
             var className = 'droppable ' + (this.props.valid ? '' : 'error')
-            return React.createElement("div", {onClick: this.handlePasteCompo, className: className}, 
-                droppedCompo
-            )
+            return <div onClick={this.handlePasteCompo} className={className}>
+                {droppedCompo}
+            </div>
         }
     })
 
-    var Palette = React.createClass({displayName: "Palette",
+    var Palette = React.createClass({
         render: function() {
             var self = this
             var minNumCells = 5
@@ -390,23 +390,23 @@
                 })
                 .map(function(foo, i) {
                     var deleteBtn = tokensInPalette[i]
-                        ? React.createElement("button", {
-                            onClick: function() {
+                        ? <button
+                            onClick={function() {
                                 self.props.onDelete(i)
-                            }, 
-                            className: "del"}, "X")
+                            }}
+                            className="del">X</button>
                         : null
-                    return React.createElement("div", {className: "pelette-cell", key: i}, 
-                        React.createElement(Cell, {
-                            token: tokensInPalette[i], 
-                            selToken: self.props.selToken, 
-                            onSelect: self.props.onSelect}), 
-                        deleteBtn
-                    )
+                    return <div className="pelette-cell" key={i}>
+                        <Cell
+                            token={tokensInPalette[i]}
+                            selToken={self.props.selToken}
+                            onSelect={self.props.onSelect} />
+                        {deleteBtn}
+                    </div>
                 })
-            return React.createElement("div", {className: "palette"}, 
-                cells
-            )
+            return <div className="palette">
+                {cells}
+            </div>
         }
     })
 
@@ -420,7 +420,7 @@
             selToken
         }
     */
-    var Cell = React.createClass({displayName: "Cell",
+    var Cell = React.createClass({
         componentWillMount: function() {
             this.saveClonedToken(this.props.token)
         },
@@ -455,13 +455,13 @@
         render: function() {
             var token = this.state.token // state not props
             return token
-                ? React.createElement(reactClasses.Surface, {
-                    tree: token, 
-                    onSelect: this.handleSelect, 
-                    onHover: function() {}, 
-                    patternSel: [0,0], // disable sel by text range
-                    selToken: this.props.selToken, // enable sel by exact match
-                    patternEditorMode: "select"})
+                ? <reactClasses.Surface
+                    tree={token}
+                    onSelect={this.handleSelect}
+                    onHover={function() {}}
+                    patternSel={[0,0]} // disable sel by text range
+                    selToken={this.props.selToken} // enable sel by exact match
+                    patternEditorMode="select" />
                 : null
         }
     })

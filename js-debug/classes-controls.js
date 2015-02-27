@@ -31,7 +31,7 @@
         }
     }
     
-    var Controls = React.createClass({displayName: "Controls",
+    var Controls = React.createClass({
         /* states:
             pattern, tree, isPatternValid
                 // Last 2 are always derived from pattern.
@@ -253,51 +253,51 @@
 
         render: function() {
             return (
-                React.createElement("div", {className: "controls-parent"}, 
-                    React.createElement("div", {className: "texts-parent-parent"}, 
-                        /* texts-parent-parent exists purely for styling
-                            so we can use padding rather than margin */
-                        React.createElement(reactClasses.Texts, {
-                            pattern: this.state.pattern, 
-                            flags: this.state.flags, 
-                            isPatternValid: this.state.isPatternValid, 
-                            isFlagsValid: this.state.isFlagsValid, 
-                            patternSel: this.state.patternSel, 
-                            onChange: this.handleTextsChange, 
-                            onPatternSelect: this.handlePatternTextSelect})
-                    ), 
-                    React.createElement("div", {className: "visuals-parent"}, 
-                        React.createElement(reactClasses.SurfaceMetadata, null), 
-                        React.createElement(reactClasses.Surface, {
-                            tree: this.state.tree, 
-                            flags: this.state.flags, 
-                            patternSel: this.state.patternSel, 
-                            selToken: this.state.selToken, 
-                            patternEditorMode: this.state.patternEditorMode, 
-                            onSelect: this.handleSurfaceSelect, 
-                            onHover: this.handleSurfaceHover}), 
-                        React.createElement(reactClasses.FlagsEditor, {
-                            flags: this.state.flags, 
-                            isFlagsValid: this.state.isFlagsValid, 
-                            onChange: this.handleFlagsEditorChange}), 
-                        React.createElement(reactClasses.PatternEditorModePicker, {
-                            patternEditorMode: this.state.patternEditorMode, 
-                            historyCount: this.state.historyCount, 
-                            onChange: this.handlePatternEditorModeChange, 
-                            onUndo: this.handlePatternEditorUndo}), 
-                        React.createElement(reactClasses.Hint, {
-                            selToken: this.state.selToken, 
-                            hoverToken: this.state.hoverToken})
-                    ), 
-                    React.createElement(reactClasses.PatternEditor, {
-                        selToken: this.state.selToken, 
-                        onSelect: this.handlePatternEditorSelect})
-                )
+                <div className="controls-parent">
+                    <div className="texts-parent-parent">
+                        {/* texts-parent-parent exists purely for styling
+                            so we can use padding rather than margin */}
+                        <reactClasses.Texts
+                            pattern={this.state.pattern}
+                            flags={this.state.flags}
+                            isPatternValid={this.state.isPatternValid}
+                            isFlagsValid={this.state.isFlagsValid}
+                            patternSel={this.state.patternSel}
+                            onChange={this.handleTextsChange}
+                            onPatternSelect={this.handlePatternTextSelect} />
+                    </div>
+                    <div className="visuals-parent">
+                        <reactClasses.SurfaceMetadata />
+                        <reactClasses.Surface
+                            tree={this.state.tree}
+                            flags={this.state.flags}
+                            patternSel={this.state.patternSel}
+                            selToken={this.state.selToken}
+                            patternEditorMode={this.state.patternEditorMode}
+                            onSelect={this.handleSurfaceSelect}
+                            onHover={this.handleSurfaceHover} />
+                        <reactClasses.FlagsEditor
+                            flags={this.state.flags}
+                            isFlagsValid={this.state.isFlagsValid}
+                            onChange={this.handleFlagsEditorChange} />
+                        <reactClasses.PatternEditorModePicker
+                            patternEditorMode={this.state.patternEditorMode}
+                            historyCount={this.state.historyCount}
+                            onChange={this.handlePatternEditorModeChange}
+                            onUndo={this.handlePatternEditorUndo} />
+                        <reactClasses.Hint 
+                            selToken={this.state.selToken}
+                            hoverToken={this.state.hoverToken} />
+                    </div>
+                    <reactClasses.PatternEditor
+                        selToken={this.state.selToken}
+                        onSelect={this.handlePatternEditorSelect} />
+                </div>
             )
         }
     })
     React.render(
-        React.createElement(Controls, null),
+        <Controls />,
         document.getElementsByClassName('react-parent')[0]
     )
 })()

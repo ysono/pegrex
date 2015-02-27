@@ -1,26 +1,26 @@
 ;(function(reactClasses) {
     'use strict'
 
-    var Texts = React.createClass({displayName: "Texts",
+    var Texts = React.createClass({
         render: function() {
             return (
-                React.createElement("div", {className: "texts-parent"}, 
-                    React.createElement(Literal, {
-                        pattern: this.props.pattern, 
-                        flags: this.props.flags, 
-                        isPatternValid: this.props.isPatternValid, 
-                        isFlagsValid: this.props.isFlagsValid, 
-                        patternSel: this.props.patternSel, 
-                        onChange: this.props.onChange, 
-                        onSelect: this.props.onPatternSelect}), 
-                    React.createElement("hr", null), 
-                    React.createElement(Ctor, {
-                        pattern: this.props.pattern, 
-                        flags: this.props.flags, 
-                        isPatternValid: this.props.isPatternValid, 
-                        isFlagsValid: this.props.isFlagsValid, 
-                        onChange: this.props.onChange})
-                )
+                <div className="texts-parent">
+                    <Literal
+                        pattern={this.props.pattern}
+                        flags={this.props.flags}
+                        isPatternValid={this.props.isPatternValid}
+                        isFlagsValid={this.props.isFlagsValid}
+                        patternSel={this.props.patternSel}
+                        onChange={this.props.onChange}
+                        onSelect={this.props.onPatternSelect} />
+                    <hr />
+                    <Ctor
+                        pattern={this.props.pattern}
+                        flags={this.props.flags}
+                        isPatternValid={this.props.isPatternValid}
+                        isFlagsValid={this.props.isFlagsValid}
+                        onChange={this.props.onChange} />
+                </div>
             )
         }
     })
@@ -31,7 +31,7 @@
             return map
         }, {})
     }
-    var Literal = React.createClass({displayName: "Literal",
+    var Literal = React.createClass({
         handleChange: function() {
             var parts = getRefVals(this.refs)
             this.props.onChange(parts)
@@ -75,25 +75,25 @@
             }
 
             return (
-                React.createElement("fieldset", {className: "literal"}, 
-                    React.createElement("span", {className: "prefix"}, "/"), 
-                    React.createElement("input", {type: "text", ref: "pattern", 
-                        placeholder: 'For an empty match, use (?:)', 
-                        value: this.props.pattern, 
-                        onChange: this.handleChange, 
-                        onSelect: this.handleSelect, 
-                        className: classNames.pattern}), 
-                    React.createElement("span", {className: "infix"}, "/"), 
-                    React.createElement("input", {type: "text", ref: "flags", 
-                        value: this.props.flags, 
-                        onChange: this.handleChange, 
-                        className: classNames.flags}), 
-                    React.createElement("span", {className: "suffix"})
-                )
+                <fieldset className="literal">
+                    <span className="prefix">/</span>
+                    <input type="text" ref="pattern"
+                        placeholder={'For an empty match, use (?:)'}
+                        value={this.props.pattern}
+                        onChange={this.handleChange}
+                        onSelect={this.handleSelect}
+                        className={classNames.pattern} />
+                    <span className="infix">/</span>
+                    <input type="text" ref="flags"
+                        value={this.props.flags}
+                        onChange={this.handleChange}
+                        className={classNames.flags} />
+                    <span className="suffix"></span>
+                </fieldset>
             )
         }
     })
-    var Ctor = React.createClass({displayName: "Ctor",
+    var Ctor = React.createClass({
         /*
             In simple conditions, we can let react loop back our updates.
             
@@ -194,19 +194,19 @@
             })
 
             return (
-                React.createElement("fieldset", {className: "ctor"}, 
-                    React.createElement("span", {className: "prefix"}, "new RegExp('"), 
-                    React.createElement("input", {type: "text", ref: "pattern", 
-                        value: escParts.pattern, 
-                        onChange: this.handleChange, 
-                        className: classNames.pattern}), 
-                    React.createElement("span", {className: "infix"}, "','"), 
-                    React.createElement("input", {type: "text", ref: "flags", 
-                        value: escParts.flags, 
-                        onChange: this.handleChange, 
-                        className: classNames.flags}), 
-                    React.createElement("span", {className: "suffix"}, "')")
-                )
+                <fieldset className="ctor">
+                    <span className="prefix">{"new RegExp('"}</span>
+                    <input type="text" ref="pattern" 
+                        value={escParts.pattern}
+                        onChange={this.handleChange}
+                        className={classNames.pattern} />
+                    <span className="infix">','</span>
+                    <input type="text" ref="flags"
+                        value={escParts.flags}
+                        onChange={this.handleChange}
+                        className={classNames.flags} />
+                    <span className="suffix">{"')"}</span>
+                </fieldset>
             )
         }
     })
