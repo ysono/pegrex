@@ -1,7 +1,7 @@
 ;(function(reactClasses) {
     'use strict'
 
-    reactClasses.FlagsEditor = React.createClass({
+    reactClasses.FlagsEditor = React.createClass({displayName: "FlagsEditor",
         handleChange: function() {
             var self = this
             var flags = Object.keys(self.refs).reduce(function(flags, flag) {
@@ -19,25 +19,25 @@
             }
             var choices = Object.keys(labels).map(function(flag, i) {
                 return (
-                    <label key={i}>
-                        <input type="checkbox"
-                            disabled={! self.props.isFlagsValid}
-                            checked={self.props.flags.indexOf(flag) >= 0}
-                            onChange={self.handleChange}
-                            ref={flag} />
-                        <span>{labels[flag]}</span>
-                    </label>
+                    React.createElement("label", {key: i}, 
+                        React.createElement("input", {type: "checkbox", 
+                            disabled: ! self.props.isFlagsValid, 
+                            checked: self.props.flags.indexOf(flag) >= 0, 
+                            onChange: self.handleChange, 
+                            ref: flag}), 
+                        React.createElement("span", null, labels[flag])
+                    )
                 )
             })
             return (
-                <fieldset className="flags-editor">
-                    {choices}
-                </fieldset>
+                React.createElement("fieldset", {className: "flags-editor"}, 
+                    choices
+                )
             )
         }
     })
 
-    reactClasses.PatternEditorModePicker = React.createClass({
+    reactClasses.PatternEditorModePicker = React.createClass({displayName: "PatternEditorModePicker",
         handleChange: function(e) {
             var mode = e.target.value
             this.props.onChange(mode)
@@ -52,31 +52,31 @@
             var radios = Object.keys(options).map(function(mode, i) {
                 var label = options[mode]
                 return (
-                    <label key={i}>
-                        <input type="radio" name="pattern-editor-mode"
-                            value={mode}
-                            checked={self.props.patternEditorMode === mode}
-                            onChange={self.handleChange} />
-                        <span>{label}</span>
-                    </label>
+                    React.createElement("label", {key: i}, 
+                        React.createElement("input", {type: "radio", name: "pattern-editor-mode", 
+                            value: mode, 
+                            checked: self.props.patternEditorMode === mode, 
+                            onChange: self.handleChange}), 
+                        React.createElement("span", null, label)
+                    )
                 )
             })
             var canUndo = this.props.patternEditorMode !== 'select'
                 && this.props.historyCount > 0
             return (
-                <fieldset className="pattern-editor-mode-picker">
-                    {radios}
-                    <button
-                        onClick={this.props.onUndo}
-                        disabled={! canUndo}>
-                        Undo
-                    </button>
-                </fieldset>
+                React.createElement("fieldset", {className: "pattern-editor-mode-picker"}, 
+                    radios, 
+                    React.createElement("button", {
+                        onClick: this.props.onUndo, 
+                        disabled: ! canUndo}, 
+                        "Undo"
+                    )
+                )
             )
         }
     })
 
-    reactClasses.Hint = React.createClass({
+    reactClasses.Hint = React.createClass({displayName: "Hint",
         getInitialState: function() {
             return {
                 show: true
@@ -92,15 +92,15 @@
             var hint = this.state.show
                 ? token && token.hint
                 : null
-            return <div className="hint">
-                {hint ? <p>{hint}</p> : null}
-                <label>
-                    <input type="checkbox"
-                        checked={this.state.show}
-                        onChange={this.handleToggle} />
-                    <span>Show Hint</span>
-                </label>
-            </div>
+            return React.createElement("div", {className: "hint"}, 
+                hint ? React.createElement("p", null, hint) : null, 
+                React.createElement("label", null, 
+                    React.createElement("input", {type: "checkbox", 
+                        checked: this.state.show, 
+                        onChange: this.handleToggle}), 
+                    React.createElement("span", null, "Show Hint")
+                )
+            )
         }
     })
 })(window.reactClasses = window.reactClasses || {})

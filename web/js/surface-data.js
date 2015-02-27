@@ -497,7 +497,7 @@
             'Quantified': function() {
                 var tUi = setUiByType(token.target)
                 var myUi = token.ui = {
-                    stroke: '#7a0'
+                    stroke: '#fb5'
                 }
 
                 var pad = {h: 30, v: 10}
@@ -711,14 +711,14 @@
                 var pad = {h: 14, v: 14}
                 var cUi = setUiByType(token.grouped)
                 cUi.pos = [pad.h, pad.v]
-                cUi.stroke = '#FFF0DB'
+                cUi.stroke = '#D6F099'
 
                 var ui = token.ui = {
                     dim: [
                         pad.h * 2 + cUi.dim[0],
                         pad.v * 2 + cUi.dim[1]
                     ],
-                    stroke: '#fb5'
+                    stroke: '#7a0'
                 }
 
                 if (tb) {

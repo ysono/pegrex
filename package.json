@@ -3,16 +3,13 @@
   "version": "1.0.0",
   "description": "Visual Regular Expression Builder",
   "main": "index.js",
-  "scripts": {
-    "build": "build.sh",
-    "test": "test.sh"
-  },
   "author": "ysono",
   "license": "ISC",
   "devDependencies": {
     "jison": "^0.4.15",
     "lodash": "^3.0.1",
-    "lodash-cli": "^3.3.1"
+    "lodash-cli": "^3.3.1",
+    "react-tools": "^0.12.2"
   },
   "repository": {
     "type": "git",

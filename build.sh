@@ -6,8 +6,14 @@ cat yy.js >> parser.js
 cp parser.js ../web/js
 popd
 
-## commenting out compilation of _.merge b/c it takes long.
+# # commenting out compilation of _.merge b/c it takes long.
 # pushd web/lib
 # ../../node_modules/.bin/lodash include=merge
 # rm lodash.custom.js
 # popd
+
+pushd web/js-debug
+for file in $(ls); do
+    ../../node_modules/.bin/jsx $file > ../js/$file
+done
+popd

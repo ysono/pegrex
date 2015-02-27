@@ -121,11 +121,11 @@
             var txform = ['translate(', data.ui.pos, ')'].join('')
 
             var boxCompo = (
-                React.createElement("rect", {width: data.ui.dim[0], height: data.ui.dim[1], rx: "3", ry: "3", 
-                        stroke: data.ui.stroke, 
-                        strokeWidth: data.ui.strokeW || 3, 
-                        fill: data.ui.fill || 'white', 
-                        ref: "hiliteElm"})
+                <rect width={data.ui.dim[0]} height={data.ui.dim[1]} rx="3" ry="3"
+                        stroke={data.ui.stroke}
+                        strokeWidth={data.ui.strokeW || 3}
+                        fill={data.ui.fill || 'white'}
+                        ref="hiliteElm" />
             )
 
             /*
@@ -148,10 +148,10 @@
             })
 
             return (
-                React.createElement("g", {transform: txform}, 
-                    boxCompo, 
-                    childCompos
-                )
+                <g transform={txform}>
+                    {boxCompo}
+                    {childCompos}
+                </g>
             )
         }
     }))
@@ -163,9 +163,9 @@
                 var txform = ['translate(', ui.pos, ')'].join('')
 
                 return (
-                    React.createElement("g", {transform: txform}, 
-                        React.createElement("circle", {cx: ui.cx, cy: ui.cy, r: ui.r, fill: ui.fill})
-                    )
+                    <g transform={txform}>
+                        <circle cx={ui.cx} cy={ui.cy} r={ui.r} fill={ui.fill} />
+                    </g>
                 )
             }
         }),
@@ -185,18 +185,18 @@
 
                 var textCompos = data.rows.map(function(row, i) {
                     return (
-                        React.createElement("text", {x: row.anchorPos[0], y: row.anchorPos[1], textAnchor: row.anchor, 
-                            fontFamily: "monospace", 
-                            key: i}, 
-                            row.text
-                        )
+                        <text x={row.anchorPos[0]} y={row.anchorPos[1]} textAnchor={row.anchor}
+                            fontFamily="monospace"
+                            key={i}>
+                            {row.text}
+                        </text>
                     )
                 })
 
                 return (
-                    React.createElement("g", {transform: txform}, 
-                        textCompos
-                    )
+                    <g transform={txform}>
+                        {textCompos}
+                    </g>
                 )
             }
         })),
@@ -220,12 +220,12 @@
                 pathData.pos = null
 
                 return (
-                    React.createElement("g", {transform: txform}, 
-                        React.createElement("rect", {width: data.dim[0], height: data.dim[1], 
-                            fill: "none", 
-                            ref: "hiliteElm"}), 
-                        React.createElement(typeToClass.path, {data: pathData})
-                    )
+                    <g transform={txform}>
+                        <rect width={data.dim[0]} height={data.dim[1]}
+                            fill="none"
+                            ref="hiliteElm" />
+                        <typeToClass.path data={pathData} />
+                    </g>
                 )
             }
         })),
@@ -294,12 +294,12 @@
                 })()
 
                 return (
-                    React.createElement("g", {transform: txform}, 
-                        React.createElement("path", {d: dStr, 
-                            markerEnd: usesMarkerEnd ? 'url(#marker-end-arrow)' : null, 
-                            stroke: data.stroke || surfaceData.neighborArrowColor, 
-                            fill: "none"})
-                    )
+                    <g transform={txform}>
+                        <path d={dStr}
+                            markerEnd={usesMarkerEnd ? 'url(#marker-end-arrow)' : null}
+                            stroke={data.stroke || surfaceData.neighborArrowColor}
+                            fill="none" />
+                    </g>
                 )
             }
         })
@@ -336,7 +336,7 @@
             patternEditorMode: required if selection is to be enabled.
         }
     */
-    var Surface = React.createClass({displayName: "Surface",
+    var Surface = React.createClass({
         handleEvents: function(pegrexEvt) {
             if (pegrexEvt.type === 'click') {
                 this.props.onSelect(pegrexEvt.data)
@@ -355,17 +355,17 @@
             }
 
             return (
-                React.createElement("div", {className: "surface-parent"}, 
-                    React.createElement("svg", {width: svgDim[0], height: svgDim[1], 
-                        "data-mode": this.props.patternEditorMode}, 
-                        childCompo
-                    )
-                )
+                <div className="surface-parent">
+                    <svg width={svgDim[0]} height={svgDim[1]}
+                        data-mode={this.props.patternEditorMode}>
+                        {childCompo}
+                    </svg>
+                </div>
             )
         }
     })
 
-    var SurfaceMetadata = React.createClass({displayName: "SurfaceMetadata",
+    var SurfaceMetadata = React.createClass({
         render: function() {
             var markerEndArrow = '\
                 <marker id="marker-end-arrow" \
@@ -393,12 +393,12 @@
                 .replace(/\{0\}/g, 'dropshadow-sel-by-exact')
                 .replace(/\{1\}/g, 'red')
             return (
-                React.createElement("svg", {width: "0", height: "0", style: {position: 'absolute'}}, 
-                    React.createElement("defs", {dangerouslySetInnerHTML: {
+                <svg width="0" height="0" style={{position: 'absolute'}}>
+                    <defs dangerouslySetInnerHTML={{
                         __html: markerEndArrow
                             + dropShadowSelByTextRange + dropShadowSelByExact
-                    }})
-                )
+                    }}></defs>
+                </svg>
             )
         }
     })
