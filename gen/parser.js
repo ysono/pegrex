@@ -959,10 +959,21 @@ if (typeof module !== 'undefined' && require.main === module) {
                 possibilities: items,
                 predefined: predefined
             }
+            if (loc) {
+                // if exclusive, need to specify loc for the nested set
+                //     (non-fake, see below) so that add/replace works at the
+                //     right location. Also, have to keep `^` out.
+                // for consistency, specify loc if inclusive too. For inclusive,
+                //     result.textLoc will be overriden later, with a range that
+                //     will include the brackets. So set innerTextLoc.
+                // but if it's the empty exclusive, `[^]`, need textLoc for
+                //     to allow the convenience of `addNeighborArrows`.
+                //     so keep textLoc too.
+                // clear as mud?
+                builders.withLoc(loc, result)
+                result.innerTextLoc = result.textLoc
+            }
             if (! inclusive) {
-                if (loc) {
-                    builders.withLoc(loc, result)
-                }
                 result = {
                     type: 'Set of Chars',
                     inclusive: true,
@@ -970,8 +981,7 @@ if (typeof module !== 'undefined' && require.main === module) {
                         result,
                         builders.charSetAnyOtherChar()
                     ],
-                    nonSemantic: true // used when converting to string
-                        // to prevent adding an extraneous pair of [ and ]
+                    nonSemantic: true // consider the wrapper Set a fake one
                 }
             }
             return result

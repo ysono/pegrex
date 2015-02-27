@@ -7,19 +7,34 @@ html, body {
     height: 100%;
 }
 
-/* under controls-parent */
+/* common */
 
-.texts-parent {
-    margin: 1rem 1%;
-    border: solid 1px;
-    text-align: center;
+.error {
+    background-color: #F0A9A1;
+    color: #fff;
 }
-.visuals-parent {
-    position: relative;
-    min-height: 7.5rem; /* enough to cover pattern-editor-mode-picker and flags-editor */
+.error::-webkit-input-placeholder {
+   color: #dfdfdf;
+}
+.error:-moz-placeholder {
+   color: #dfdfdf;
+}
+.error:-moz-placeholder {
+   color: #dfdfdf;
+}
+.error:-ms-input-placeholder {  
+   color: #dfdfdf;
 }
 
 /* under texts-parent */
+
+.texts-parent-parent {
+    padding: 1rem 1%;
+}
+.texts-parent {
+    border: solid 1px;
+    text-align: center;
+}
 
 .texts-parent>fieldset {
     border: none;
@@ -56,10 +71,6 @@ html, body {
     width: 3rem;
 }
 
-.texts-parent>fieldset>input.error {
-    background-color: #F0A9A1;
-}
-
 @media (max-width: 768px) {
     .texts-parent>fieldset>:not(input) {
         display: none;
@@ -68,6 +79,10 @@ html, body {
 
 /* under visuals-parent */
 
+.visuals-parent {
+    position: relative;
+    min-height: 7.5rem; /* enough to cover pattern-editor-mode-picker and flags-editor */
+}
 .visuals-parent>.surface-parent {
     width: 100%;
     overflow: auto;
@@ -78,7 +93,7 @@ html, body {
     position: absolute;
     top: 0;
     padding: 0;
-    background-color: rgba(255,255,242,.85);
+    background-color: rgba(255,255,255,.85);
     font-family: Arial, Helvetica, sans-serif;
     font-size: .8rem;
 }
@@ -99,9 +114,71 @@ html, body {
 
 /* under pattern-editor-parent */
 
+.pattern-editor-parent {
+    position: relative;
+    width: 100%;
+}
+.pattern-editor-parent[data-pinned] {
+    position: absolute;
+    bottom: 0;
+    max-height: 100%;
+    overflow: auto;
+}
+
+.pattern-editor-toggler-parent {
+    text-align: center;
+}
+.pattern-editor-pinner:before {
+    content: "Pin";
+}
+.pattern-editor-parent[data-pinned] .pattern-editor-pinner:before {
+    content: "Unpin";
+}
+.pattern-editor-toggler {
+    width: 15%;
+}
+.pattern-editor-toggler:before {
+    content: "- - -";
+}
+.pattern-editor-parent[data-hidden] .pattern-editor-toggler:before {
+    content: "+ + +";
+}
+
 .pattern-editor {
     display: flex;
     flex-direction: column;
+    border: solid 1px;
+    padding: 4px; /* chrome bug? if using rem here, when .surface-parent starts
+        having horizontal scroolbar, top of palette cells get chopped off. */
+    background-color: white;
+    opacity: .95;
+}
+.pattern-editor-parent[data-hidden]>.pattern-editor {
+    display: none;
+}
+
+/* note, (.palette justify center) + (.palette>* min-width foo) messes up scrolling,
+    which can't go all the way left. */
+.palette {
+    display: flex;
+    justify-content: center; 
+    overflow-x: auto;
+}
+.palette>* {
+    display: inline-block;
+    width: 8rem;
+    height: 8rem;
+    margin: 2px;
+    border: solid 1px;
+    overflow: auto;
+}
+.pelette-cell {
+    position: relative;
+}
+.pelette-cell>.del {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
 }
 
 .create-parent {
@@ -142,10 +219,6 @@ html, body {
 .create-form-inputs label {
     display: block;
 }
-.create-form-inputs .error {
-    background-color: #F0A9A1;
-    color: #fff;
-}
 .create-form-inputs .droppable {
     border: solid 1px;
     cursor: pointer;
@@ -178,33 +251,6 @@ html, body {
     margin: .2rem;
     border: solid 1px;
     min-height: 1rem;
-}
-.create-form-preview>.surface-parent {
-    max-height: 14rem;
-    overflow: auto;
-}
-
-.palette {
-    display: flex;
-    justify-content: center; /* note, center messes up scrolling */
-    overflow-x: auto;
-}
-.palette>* {
-    display: inline-block;
-    width: 8rem;
-    height: 8rem;
-    min-width: 6rem;
-    margin: 2px;
-    border: solid 1px;
-    overflow: auto;
-}
-.pelette-cell {
-    position: relative;
-}
-.pelette-cell>.del {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
 }
 
 /* svg common */

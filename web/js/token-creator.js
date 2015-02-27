@@ -44,8 +44,8 @@
     
     function createDisj(tokens) {
         // Making a guess as to what user wants:
-        // an entry of disj or alt becomes an alt
-        // consecutive Terms are lumped together into one Alternative
+        // a disj or an alt becomes an alt
+        // consecutive Terms are lumped together into one alt
         var disj = {
             type: 'Disjunction',
             alternatives: []
@@ -153,6 +153,17 @@
                     mult: true,
                     paramType: 'token',
                     validate: parserTypeValidator(['Specific Char', 'Range of Chars'])
+
+                    // we could consider allowing embedding predefined, it would be confusing
+                    //     since we do not visually distinguish seln of predefined vs custom set of chars.
+                    // validate: function(token) {
+                    //     if ( parserTypeValidator(['Specific Char', 'Range of Chars'])(token) ) {
+                    //         return true
+                    //     }
+                    //     if (token && token.type === 'Set of Chars') {
+                    //         return !! token.predefined
+                    //     }
+                    // }
                 }
             ],
             create: function(vals) {
@@ -237,7 +248,7 @@
             ],
             create: simpleCreator('assertionWB')
         },{
-            tokenLabel: 'Look-Forward Assertion',
+            tokenLabel: 'Look-Forward',
             params: [
                 {
                     label: 'Expect the specified thing to',

@@ -732,20 +732,41 @@
                 return ui
             },
             'Set of Chars': function() {
-                var pad = {x: [14,14], y: [10,10]}
-                var intraMargin = 10
                 var ui = setUiWithChildren(
                     token,
-                    pad,
-                    intraMargin,
+                    {x: [24,24], y: [10,10]},
+                    10,
                     'y'
                 )
                 ui.stroke = '#b7a'
                 ui.fill = token.inclusive ? 'white' : surfaceData.fillForNegative
 
-                if (! token.possibilities.length) {
-                    // allow adding into [] or [^]
-                    addNeighborArrows(token)
+                var addReplW = 14
+                var h = surfaceData.selectableArrowHeight
+                var boxY = (ui.dim[1] - h) / 2
+                var arrowY = h / 2
+                if (token.possibilities.length) {
+                    if (! token.nonSemantic && ! token.predefined) {
+                        // add targets for add/replace
+                        ui.neighborArrows = [{
+                            pos: [0, boxY],
+                            textLoc: [token.innerTextLoc[0], token.innerTextLoc[0]]
+                        },{
+                            pos: [ui.dim[0] - addReplW, boxY],
+                            textLoc: [token.innerTextLoc[1], token.innerTextLoc[1]]
+                        }]
+                        ui.neighborArrows.forEach(function(arrow) {
+                            arrow.type = 'boxed path'
+                            arrow.dim = [addReplW, h]
+                            arrow.d = [
+                                [0, arrowY],
+                                [addReplW, arrowY]
+                            ]
+                        })
+                    }
+                } else {
+                    debugger
+                    addNeighborArrows(token) // allow adding into [] or [^]
                 }
 
                 return ui
