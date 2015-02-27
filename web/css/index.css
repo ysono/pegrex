@@ -119,7 +119,7 @@ html, body {
     width: 100%;
 }
 .pattern-editor-parent[data-pinned] {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     max-height: 100%;
     overflow: auto;
