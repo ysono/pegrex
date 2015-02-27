@@ -10,9 +10,17 @@
     function parserTypeValidator(types) {
         types = [].concat(types)
         return function(token) {
-            return token &&
-                types.indexOf(token.type) >= 0
+            return token && types.indexOf(token.type) >= 0
         }
+    }
+    function termTypeValidator(token) {
+        return token &&
+            ['Disjunction', 'Alternative',
+            'Quantifier', 'Any Other Char', 'Range of Chars'].indexOf(token.type) < 0
+    }
+    function groupableTypeValidator(token) {
+        return token &&
+            ['Quantifier', 'Any Other Char', 'Range of Chars'].indexOf(token.type) < 0
     }
     function numValidator(isInfAllowed) {
         return function(val) {
@@ -33,13 +41,7 @@
         if (alt.terms.length !== 1) { return null }
         return alt.terms[0]
     }
-
-
-    var termTypeValidator = parserTypeValidator(
-        ['Quantified', 'Group', 'Set of Chars', 'Any Char', 'Specific Char'])
-    var groupedTypeValidator = parserTypeValidator(
-        ['Disjunction', 'Alternative',
-        'Quantified', 'Group', 'Set of Chars', 'Any Char', 'Specific Char'])
+    
     function createDisj(tokens) {
         // Making a guess as to what user wants:
         // an entry of disj or alt becomes an alt
@@ -105,19 +107,19 @@
                 {
                     label: 'Capturing',
                     choices: {
-                        'Yes': 'true',
-                        'No': 'false'
+                        'Yes': 'yes',
+                        'No': 'no'
                     },
-                    default: 'false'
+                    default: 'no'
                 },{
                     label: 'Content',
                     mult: true,
                     paramType: 'token',
-                    validate: groupedTypeValidator
+                    validate: groupableTypeValidator
                 }
             ],
             create: function(vals) {
-                var isCapturing = vals[0] === 'true'
+                var isCapturing = vals[0] === 'yes'
                 var tokens = vals[1]
                 var disj = createDisj(tokens)
                 return simpleCreator('group')([isCapturing, disj, 0])
@@ -142,10 +144,10 @@
                 {
                     label: 'Inclusive',
                     choices: {
-                        'Yes': 'true',
-                        'No': 'false'
+                        'Yes': 'yes',
+                        'No': 'no'
                     },
-                    default: 'true'
+                    default: 'yes'
                 },{
                     label: 'Possibility',
                     mult: true,
@@ -154,7 +156,7 @@
                 }
             ],
             create: function(vals) {
-                var inclusive = vals[0] === 'true'
+                var inclusive = vals[0] === 'yes'
                 var items = vals[1]
                 return parser.yy.b.charSet(null, inclusive, items)
             }
@@ -193,17 +195,17 @@
                 },{
                     label: 'Greedy',
                     choices: {
-                        'Yes': 'true',
-                        'No': 'false'
+                        'Yes': 'yes',
+                        'No': 'no'
                     },
-                    default: 'true'
+                    default: 'yes'
                 }
             ],
             create: function(vals) {
                 var qrStr = '{' + vals[1] + ','
                     + (vals[2] === 'Infinity' ? '' : vals[2])
                     + '}'
-                    + (vals[3] === 'true' ? '' : '?')
+                    + (vals[3] === 'yes' ? '' : '?')
                 var qr = parser.yy.b.quantifier(qrStr)
                 qr.textLoc = [0,1]
                 var qd = parser.yy.b.quantified(vals[0], qr)
@@ -247,7 +249,7 @@
                     label: 'Content',
                     mult: true,
                     paramType: 'token',
-                    validate: groupedTypeValidator
+                    validate: groupableTypeValidator
                 }
             ],
             create: function(vals) {
@@ -257,6 +259,8 @@
                 return simpleCreator('assertionLF')([flag, disj])
             }
         }
+
+        // not allowing to create Reference.
     ]
     var createInfoMap = createInfoList.reduce(function(map, createInfo) {
         map[createInfo.tokenLabel] = createInfo
@@ -332,7 +336,7 @@
                     .map(function(p) {
                         return toStringers[p.type](p)
                     })
-                    .join(',')
+                    .join('')
             if (! token.nonSemantic) {
                 str = '[' + str + ']'
             }

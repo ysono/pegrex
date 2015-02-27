@@ -71,7 +71,6 @@
 
         proto.componentDidMount = function() {
             var rootElm = this.getDOMNode()
-            // data-type for aiding with debugging only; not used by program.
             rootElm.setAttribute('data-type', this.props.data.type)
             this.hiliteSelected()
         }
