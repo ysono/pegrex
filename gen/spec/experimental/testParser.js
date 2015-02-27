@@ -22,6 +22,11 @@ _.each(strToExpected, function(expected, str) {
             delete act.hint // not comparing hints
             delete act.textLoc // lazy - not comparing locations
         }
+
+        if (typeof act === 'object'
+                && Object.keys(act).length !== Object.keys(exp).length) {
+            debugger // keep this debugger - it's useful
+        }
     })
     if (success) {
         console.info(success, str)

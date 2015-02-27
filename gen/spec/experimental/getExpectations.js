@@ -192,66 +192,76 @@ var provide = {
             },
             '\\W': {
                 type: 'Set of Chars',
-                inclusive: false,
+                inclusive: true,
                 possibilities: [
                     {
-                        type: 'Range of Chars',
+                        type: 'Set of Chars',
                         inclusive: false,
-                        range: [
+                        possibilities: [
                             {
-                                type: 'Specific Char',
+                                type: 'Range of Chars',
                                 inclusive: false,
-                                display: '0'
+                                range: [
+                                    {
+                                        type: 'Specific Char',
+                                        inclusive: false,
+                                        display: '0'
+                                    },
+                                    {
+                                        type: 'Specific Char',
+                                        inclusive: false,
+                                        display: '9'
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'Range of Chars',
+                                inclusive: false,
+                                range: [
+                                    {
+                                        type: 'Specific Char',
+                                        inclusive: false,
+                                        display: 'A'
+                                    },
+                                    {
+                                        type: 'Specific Char',
+                                        inclusive: false,
+                                        display: 'Z'
+                                    }
+                                ]
                             },
                             {
                                 type: 'Specific Char',
                                 inclusive: false,
-                                display: '9'
-                            }
-                        ]
-                    },
-                    {
-                        type: 'Range of Chars',
-                        inclusive: false,
-                        range: [
-                            {
-                                type: 'Specific Char',
-                                inclusive: false,
-                                display: 'A'
+                                display: '_'
                             },
                             {
-                                type: 'Specific Char',
+                                type: 'Range of Chars',
                                 inclusive: false,
-                                display: 'Z'
+                                range: [
+                                    {
+                                        type: 'Specific Char',
+                                        inclusive: false,
+                                        display: 'a'
+                                    },
+                                    {
+                                        type: 'Specific Char',
+                                        inclusive: false,
+                                        display: 'z'
+                                    }
+                                ]
                             }
-                        ]
+                        ],  
+                        predefined: {
+                            display: '\\W',
+                            meaning: 'Non-Word Char'
+                        }
                     },
                     {
-                        type: 'Specific Char',
-                        inclusive: false,
-                        display: '_'
-                    },
-                    {
-                        type: 'Range of Chars',
-                        inclusive: false,
-                        range: [
-                            {
-                                type: 'Specific Char',
-                                inclusive: false,
-                                display: 'a'
-                            },
-                            {
-                                type: 'Specific Char',
-                                inclusive: false,
-                                display: 'z'
-                            }
-                        ]
+                        type: 'Any Other Char'
                     }
-                ],  
-                predefined: {
-                    display: '\\W',
-                    meaning: 'Non-Word Char'
-                }
+                ],
+                nonSemantic: true
             }
         }
     }

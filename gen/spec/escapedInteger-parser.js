@@ -102,7 +102,8 @@ var specs = [
                     }
                 ],
                 predefined: undefined,
-                textLoc: [6,10]
+                textLoc: [6,10],
+                innerTextLoc: [7,9]
             }
         ]
     ], [
@@ -311,7 +312,8 @@ var specs = [
                     }
                 ],
                 predefined: undefined,
-                textLoc: [0,6]
+                textLoc: [0,6],
+                innerTextLoc: [1,5]
             }
         ]
     ],
@@ -337,7 +339,8 @@ var specs = [
                     }
                 ],
                 predefined: undefined,
-                textLoc: [0,6]
+                textLoc: [0,6],
+                innerTextLoc: [1,5]
             }
         ]
     ],
