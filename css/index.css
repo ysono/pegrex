@@ -113,15 +113,21 @@ html, body {
 }
 
 .hint {
-    float: right;
+    position: absolute;
+    right: 3px;
+    bottom: 1rem; /* enough to clear .pattern-editor-toggler-parent when pinned and collapsed */
     width: 20%;
+    margin: 3px;
+}
+.hint>label {
+    float: right;
 }
 .hint>p {
     margin: 0;
     padding: .3rem;
     background-color: #0D547A;
     color: #fff;
-    max-height: 6rem;
+    max-height: 4.5rem;
     overflow-y: auto;
 }
 
@@ -149,6 +155,7 @@ html, body {
 }
 .pattern-editor-toggler {
     width: 15%;
+    letter-spacing: 1rem;
 }
 .pattern-editor-toggler:before {
     content: "- - -";

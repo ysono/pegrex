@@ -746,8 +746,8 @@
                 var boxY = (ui.dim[1] - h) / 2
                 var arrowY = h / 2
                 if (token.possibilities.length) {
-                    if (! token.nonSemantic && ! token.predefined) {
-                        // add targets for add/replace
+                    if (! token.nonSemantic && ! token.predefinedDisplay) {
+                        // add targets for add/replace within set.
                         ui.neighborArrows = [{
                             pos: [0, boxY],
                             textLoc: [token.innerTextLoc[0], token.innerTextLoc[0]]
@@ -807,7 +807,7 @@
             },
             'Reference': function() {
                 var ui = setUiWithTextBlockOnly(
-                    [token.type, 'To #' + token.number], token)
+                    [token.isBack ? 'Back' : 'Forward', token.type, 'To #' + token.number], token)
                 ui.stroke = '#f9f374'
                 ui.fill = token.isBack ? null : surfaceData.fillForNegative
                 return ui

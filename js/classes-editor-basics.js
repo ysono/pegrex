@@ -88,17 +88,18 @@
             })
         },
         render: function() {
+            var token = this.props.hoverToken || this.props.selToken
             var hint = this.state.show
-                ? this.props.hoverToken && this.props.hoverToken.hint
+                ? token && token.hint
                 : null
             return <div className="hint">
+                {hint ? <p>{hint}</p> : null}
                 <label>
                     <input type="checkbox"
                         checked={this.state.show}
                         onChange={this.handleToggle} />
                     <span>Show Hint</span>
                 </label>
-                {hint ? <p>{hint}</p> : null}
             </div>
         }
     })

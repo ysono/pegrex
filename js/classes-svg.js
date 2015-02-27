@@ -38,12 +38,17 @@
             var mode = this.props.patternEditorMode
             var patternSel = this.props.patternSel
             var textLoc = this.props.data.textLoc
+            var type = this.props.data.type
 
             var textHasLen = textLoc
                 && textLoc[0] != textLoc[1]
-            var amSelectable = mode
-                && textLoc
-                && (mode === 'add' || textHasLen)
+
+            var amSelectable = {
+                'select': type && type[0] <= 'Z',
+                    // whether data is a parser token. Relies on the case convention.
+                'add': textLoc,
+                'delete': textHasLen
+            }[mode]
             var amSelectedByExact = this.props.selToken === this.props.data
                 // obj ref equality. a match iff the exact selected token.
             var amSelectedByTextRange =
@@ -166,7 +171,9 @@
         }),
 
         /*
-            below: UI-scoped types that do not come from parser
+            below: UI-only types that do not come from parser.
+            Important: hiliteSelected depends on the convention of
+                starting UI-only types with lower case.
         */
 
         // make textBlock selectable to prevent flicker of mouse cursor

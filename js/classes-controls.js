@@ -286,6 +286,7 @@
                             onChange={this.handlePatternEditorModeChange}
                             onUndo={this.handlePatternEditorUndo} />
                         <reactClasses.Hint 
+                            selToken={this.state.selToken}
                             hoverToken={this.state.hoverToken} />
                     </div>
                     <reactClasses.PatternEditor
