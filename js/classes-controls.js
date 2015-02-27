@@ -194,6 +194,10 @@
                         patternSel: [textLoc[0],
                             textLoc[0] + selTokenText.length]
                     }
+                    // note, by not clearing selToken, the previously selected token
+                    //     continues to be available for add/repl/pasting. But it
+                    //     can no longer be shown as selected, since the exact token
+                    //     obj is no longer being rendered.
                 }
             } else if(mode === 'delete') {
                 if (textLoc) {
