@@ -32,16 +32,18 @@
             return {
                 tokenLabel: null,
                 tokensInPalette: [],
-                hidden: false,
-                pinned: true
+                hidden: reactClasses.ls.readBool('editorHidden', false),
+                pinned: reactClasses.ls.readBool('editorPinned', true)
             }
         },
         handleTogglePin: function() {
+            localStorage.setItem('editorPinned', ! this.state.pinned)
             this.setState({
                 pinned: ! this.state.pinned
             })
         },
         handleToggleShow: function() {
+            localStorage.setItem('editorHidden', ! this.state.hidden)
             this.setState({
                 hidden: ! this.state.hidden
             })

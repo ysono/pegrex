@@ -48,7 +48,6 @@
             var blob = new Blob([svgData], {
                 type: 'image/svg+xml;charset=utf-8'
             })
-            debugger
             saveAs(blob, 'pegrex.svg')
         },
         render: function() {
@@ -90,10 +89,11 @@
     reactClasses.Hint = React.createClass({
         getInitialState: function() {
             return {
-                show: true
+                show: reactClasses.ls.readBool('showHint', true)
             }
         },
         handleToggle: function() {
+            localStorage.setItem('showHint', ! this.state.show)
             this.setState({
                 show: ! this.state.show
             })

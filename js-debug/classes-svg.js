@@ -392,7 +392,7 @@
                 </filter>'
             var dropShadowSelByTextRange = dropShadowTemplate
                 .replace(/\{0\}/g, 'dropshadow-sel-by-text-range')
-                .replace(/\{1\}/g, '#5CD3FA')
+                .replace(/\{1\}/g, 'orange')
             var dropShadowSelByExact = dropShadowTemplate
                 .replace(/\{0\}/g, 'dropshadow-sel-by-exact')
                 .replace(/\{1\}/g, 'red')
