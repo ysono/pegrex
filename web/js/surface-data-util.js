@@ -5,7 +5,7 @@
     surfaceData.neighborArrowColor = '#8a8a8a'
     surfaceData.fillForNegative = '#ccc'
     surfaceData.selectableArrowHeight = surfaceData.markerLen * 3
-        // tall enough as a click target for 'add' action;
+        // tall enough as a click target for add/replace action;
         // not so tall as to block elements underneath, which can
         // easily be done in nested disjunctions b/c these disjs
         // use quadratic curves for their neighborArrows
@@ -20,9 +20,6 @@
         'Set of Chars': 'possibilities',
         'Range of Chars': 'range'
     }
-    /*
-        Locate children for a given component.
-    */
     surfaceData.getChildTokens = function(token) {
         var prop = typeToChildProp[token.type]
         if (typeof prop === 'string') {

@@ -1,37 +1,6 @@
-;(function() {
+;(function(reactClasses) {
     'use strict'
 
-    var hashUtil = {
-        read: function() {
-            // ff decodes location.hash
-            return decodeURIComponent(window.location.href.split("#")[1])
-        },
-        parse: function() {
-            var hash = hashUtil.read()
-            var commaIndex = hash.indexOf(',')
-            if (commaIndex <= 0) { return }
-            var patternLen = Number(hash.slice(0, commaIndex))
-            if (isNaN(patternLen)) { return }
-            var flagsIndex = commaIndex + 1 + patternLen
-            return {
-                pattern: hash.slice(commaIndex + 1, flagsIndex),
-                flags: hash.slice(flagsIndex)
-            }
-        },
-        update: function(parts, rememberPrev) {
-            var hash = parts.pattern.length + ','
-                + parts.pattern + parts.flags
-            if (hash === hashUtil.read()) {
-                return
-            }
-            if (rememberPrev) {
-                window.location.hash = encodeURIComponent(hash)
-            } else {
-                window.location.replace('#' + encodeURIComponent(hash))
-            }
-        }
-    }
-    
     var Controls = React.createClass({
         /* states:
             pattern, tree, isPatternValid
@@ -54,8 +23,8 @@
             hoverToken
         */
         getInitialState: function() {
-            var state = hashUtil.parse() || {
-                pattern: '(?:)',
+            var state = reactClasses.hashUtil.parse() || {
+                pattern: '^\\ty[pe] (he\\re).$',
                 flags: ''
             }
             this.prepStateForTextsChange(state)
@@ -75,7 +44,7 @@
                 ? newState.pattern : this.state.pattern
             newState.flags = typeof newState.flags === 'string'
                 ? newState.flags : this.state.flags
-            hashUtil.update(newState, rememberPrev)
+            reactClasses.hashUtil.update(newState, rememberPrev)
 
             if (rememberPrev) {
                 newState.historyCount = this.state.historyCount + 1
@@ -135,7 +104,7 @@
         /* events from hash */
 
         handleHashChange: function() {
-            var parts = hashUtil.parse()
+            var parts = reactClasses.hashUtil.parse()
             var newState = this.prepStateForTextsChange(parts)
             if (newState) {
                 if (this.state.rememberHistoryCount) {
@@ -297,8 +266,6 @@
             )
         }
     })
-    React.render(
-        <Controls />,
-        document.getElementsByClassName('react-parent')[0]
-    )
-})()
+    reactClasses.Controls = Controls
+
+})(window.reactClasses = window.reactClasses || {})

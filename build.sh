@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 pushd gen
 ../node_modules/.bin/jison parser.jison
@@ -12,8 +12,16 @@ popd
 # rm lodash.custom.js
 # popd
 
+# cat'ing only b/c otherwise it's easy to mistake the file being edited.
 pushd web/js-debug
-for file in $(ls); do
-    ../../node_modules/.bin/jsx $file > ../js/$file
+TARGET=../js/classes-all.js
+LAST=render.js
+compile () {
+    ../../node_modules/.bin/jsx $1 >> $TARGET
+}
+rm $TARGET
+for FILE in $(ls | grep -v $LAST) ; do
+    compile $FILE
 done
+compile $LAST
 popd
