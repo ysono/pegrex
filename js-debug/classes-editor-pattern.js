@@ -373,7 +373,7 @@
             var token = this.props.val
             var droppedCompo = token
                 ? <Cell token={token} />
-                : <p className="error">Select a node to highlight it; then click here to paste.</p>
+                : <p className="error">Select a token to copy it. Copied token is highlighted in red. Then click here to paste.</p>
             var className = 'droppable ' + (this.props.valid ? '' : 'error')
             return <div onClick={this.handlePasteCompo} className={className}>
                 {droppedCompo}

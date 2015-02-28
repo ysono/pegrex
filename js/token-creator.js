@@ -1,11 +1,15 @@
 ;(function(tokenCreator) {
     'use strict'
 
+    // creators
+
     function simpleCreator(builderName) {
         return function(args) {
             return parser.yy.b[builderName].apply(parser.yy.b, args)
         }
     }
+
+    // validators
 
     function parserTypeValidator(types) {
         types = [].concat(types)
@@ -22,6 +26,22 @@
         return token &&
             ['Quantifier', 'Any Other Char', 'Range of Chars'].indexOf(token.type) < 0
     }
+
+    function typeInSingleTermValidator(types) {
+        var typeValidator = parserTypeValidator(types)
+        return function(text) {
+            debugger
+            var term
+            try {
+                term = parseOneTerm(text)
+                return typeValidator(term)
+            } catch(e) {
+                // TODO message?
+                return false
+            }
+        }
+    }
+
     function numValidator(isInfAllowed) {
         return function(val) {
             return (isInfAllowed && val === 'Infinity')
@@ -30,6 +50,8 @@
                 )
         }
     }
+    
+    // creators and creator helpers
 
     function parseOneTerm(text) {
         var pattern = parser.parse(text)
@@ -41,7 +63,6 @@
         if (alt.terms.length !== 1) { return null }
         return alt.terms[0]
     }
-    
     function createDisj(tokens) {
         // Making a guess as to what user wants:
         // a disj or an alt becomes an alt
@@ -78,66 +99,37 @@
 
     // `tokenLabel`s don't have to match a `token.type` given by the parser.
     // ordered in the desc order of what users want to use the most.
+    // not allowing to create Reference.
     var createInfoList = [
         {
             tokenLabel: 'Specific Char',
             params: [
                 {
                     label: 'Character',
-                    validate: function(val) {
-                        try {
-                            var term = parseOneTerm(val)
-                            return term.type === 'Specific Char'
-                        } catch(e) {
-                            return false
-                        }
-                    }
+                    validate: typeInSingleTermValidator('Specific Char')
                 }
             ],
             create: function(vals) {
                 return parseOneTerm(vals[0])
             }
         },{
-            tokenLabel: 'Any Char',
-            params: [],
-            create: simpleCreator('anyChar')
-        },{
-            tokenLabel: 'Group',
-            params: [
-                {
-                    label: 'Capturing',
-                    choices: {
-                        'Yes': 'yes',
-                        'No': 'no'
-                    },
-                    default: 'no'
-                },{
-                    label: 'Content',
-                    mult: true,
-                    paramType: 'token',
-                    validate: groupableTypeValidator
-                }
-            ],
-            create: function(vals) {
-                var isCapturing = vals[0] === 'yes'
-                var tokens = vals[1]
-                var disj = createDisj(tokens)
-                return simpleCreator('group')([isCapturing, disj, 0])
-            }
-        },{
             tokenLabel: 'Range of Chars',
             params: [
                 {
                     label: 'From',
-                    paramType: 'token',
-                    validate: parserTypeValidator('Specific Char')
+                    validate: typeInSingleTermValidator('Specific Char')
                 },{
                     label: 'To',
-                    paramType: 'token',
-                    validate: parserTypeValidator('Specific Char')
+                    validate: typeInSingleTermValidator('Specific Char')
                 }
             ],
-            create: simpleCreator('charSetRange')
+            create: function(texts) {
+                debugger
+                var tokens = texts.map(function(text) {
+                    return parseOneTerm(text)
+                })
+                return simpleCreator('charSetRange')(tokens)
+            }
         },{
             tokenLabel: 'Set of Chars',
             params: [
@@ -224,6 +216,29 @@
                 return qd
             }
         },{
+            tokenLabel: 'Group',
+            params: [
+                {
+                    label: 'Capturing',
+                    choices: {
+                        'Yes': 'yes',
+                        'No': 'no'
+                    },
+                    default: 'no'
+                },{
+                    label: 'Content',
+                    mult: true,
+                    paramType: 'token',
+                    validate: groupableTypeValidator
+                }
+            ],
+            create: function(vals) {
+                var isCapturing = vals[0] === 'yes'
+                var tokens = vals[1]
+                var disj = createDisj(tokens)
+                return simpleCreator('group')([isCapturing, disj, 0])
+            }
+        },{
             tokenLabel: 'Line Boundary',
             params: [
                 {
@@ -269,9 +284,11 @@
                 var disj = createDisj(tokens)
                 return simpleCreator('assertionLF')([flag, disj])
             }
+        },{
+            tokenLabel: 'Any Char',
+            params: [],
+            create: simpleCreator('anyChar')
         }
-
-        // not allowing to create Reference.
     ]
     var createInfoMap = createInfoList.reduce(function(map, createInfo) {
         map[createInfo.tokenLabel] = createInfo
