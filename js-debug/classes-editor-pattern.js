@@ -122,208 +122,231 @@
     })
 
     var Form = React.createClass({
-        /* states:
-            params, vals, validities, allValid, previewToken, overallErrorMsg */
+        /* states: params, previewToken, previewStr, previewErrMsg */
         getInitialState: function() {
             return {
                 params: []
             }
         },
         componentWillReceiveProps: function(nextProps) {
-            if (this.props.tokenLabel === nextProps.tokenLabel) {
-                return
-            }
-            var self = this
-            // reset state to a clean slate for the tokenLabel
-            var params = tokenCreator.getParams(nextProps.tokenLabel)
-            this.validateAll(nextProps.tokenLabel, {
-                params: params,
-                vals: params.map(function(param) {
-                    return param.default
-                }),
-                validities: params.map(function(param) {
-                    return self.validateSingle(param, param.default)
+            if (this.props.tokenLabel !== nextProps.tokenLabel) {
+                this.setState({
+                    params: tokenCreator.getParams(nextProps.tokenLabel)
                 })
-            })
+            }
         },
 
-        validateAll: function(tokenLabel, newState) {
-            newState.allValid = newState.validities.every(function(validity) {
-                return validity
-            })
-            var token = newState.allValid
-                ? tokenCreator.create(tokenLabel, newState.vals)
+        handleChange: function(vals, allValid) {
+            if (! this.props.tokenLabel) { return }
+
+            var token = allValid
+                ? tokenCreator.create(this.props.tokenLabel, vals)
                 : null
+            var newState = {}
             if (token instanceof Error) {
                 newState.previewToken = null
-                newState.overallErrorMsg = token.message
+                newState.previewStr = null
+                newState.previewErrMsg = token.message
                     || 'The inputs are not valid as a whole.'
             } else {
                 newState.previewToken = token
-                newState.overallErrorMsg = null
+                newState.previewStr = token && tokenCreator.toString(token)
+                newState.previewErrMsg = null
             }
             this.setState(newState)
         },
-        validateSingle: function(param, val) {
-            return param.choices
-                ? !! val // skipping check on if it's a valid val.
-                    // we don't have falsy i.e. empty val as a choice.
-                : ! param.validate || param.validate(val)
-        },
-        handleChangeSingle: function(paramIndex, val, param) {
-            this.state.vals[paramIndex] = val
-            this.state.validities[paramIndex] = this.validateSingle(param, val)
-            this.validateAll(this.props.tokenLabel, this.state)
-        },
-        handleChangeMult: function(paramIndex, val, isValid) {
-            this.state.vals[paramIndex] = val
-            this.state.validities[paramIndex] = isValid
-            this.validateAll(this.props.tokenLabel, this.state)
-        },
-
         handleSubmit: function(e) {
             e.preventDefault()
             this.props.onSubmit(this.state.previewToken)
         },
 
         render: function() {
-            var self = this
-            var fieldCompos = this.state.params.map(function(param, i) {
-                var fieldClass = param.choices ? FormInputRadio
-                    : param.paramType === 'token' ? FormInputToken
-                    : FormInputText
-                var fieldPropsProto = {
-                    param: param,
-                    selToken: self.props.selToken
-                }
-
-                /* required in props: val, valid, onChange */
-                function getSingleInputCompo(props) {
-                    Object.keys(fieldPropsProto).forEach(function(key) {
-                        props[key] = fieldPropsProto[key]
-                    })
-                    return React.createElement(fieldClass, props)
-                }
-
-                var fieldCompo = param.mult
-                    ? <FormInputMult
-                        param={param}
-                        getSingleInputCompo={getSingleInputCompo}
-                        validateSingle={self.validateSingle}
-                        onChange={function(val, isValid) {
-                            self.handleChangeMult(i, val, isValid)
-                        }} />
-                    : getSingleInputCompo({
-                        val: self.state.vals[i],
-                        valid: self.state.validities[i],
-                        onChange: function(val) {
-                            self.handleChangeSingle(i, val, param)
-                        }
-                    })
-                return <label key={i}>
-                    <span>{param.label}</span>
-                    {fieldCompo}
-                </label>
-            })
-
-            var previewStr = this.state.previewToken &&
-                tokenCreator.toString(this.state.previewToken)
             return (
                 <form onSubmit={this.handleSubmit}
                     className="create-form">
                     <div className="create-form-inputs">
-                        {fieldCompos}
+                        <FormInputs
+                            params={this.state.params}
+                            selToken={this.props.selToken}
+                            onChange={this.handleChange} />
                         <input type="submit" value="Create"
                             disabled={! this.state.previewToken} />
                         <p ref="overallError" className="error">
-                            {this.state.overallErrorMsg}</p>
+                            {this.state.previewErrMsg}</p>
                     </div>
                     <div className="create-form-preview">
                         <p>Preview</p>
-                        <p className="preview-str">{previewStr}</p>
+                        <p className="preview-str">{this.state.previewStr}</p>
                         <Cell token={this.state.previewToken} />
                     </div>
                 </form>
             )
         }
     })
-    var FormInputMult = React.createClass({
-        /* states: vals, validities */
-        getInitialState: function() {
-            return this.getResetState()
-        },
-        componentWillReceiveProps: function(nextProps) {
-            if (this.props.param !== nextProps.param) {
-                this.setState(this.getResetState())
-            }
-        },
-        getResetState: function() {
-            var param = this.props.param
-            return {
-                // init size 1
-                vals: [param.default],
-                validities: [this.validateSingle(param.default)],
-            }
+
+    /*
+        required in props
+            selToken
+            onChange
+        required prop on `this`
+            nestsMulti
+        states: vals, validities
+    */
+    var formInputsMixin = {
+        resetAll: function(params) {
+            var self = this
+            var vals = params.map(function(param) {
+                return (self.nestsMulti && param.multi)
+                    ? null // let FormInputMulti update
+                    : param.default
+            })
+            var validities = params.map(function(param) {
+                return (self.nestsMulti && param.multi)
+                    ? false // let FormInputMulti update
+                    : self.validateSingle(param, param.default)
+            })
+            this.saveChange(vals, validities)
         },
 
-        validateAll: function() {
-            var allValid = this.state.validities.every(function(validity) {
+        validateSingle: function(param, val) {
+            return param.choices ? !! val
+                : ! param.validate || param.validate(val)
+        },
+        handleSingleChange: function(paramIndex, val, validity) {
+            var vals = this.state.vals
+            var validities = this.state.validities
+            vals[paramIndex] = val
+            validities[paramIndex] = validity
+            this.saveChange(vals, validities)
+        },
+        saveChange: function(vals, validities) {
+            var allValid = validities.every(function(validity) {
                 return validity
             })
             this.setState({
-                vals: this.state.vals,
-                validities: this.state.validities
+                vals: vals,
+                validities: validities
             })
-            this.props.onChange(this.state.vals, allValid)
-        },
-        validateSingle: function(val) {
-            var param = this.props.param
-            return this.props.validateSingle(param, val)
-        },
-        handleChange: function(multIndex, val) {
-            this.state.vals[multIndex] = val
-            this.state.validities[multIndex] = this.validateSingle(val)
-            this.validateAll()
+            this.props.onChange(vals, allValid)
         },
 
-        handleAddMult: function() {
-            var param = this.props.param
-            this.state.vals.push(param.default)
-            this.state.validities.push(this.validateSingle(param.default))
-            this.validateAll()
-        },
-        handleDelMult: function(multIndex) {
-            this.state.vals.splice(multIndex, 1)
-            this.state.validities.splice(multIndex, 1)
-            this.validateAll()
-        },
-
-        render: function() {
+        createInputCompo: function(param, paramIndex) {
             var self = this
-            var singleInputCompos = this.state.vals.map(function(singleVal, i) {
-                var singleInputCompo = self.props.getSingleInputCompo({
-                    val: singleVal,
-                    valid: self.state.validities[i],
-                    onChange: function(val) {
-                        self.handleChange(i, val)
+            var isMult = this.nestsMulti && param.multi
+            var inputClass = 
+                isMult ? FormInputMulti
+                : param.choices ? FormInputRadio
+                : param.paramType === 'token' ? FormInputToken
+                : FormInputText
+            var inputCompo = React.createElement(inputClass, {
+                param: param,
+                val: this.state.vals[paramIndex],
+                valid: this.state.validities[paramIndex],
+                selToken: this.props.selToken,
+                onChange: function(val, validity) {
+                    // FormInputMulti will provide validity, which is
+                    // calculated in its `saveChange` as `allValid`.
+                    // single inputs should not provide validity.
+                    if (typeof validity !== 'boolean') {
+                        validity = self.validateSingle(param, val)
                     }
-                })
-                var handleDelMult = function() {
-                    self.handleDelMult(i)
-                }
-                return <span key={i}>
-                    {singleInputCompo}
-                    <div className="mult" onClick={handleDelMult} role="button">-</div>
-                </span>
+                    self.handleSingleChange(paramIndex, val, validity)
+                },
+                key: paramIndex
             })
+            return isMult
+                ? inputCompo
+                : <label className="input-single" key={paramIndex}>
+                    <span>{param.label}</span>
+                    {inputCompo}
+                </label>
+        }
+    }
+    /*
+        required in props, in addition to those for formInputsMixin
+            params
+    */
+    var FormInputs = React.createClass({
+        mixins: [formInputsMixin],
+        nestsMulti: true,
+        componentWillMount: function() {
+            this.resetAll(this.props.params)
+        },
+        componentWillReceiveProps: function(nextProps) {
+            if (this.props.params !== nextProps.params) { // obj ref equality
+                this.resetAll(nextProps.params)
+            }
+        },
+        render: function() {
+            var inputCompos = this.props.params.map(this.createInputCompo)
             return <div>
-                <div className="mult" onClick={this.handleAddMult} role="button">+</div>
-                {singleInputCompos}
+                {inputCompos}
             </div>
-            // for +/-, mock a button b/c a <botton> or <button type="button">
-            //     would be associated with its parent <label>
         }
     })
+    /*
+        required in props, in addition to those for formInputsMixin
+            param
+    */
+    var FormInputMulti = React.createClass({
+        mixins: [formInputsMixin],
+        nestsMulti: false,
+        componentWillMount: function() {
+            this.resetAll([this.props.param]) // init size 1
+        },
+        componentWillReceiveProps: function(nextProps) {
+            if (this.props.param !== nextProps.param) { // obj ref equality
+                this.resetAll([nextProps.param]) // init size 1
+            }
+        },
+        render: function() {
+            var self = this
+            var param = this.props.param
+
+            function modState(fn) {
+                var vals = self.state.vals
+                var validities = self.state.validities
+                fn(vals, validities)
+                self.saveChange(vals, validities)
+            }
+            function handleAdd(i) {
+                modState(function(vals, validities) {
+                    vals.splice(i + 1, 0, param.default)
+                    validities.splice(i + 1, 0, self.validateSingle(param, param.default))
+                })
+            }
+            function handleDel(i) {
+                modState(function(vals, validities) {
+                    vals.splice(i, 1)
+                    validities.splice(i, 1)
+                })
+            }
+
+            var inputCompos = this.state.vals.map(function(val, i) {
+                return <div key={i}>
+                    {self.createInputCompo(param, i)}
+                    <button type="button" onClick={function() {
+                        handleAdd(i)
+                    }}>+</button>
+                    <button type="button" onClick={function() {
+                        handleDel(i)
+                    }}>-</button>
+                </div>
+            })
+            return <div className="input-multi">
+                <span>
+                    <span>{param.label}</span>
+                    <button type="button"
+                        onClick={function() {
+                            handleAdd(-1)
+                        }}
+                        className="insert-head">+</button>
+                </span>
+                {inputCompos}
+            </div>
+        }
+    })
+
     var FormInputText = React.createClass({
         handleChange: function(e) {
             this.props.onChange(e.target.value)

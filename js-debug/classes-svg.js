@@ -1,12 +1,12 @@
 ;(function(reactClasses) {
     'use strict'
 
-    function makeSelectableProto(proto) {
+    var selectableMixin = {
         /*
             Relays a select event to the parent component. The root `Surface`
                 component will eventually receive it and process it.
         */
-        proto.handleEvents = function(e) {
+        handleEvents: function(e) {
             var pegrexEvt
             if (e.isPegrexEvt) {
                 // Then pass-thru.
@@ -24,14 +24,14 @@
                 e.stopPropagation()
             }
             this.props.onBubbleUpEvents(pegrexEvt)
-        }
+        },
         /*
             Determines if this compo is (1) selectable and (2) selected, based on
                 the current mode, the current selected portion of the pattern string,
                 and the span of text that this compo is associated with.
             Expresses these properties on the DOM, on this.refs.hiliteElm.
         */
-        proto.hiliteSelected = function() {
+        hiliteSelected: function() {
             if (! this.refs.hiliteElm || ! this.props.data.textLoc) {
                 return
             }
@@ -79,16 +79,16 @@
             } else {
                 hiliteElm.removeAttribute('filter')
             }
-        }
+        },
 
-        proto.componentDidMount = function() {
+        componentDidMount: function() {
             var rootElm = this.getDOMNode()
             rootElm.setAttribute('data-type', this.props.data.type)
             this.hiliteSelected()
+        },
+        componentDidUpdate: function() {
+            this.hiliteSelected()
         }
-        proto.componentDidUpdate = proto.hiliteSelected
-
-        return proto
     }
 
     /*
@@ -114,7 +114,8 @@
             data.ui
                 .textBlocks
     */
-    var boxedClass = React.createClass(makeSelectableProto({
+    var boxedClass = React.createClass({
+        mixins: [selectableMixin],
         render: function() {
             var self = this
             var data = this.props.data
@@ -156,7 +157,7 @@
                 </g>
             )
         }
-    }))
+    })
     var typeToClass = {
         'Terminus': React.createClass({
             render: function() {
@@ -179,7 +180,8 @@
         */
 
         // make textBlock selectable to prevent flicker of mouse cursor
-        'textBlock': React.createClass(makeSelectableProto({
+        'textBlock': React.createClass({
+            mixins: [selectableMixin],
             render: function() {
                 var data = this.props.data
 
@@ -201,7 +203,7 @@
                     </g>
                 )
             }
-        })),
+        }),
 
         /*
             Make a path with a box around it that can be selectable.
@@ -212,7 +214,8 @@
                 dim: [n,n]
             }
         */
-        'boxed path': React.createClass(makeSelectableProto({
+        'boxed path': React.createClass({
+            mixins: [selectableMixin],
             render: function() {
                 var data = this.props.data
 
@@ -230,7 +233,7 @@
                     </g>
                 )
             }
-        })),
+        }),
 
         /*
             in this.props.data: {
