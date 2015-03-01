@@ -239,9 +239,7 @@
                     React.createElement("div", {className: "visuals-parent"}, 
                         React.createElement(reactClasses.Surface, {
                             tree: this.state.tree, 
-                            flags: this.state.flags, 
                             patternSel: this.state.patternSel, 
-                            selToken: this.state.selToken, 
                             patternEditorMode: this.state.patternEditorMode, 
                             onSelect: this.handleSurfaceSelect, 
                             onHover: this.handleSurfaceHover, 
@@ -478,6 +476,7 @@
                             React.createElement(Form, {
                                 tokenLabel: this.state.tokenLabel, 
                                 selToken: this.props.selToken, 
+                                onSelect: this.props.onSelect, 
                                 onSubmit: this.handleCreate})
                         )
                     )
@@ -557,7 +556,7 @@
                             params: this.state.params, 
                             selToken: this.props.selToken, 
                             onChange: this.handleChange}), 
-                        React.createElement("input", {type: "submit", value: "Create", 
+                        React.createElement("input", {type: "submit", value: "Create in Palette", 
                             disabled: ! this.state.previewToken}), 
                         React.createElement("p", {ref: "overallError", className: "error"}, 
                             this.state.previewErrMsg)
@@ -565,7 +564,8 @@
                     React.createElement("div", {className: "create-form-preview"}, 
                         React.createElement("p", null, "Preview"), 
                         React.createElement("p", {className: "preview-str"}, this.state.previewStr), 
-                        React.createElement(Cell, {token: this.state.previewToken})
+                        React.createElement(Cell, {token: this.state.previewToken, 
+                            onSelect: this.props.onSelect})
                     )
                 )
             )
@@ -777,14 +777,14 @@
                 return
             }
             var token = _.merge({}, this.props.selToken) // important to clone!
-            // note, selecting `x` of `[^x]` and then pasting will paste `[^x]`
+            // TODO selecting `x` of `[^x]` and then pasting will paste `[^x]`
             this.props.onChange(token)
         },
         render: function() {
             var token = this.props.val
             var droppedCompo = token
                 ? React.createElement(Cell, {token: token})
-                : React.createElement("p", {className: "error"}, "Select a token to copy it. Copied token is highlighted in red. Then click here to paste.")
+                : React.createElement("p", {className: "error"}, "Click to paste the clipboard content.")
             var className = 'droppable ' + (this.props.valid ? '' : 'error')
             return React.createElement("div", {onClick: this.handlePasteCompo, className: className}, 
                 droppedCompo
@@ -812,7 +812,6 @@
                     return React.createElement("div", {className: "palette-cell", key: i}, 
                         React.createElement(Cell, {
                             token: tokensInPalette[i], 
-                            selToken: self.props.selToken, 
                             onSelect: self.props.onSelect}), 
                         deleteBtn
                     )
@@ -834,11 +833,7 @@
     /*
         in props {
             token: required
-
-            // both of these 2 are required for Cell to be selectable.
-            // selToken can be falsy, as it often will be.
-            onSelect
-            selToken
+            onSelect: required if selection is to be enabled.
         }
     */
     var Cell = React.createClass({displayName: "Cell",
@@ -853,6 +848,10 @@
             //     Hence retained the cloned obj by saving it in state.
             // Selection by text range is disabled
             //     b/c there is no corresponding text.
+            // TODO update documentation. state is needed or e.g. o/w:
+            //     put in a spec char into set of chars -> create exclusive
+            //     -> create inclusive --> the spec char in palette for prev
+            //     item toggles too.
             var willCloneToken = this.props.token !== nextProps.token
             if (willCloneToken) {
                 this.saveClonedToken(nextProps.token)
@@ -878,11 +877,8 @@
             return token
                 ? React.createElement(reactClasses.Surface, {
                     tree: token, 
-                    onSelect: this.handleSelect, 
-                    onHover: function() {}, 
-                    patternSel: [0,0], // disable sel by text range
-                    selToken: this.props.selToken, // enable sel by exact match
-                    patternEditorMode: "select"})
+                    patternEditorMode: "select", 
+                    onSelect: this.handleSelect})
                 : null
         }
     })
@@ -1003,7 +999,6 @@
         render: function() {
             var self = this
             var data = this.props.data
-            var patternSel = this.props.patternSel
 
             var txform = ['translate(', data.ui.pos, ')'].join('')
 
@@ -1209,7 +1204,6 @@
             onBubbleUpEvents: parentCompo.handleEvents,
             data: childData,
             patternSel: parentCompo.props.patternSel,
-            selToken: parentCompo.props.selToken,
             patternEditorMode: parentCompo.props.patternEditorMode,
             key: key
         })
@@ -1219,10 +1213,14 @@
     /*
         props ~= {
             tree: required
-            onSelect: required
-            onHover: required
-            patternSel: optional
-            patternEditorMode: required if selection is to be enabled.
+            
+            onHover: optional
+
+            patternSel // required if highlighting by text selection is to be enabled.
+
+            // both are required iff selection is to be enabled
+            patternEditorMode
+            onSelect
         }
     */
     var Surface = React.createClass({displayName: "Surface",
@@ -1230,6 +1228,7 @@
             if (pegrexEvt.type === 'click') {
                 this.props.onSelect(pegrexEvt.data)
             } else {
+                this.props.onHover &&
                 this.props.onHover(pegrexEvt.data, pegrexEvt.type === 'mouseenter')
             }
         },
