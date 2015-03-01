@@ -90,6 +90,7 @@
                             <Form
                                 tokenLabel={this.state.tokenLabel}
                                 selToken={this.props.selToken}
+                                onSelect={this.props.onSelect}
                                 onSubmit={this.handleCreate} />
                         </div>
                     </div>
@@ -169,7 +170,7 @@
                             params={this.state.params}
                             selToken={this.props.selToken}
                             onChange={this.handleChange} />
-                        <input type="submit" value="Create"
+                        <input type="submit" value="Create in Palette"
                             disabled={! this.state.previewToken} />
                         <p ref="overallError" className="error">
                             {this.state.previewErrMsg}</p>
@@ -177,7 +178,8 @@
                     <div className="create-form-preview">
                         <p>Preview</p>
                         <p className="preview-str">{this.state.previewStr}</p>
-                        <Cell token={this.state.previewToken} />
+                        <Cell token={this.state.previewToken}
+                            onSelect={this.props.onSelect} />
                     </div>
                 </form>
             )
@@ -389,7 +391,7 @@
                 return
             }
             var token = _.merge({}, this.props.selToken) // important to clone!
-            // note, selecting `x` of `[^x]` and then pasting will paste `[^x]`
+            // TODO selecting `x` of `[^x]` and then pasting will paste `[^x]`
             this.props.onChange(token)
         },
         render: function() {
@@ -424,7 +426,6 @@
                     return <div className="palette-cell" key={i}>
                         <Cell
                             token={tokensInPalette[i]}
-                            selToken={self.props.selToken}
                             onSelect={self.props.onSelect} />
                         {deleteBtn}
                     </div>
@@ -446,11 +447,7 @@
     /*
         in props {
             token: required
-
-            // both of these 2 are required for Cell to be selectable.
-            // selToken can be falsy, as it often will be.
-            onSelect
-            selToken
+            onSelect: required if selection is to be enabled.
         }
     */
     var Cell = React.createClass({
@@ -465,6 +462,10 @@
             //     Hence retained the cloned obj by saving it in state.
             // Selection by text range is disabled
             //     b/c there is no corresponding text.
+            // TODO update documentation. state is needed or e.g. o/w:
+            //     put in a spec char into set of chars -> create exclusive
+            //     -> create inclusive --> the spec char in palette for prev
+            //     item toggles too.
             var willCloneToken = this.props.token !== nextProps.token
             if (willCloneToken) {
                 this.saveClonedToken(nextProps.token)
@@ -490,11 +491,8 @@
             return token
                 ? <reactClasses.Surface
                     tree={token}
-                    onSelect={this.handleSelect}
-                    onHover={function() {}}
-                    patternSel={[0,0]} // disable sel by text range
-                    selToken={this.props.selToken} // enable sel by exact match
-                    patternEditorMode="select" />
+                    patternEditorMode="select"
+                    onSelect={this.handleSelect} />
                 : null
         }
     })

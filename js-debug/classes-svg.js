@@ -56,7 +56,8 @@
             var hiliteElm = this.refs.hiliteElm.getDOMNode()
 
             // ie-safe toggle
-            if (hiliteElm.classList.contains('selectable') !== amSelectable) {
+            if (hiliteElm.classList &&
+                hiliteElm.classList.contains('selectable') !== amSelectable) {
                 hiliteElm.classList.toggle('selectable')
             }
             function handleEvt(elm, type, handler) {
@@ -112,7 +113,6 @@
         render: function() {
             var self = this
             var data = this.props.data
-            var patternSel = this.props.patternSel
 
             var txform = ['translate(', data.ui.pos, ')'].join('')
 
@@ -318,7 +318,6 @@
             onBubbleUpEvents: parentCompo.handleEvents,
             data: childData,
             patternSel: parentCompo.props.patternSel,
-            selToken: parentCompo.props.selToken,
             patternEditorMode: parentCompo.props.patternEditorMode,
             key: key
         })
@@ -328,10 +327,14 @@
     /*
         props ~= {
             tree: required
-            onSelect: required
-            onHover: required
-            patternSel: optional
-            patternEditorMode: required if selection is to be enabled.
+            
+            onHover: optional
+
+            patternSel // required if highlighting by text selection is to be enabled.
+
+            // both are required iff selection is to be enabled
+            patternEditorMode
+            onSelect
         }
     */
     var Surface = React.createClass({
@@ -339,6 +342,7 @@
             if (pegrexEvt.type === 'click') {
                 this.props.onSelect(pegrexEvt.data)
             } else {
+                this.props.onHover &&
                 this.props.onHover(pegrexEvt.data, pegrexEvt.type === 'mouseenter')
             }
         },

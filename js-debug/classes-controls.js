@@ -239,9 +239,7 @@
                     <div className="visuals-parent">
                         <reactClasses.Surface
                             tree={this.state.tree}
-                            flags={this.state.flags}
                             patternSel={this.state.patternSel}
-                            selToken={this.state.selToken}
                             patternEditorMode={this.state.patternEditorMode}
                             onSelect={this.handleSurfaceSelect}
                             onHover={this.handleSurfaceHover}
