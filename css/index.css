@@ -184,7 +184,7 @@ html, body {
     which can't go all the way left. */
 .palette {
     display: flex;
-    justify-content: left;
+    justify-content: center;
 }
 .palette>.label {
     -ms-writing-mode: tb-lr;
