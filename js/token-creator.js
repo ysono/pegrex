@@ -11,43 +11,47 @@
 
     // validators
 
-    function parserTypeValidator(types) {
-        types = [].concat(types)
-        return function(token) {
-            return token && types.indexOf(token.type) >= 0
-        }
-    }
-    function termTypeValidator(token) {
-        return token &&
-            ['Disjunction', 'Alternative',
-            'Quantifier', 'Any Other Char', 'Range of Chars'].indexOf(token.type) < 0
-    }
-    function groupableTypeValidator(token) {
-        return token &&
-            ['Quantifier', 'Any Other Char', 'Range of Chars'].indexOf(token.type) < 0
-    }
-
-    // TODO distinguish validator on token vs on type
-    function singleTermTypeValidator(types) {
-        var typeValidator = parserTypeValidator(types)
-        return function(text) {
-            var term
-            try {
-                term = parseOneTerm(text)
-                return typeValidator(term)
-            } catch(e) {
-                // TODO message?
-                return false
+    var validate = {
+        token: {
+            ofTypes: function(types) {
+                types = [].concat(types)
+                return function(token) {
+                    return token && types.indexOf(token.type) >= 0
+                }
+            },
+            asTerm: function(token) {
+                return token &&
+                    ['Disjunction', 'Alternative',
+                    'Quantifier', 'Any Other Char', 'Range of Chars']
+                        .indexOf(token.type) < 0
+            },
+            asGroupable: function(token) {
+                return token &&
+                    ['Quantifier', 'Any Other Char', 'Range of Chars']
+                        .indexOf(token.type) < 0
             }
-        }
-    }
-
-    function numValidator(isInfAllowed) {
-        return function(val) {
-            return (isInfAllowed && val === 'Infinity')
-                || (
-                    ! isNaN(val) && ! isNaN(Number(val)) && ! isNaN(parseInt(val))
-                )
+        },
+        text: {
+            asSingleTermOfTypes: function(types) {
+                var typeValidator = validate.token.ofTypes(types)
+                return function(text) {
+                    var term
+                    try {
+                        term = parseOneTerm(text)
+                        return typeValidator(term)
+                    } catch(e) {
+                        // TODO message?
+                        return false
+                    }
+                }
+            }
+        },
+        int: function(isInfAllowed) {
+            return function(val) {
+                if (isInfAllowed && val === 'Infinity') { return true }
+                if (isNaN(val)) { return false }
+                return Number(val) === parseInt(val)
+            }
         }
     }
     
@@ -76,10 +80,10 @@
                 disj.alternatives = disj.alternatives.concat(token.alternatives)
             } else if (token.type === 'Alternative') {
                 disj.alternatives.push(token)
-            } else if (termTypeValidator(token)) {
+            } else if (validate.token.asTerm(token)) {
                 ;(function() {
                     var alt
-                    if (termTypeValidator(tokens[i - 1])) {
+                    if (validate.token.asTerm(tokens[i - 1])) {
                         alt = disj.alternatives.slice(-1)[0]
                     } else {
                         alt = {
@@ -106,7 +110,7 @@
             params: [
                 {
                     label: 'Character',
-                    validate: singleTermTypeValidator('Specific Char')
+                    validate: validate.text.asSingleTermOfTypes('Specific Char')
                 }
             ],
             create: function(vals) {
@@ -117,10 +121,10 @@
             params: [
                 {
                     label: 'From',
-                    validate: singleTermTypeValidator('Specific Char')
+                    validate: validate.text.asSingleTermOfTypes('Specific Char')
                 },{
                     label: 'To',
-                    validate: singleTermTypeValidator('Specific Char')
+                    validate: validate.text.asSingleTermOfTypes('Specific Char')
                 }
             ],
             create: function(texts) {
@@ -143,18 +147,11 @@
                     label: 'Possibility',
                     multi: true,
                     paramType: 'token',
-                    validate: parserTypeValidator(['Specific Char', 'Range of Chars'])
+                    validate: validate.token.ofTypes(['Specific Char', 'Range of Chars'])
 
-                    // we could consider allowing embedding predefined, it would be confusing
-                    //     since we do not visually distinguish seln of predefined vs custom set of chars.
-                    // validate: function(token) {
-                    //     if ( parserTypeValidator(['Specific Char', 'Range of Chars'])(token) ) {
-                    //         return true
-                    //     }
-                    //     if (token && token.type === 'Set of Chars') {
-                    //         return !! token.predefinedDisplay
-                    //     }
-                    // }
+                    // we could consider allowing embedding predefined, but it would be
+                    //     confusing since we do not visually distinguish seln of
+                    //     predefined vs custom set of chars.
                 }
             ],
             create: function(vals) {
@@ -184,15 +181,15 @@
                 {
                     label: 'Component being repeated',
                     paramType: 'token',
-                    validate: parserTypeValidator(
+                    validate: validate.token.ofTypes(
                         // any term except Quantified
                         ['Group', 'Set of Chars', 'Any Char', 'Specific Char'])
                 },{
                     label: 'Minimal occurrence',
-                    validate: numValidator()
+                    validate: validate.int()
                 },{
                     label: 'Maximal occurrence',
-                    validate: numValidator(true),
+                    validate: validate.int(true),
                     default: 'Infinity'
                 },{
                     label: 'Greedy',
@@ -228,7 +225,7 @@
                     label: 'Content',
                     multi: true,
                     paramType: 'token',
-                    validate: groupableTypeValidator
+                    validate: validate.token.asGroupable
                 }
             ],
             create: function(vals) {
@@ -274,7 +271,7 @@
                     label: 'Content',
                     multi: true,
                     paramType: 'token',
-                    validate: groupableTypeValidator
+                    validate: validate.token.asGroupable
                 }
             ],
             create: function(vals) {
