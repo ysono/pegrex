@@ -27,10 +27,10 @@
             ['Quantifier', 'Any Other Char', 'Range of Chars'].indexOf(token.type) < 0
     }
 
-    function typeInSingleTermValidator(types) {
+    // TODO distinguish validator on token vs on type
+    function singleTermTypeValidator(types) {
         var typeValidator = parserTypeValidator(types)
         return function(text) {
-            debugger
             var term
             try {
                 term = parseOneTerm(text)
@@ -106,7 +106,7 @@
             params: [
                 {
                     label: 'Character',
-                    validate: typeInSingleTermValidator('Specific Char')
+                    validate: singleTermTypeValidator('Specific Char')
                 }
             ],
             create: function(vals) {
@@ -117,14 +117,13 @@
             params: [
                 {
                     label: 'From',
-                    validate: typeInSingleTermValidator('Specific Char')
+                    validate: singleTermTypeValidator('Specific Char')
                 },{
                     label: 'To',
-                    validate: typeInSingleTermValidator('Specific Char')
+                    validate: singleTermTypeValidator('Specific Char')
                 }
             ],
             create: function(texts) {
-                debugger
                 var tokens = texts.map(function(text) {
                     return parseOneTerm(text)
                 })
@@ -142,7 +141,7 @@
                     default: 'yes'
                 },{
                     label: 'Possibility',
-                    mult: true,
+                    multi: true,
                     paramType: 'token',
                     validate: parserTypeValidator(['Specific Char', 'Range of Chars'])
 
@@ -227,7 +226,7 @@
                     default: 'no'
                 },{
                     label: 'Content',
-                    mult: true,
+                    multi: true,
                     paramType: 'token',
                     validate: groupableTypeValidator
                 }
@@ -273,7 +272,7 @@
                     }
                 },{
                     label: 'Content',
-                    mult: true,
+                    multi: true,
                     paramType: 'token',
                     validate: groupableTypeValidator
                 }
@@ -374,7 +373,9 @@
             return '.'
         },
         'Specific Char': function(token) {
-            return token.display
+            return {
+                'Space Char': ' '
+            }[token.display] || token.display
         },
 
         groupHelper: function(disj, groupPrefix) {
