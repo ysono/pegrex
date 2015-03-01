@@ -46,15 +46,10 @@
             var amSelectable = {
                 'select': type && type[0] <= 'Z',
                     // whether data is a parser token. Relies on the case convention.
-                'add': textLoc,
+                'add': !! textLoc,
                 'delete': textHasLen
             }[mode]
-            var amSelectedByExact = this.props.selToken === this.props.data
-                // obj ref equality. a match iff the exact selected token.
-            var amSelectedByTextRange =
-                ! amSelectedByExact
-                && patternSel
-                && textHasLen
+            var amSelectedByTextRange = patternSel && textHasLen
                 && patternSel[0] <= textLoc[0]
                 && patternSel[1] >= textLoc[1]
 
@@ -72,9 +67,7 @@
             handleEvt(hiliteElm, 'mouseleave', this.handleEvents)
 
             // note: filter attr is not supported by react, so have to use js anyway.
-            if (amSelectedByExact) {
-                hiliteElm.setAttribute('filter', 'url(#dropshadow-sel-by-exact)')
-            } else if (amSelectedByTextRange) {
+            if (amSelectedByTextRange) {
                 hiliteElm.setAttribute('filter', 'url(#dropshadow-sel-by-text-range)')
             } else {
                 hiliteElm.removeAttribute('filter')
@@ -395,14 +388,10 @@
                 </filter>'
             var dropShadowSelByTextRange = dropShadowTemplate
                 .replace(/\{0\}/g, 'dropshadow-sel-by-text-range')
-                .replace(/\{1\}/g, 'orange')
-            var dropShadowSelByExact = dropShadowTemplate
-                .replace(/\{0\}/g, 'dropshadow-sel-by-exact')
                 .replace(/\{1\}/g, 'red')
             return (
                 <defs dangerouslySetInnerHTML={{
-                    __html: markerEndArrow
-                        + dropShadowSelByTextRange + dropShadowSelByExact
+                    __html: markerEndArrow + dropShadowSelByTextRange
                 }}></defs>
             )
         }

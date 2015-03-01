@@ -396,7 +396,7 @@
             var token = this.props.val
             var droppedCompo = token
                 ? <Cell token={token} />
-                : <p className="error">Select a token to copy it. Copied token is highlighted in red. Then click here to paste.</p>
+                : <p className="error">Click to paste the clipboard content.</p>
             var className = 'droppable ' + (this.props.valid ? '' : 'error')
             return <div onClick={this.handlePasteCompo} className={className}>
                 {droppedCompo}
@@ -421,7 +421,7 @@
                             }}
                             className="del">X</button>
                         : null
-                    return <div className="pelette-cell" key={i}>
+                    return <div className="palette-cell" key={i}>
                         <Cell
                             token={tokensInPalette[i]}
                             selToken={self.props.selToken}
@@ -430,7 +430,15 @@
                     </div>
                 })
             return <div className="palette">
-                {cells}
+                <span className="label">Clipboard</span>
+                <div className="clipboard palette-cell">
+                    <Cell token={this.props.selToken} />
+                </div>
+                <div className="vr" />
+                <span className="label">Palette</span>
+                <div className="palette-cells">
+                    {cells}
+                </div>
             </div>
         }
     })

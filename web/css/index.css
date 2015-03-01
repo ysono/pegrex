@@ -32,7 +32,7 @@ html, body {
     padding: 1rem 1%;
 }
 .texts-parent {
-    border: solid 1px;
+    border: 1px solid;
     text-align: center;
 }
 
@@ -170,7 +170,7 @@ html, body {
 .pattern-editor {
     display: flex;
     flex-direction: column;
-    border: solid 1px;
+    border: 1px solid;
     padding: 4px; /* chrome bug? if using rem here, when .surface-parent starts
         having horizontal scroolbar, top of palette cells get chopped off. */
     background-color: white;
@@ -184,24 +184,38 @@ html, body {
     which can't go all the way left. */
 .palette {
     display: flex;
-    justify-content: center; 
-    overflow-x: auto;
+    justify-content: left;
 }
-.palette>* {
+.palette>.label {
+    -ms-writing-mode: tb-lr;
+    -webkit-writing-mode: vertical-lr;
+    -moz-writing-mode: vertical-lr;
+    -ms-writing-mode: vertical-lr;
+    writing-mode: vertical-lr;
+}
+.palette-cells>* {
     display: inline-block;
+}
+.palette-cell {
+    position: relative;
     width: 8rem;
     height: 8rem;
     margin: 2px;
-    border: solid 1px;
+    border: 1px solid;
     overflow: auto;
 }
-.pelette-cell {
-    position: relative;
-}
-.pelette-cell>.del {
+.palette-cell>.del {
     position: absolute;
     bottom: 5px;
     right: 5px;
+}
+.vr {
+    width: 3px;
+    height: 8rem;
+    margin: 6px;
+    border-left: solid;
+    border-right: solid;
+    border-width: 1px;
 }
 
 .create-parent {
@@ -226,7 +240,7 @@ html, body {
 .create-form-inputs {
     position: relative;
     width: 14rem;
-    border: dotted 1px;
+    border: 1px dotted;
 }
 .create-form-inputs>[type="submit"] {
     position: absolute;
@@ -243,7 +257,7 @@ html, body {
     display: block;
 }
 .create-form-inputs .droppable {
-    border: solid 1px;
+    border: 1px solid;
     cursor: pointer;
 }
 .create-form-inputs .droppable:not(.error):hover {
@@ -265,7 +279,7 @@ html, body {
 }
 .create-form-preview .preview-str {
     margin: .2rem;
-    border: solid 1px;
+    border: 1px solid;
     min-height: 1rem;
 }
 
