@@ -943,7 +943,8 @@
             var hiliteElm = this.refs.hiliteElm.getDOMNode()
 
             // ie-safe toggle
-            if (hiliteElm.classList.contains('selectable') !== amSelectable) {
+            if (hiliteElm.classList &&
+                hiliteElm.classList.contains('selectable') !== amSelectable) {
                 hiliteElm.classList.toggle('selectable')
             }
             function handleEvt(elm, type, handler) {
