@@ -890,7 +890,7 @@
 
     var selectableMixin = {
         /*
-            Relays a select event to the parent component. The root `Surface`
+            Relays any kind of events to the parent component. The root `Surface`
                 component will eventually receive it and process it.
         */
         handleEvents: function(e) {

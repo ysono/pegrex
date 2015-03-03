@@ -811,10 +811,15 @@
                 return ui
             },
             'Reference': function() {
+                // accommodating mockToken by tokenCreator which does not know whether back/fwd
+                var dir = typeof token.isBack === 'boolean'
+                    ? token.isBack
+                        ? 'Back' : 'Forward'
+                    : ''
                 var ui = setUiWithTextBlockOnly(
-                    [token.isBack ? 'Back' : 'Forward', token.type, 'To #' + token.number], token)
+                    [dir, token.type, 'To #' + token.number], token)
                 ui.stroke = '#f9f374'
-                ui.fill = token.isBack ? null : surfaceData.fillForNegative
+                ui.fill = dir === 'Forward' ? surfaceData.fillForNegative : null
                 return ui
             },
             'Any Other Char': function() {

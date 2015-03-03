@@ -103,7 +103,6 @@
 
     // `tokenLabel`s don't have to match a `token.type` given by the parser.
     // ordered in the desc order of what users want to use the most.
-    // not allowing to create Reference.
     var createInfoList = [
         {
             tokenLabel: 'Specific Char',
@@ -233,6 +232,22 @@
                 var tokens = vals[1]
                 var disj = createDisj(tokens)
                 return simpleCreator('group')([isCapturing, disj, 0])
+            }
+        },{
+            tokenLabel: 'Group Reference',
+            params: [
+                {
+                    label: 'Number',
+                    validate: validate.int()
+                }
+            ],
+            create: function(vals) {
+                // not using yy builder
+                return {
+                    type: 'Reference',
+                    // isBack: true,
+                    number: Number(vals[0])
+                }
             }
         },{
             tokenLabel: 'Line Boundary',
@@ -373,6 +388,9 @@
             return {
                 'Space Char': ' '
             }[token.display] || token.display
+        },
+        'Reference': function(mockToken) {
+            return '\\' + mockToken.number
         },
 
         groupHelper: function(disj, groupPrefix) {

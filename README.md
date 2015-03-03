@@ -1,12 +1,10 @@
 PegRex
 ===
 
-A visual parser and builder utility of regular expressions.
+A utility for visually parsering and building regular expressions.
 
-Dependencies
+Using
 ---
-
-Dependencies are intentionally kept minimal. The main ones are
 
 - [jison](https://github.com/zaach/jison)
 - [reactjs](https://github.com/facebook/react)
@@ -14,12 +12,13 @@ Dependencies are intentionally kept minimal. The main ones are
 Run
 ---
 
-Host `web` dir on a static server.
+Host `./web` dir on a static server.
 
 Build
 ---
 
 `npm install`
+
 `./build.sh`
 
 Test

@@ -146,7 +146,8 @@
             }
         },
 
-        /* mockNumer used by token creator. */
+        /* mockNumer must be used by token creator to prevent
+            modifying the numCapturedGroups state */
         group: function(isCapturing, disj, mockNumber) {
             return {
                 type: 'Group',
